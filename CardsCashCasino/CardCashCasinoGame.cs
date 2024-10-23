@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CardsCashCasino
 {
-    public class Game1 : Game
+    public class CardCashCasinoGame : Game
     {
         /// <summary>
         /// The graphics device manager for the project.
@@ -14,9 +14,9 @@ namespace CardsCashCasino
         /// <summary>
         /// The sprite batch for the project.
         /// </summary>
-        private SpriteBatch _spriteBatch;
+        private SpriteBatch? _spriteBatch;
 
-        public Game1()
+        public CardCashCasinoGame()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";

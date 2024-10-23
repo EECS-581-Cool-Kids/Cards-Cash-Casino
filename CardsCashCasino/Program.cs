@@ -1,3 +1,3 @@
 ﻿
-using var game = new CardsCashCasino.Game1();
+using var game = new CardsCashCasino.CardCashCasinoGame();
 game.Run();
