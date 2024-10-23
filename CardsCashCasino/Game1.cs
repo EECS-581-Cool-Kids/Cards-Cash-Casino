@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Cards_Cash_Casino
+namespace CardsCashCasino
 {
     public class Game1 : Game
     {
