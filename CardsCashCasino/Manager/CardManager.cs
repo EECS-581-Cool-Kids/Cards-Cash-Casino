@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Content;
+﻿using CardsCashCasino.Data;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,49 @@ namespace CardsCashCasino.Manager
 {
     public class CardManager
     {
+        /// <summary>
+        /// The list of cards.
+        /// </summary>
+        public List<Card> Cards { get; set; } = new List<Card>();
+
+        /// <summary>
+        /// Internal deck object. Copied into the Cards list when requested. Used to minimize computation time when creating new decks.
+        /// Initialized upon construction.
+        /// </summary>
+        private List<Card> _deck = new List<Card>();
+
+        public CardManager() 
+        {
+            List<Suit> suits = Enum.GetValues<Suit>().ToList();
+            List<Value> values = Enum.GetValues<Value>().ToList();
+
+            foreach (Suit suit in suits)
+            {
+                foreach (Value value in values)
+                    _deck.Add(new Card(suit, value));
+            }
+        }
+
+        /// <summary>
+        /// Generates however many decks are requested, and places them into the list of cards.
+        /// </summary>
+        public void GenerateDecks(int numDecks)
+        {
+            for (int i = 0; i < numDecks; i++)
+            {
+                foreach (Card card in _deck)
+                    Cards.Add(new Card(card));
+            }
+        }
+
+        /// <summary>
+        /// Clears the stored cards.
+        /// </summary>
+        public void ClearDecks()
+        {
+            Cards.Clear();
+        }
+
         /// <summary>
         /// Update method for the CardManager
         /// </summary>
