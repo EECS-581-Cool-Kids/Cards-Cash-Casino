@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CardsCashCasino.Manager;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -15,6 +16,11 @@ namespace CardsCashCasino
         /// The sprite batch for the project.
         /// </summary>
         private SpriteBatch? _spriteBatch;
+
+        /// <summary>
+        /// The card manager for the game.
+        /// </summary>
+        private CardManager cardManager = new();
 
         public CardCashCasinoGame()
         {
@@ -37,6 +43,9 @@ namespace CardsCashCasino
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            // Load the card textures.
+            CardTextures.LoadContent(Content);
         }
 
         /// <summary>
