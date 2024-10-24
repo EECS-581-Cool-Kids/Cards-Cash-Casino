@@ -48,6 +48,12 @@ namespace CardsCashCasino.Data
             _value = value;
         }
 
+        public Card(Card other)
+        {
+            _suit = other._suit;
+            _value = other._value;
+        }
+
         /// <summary>
         /// Draws the card object to the screen.
         /// </summary>
