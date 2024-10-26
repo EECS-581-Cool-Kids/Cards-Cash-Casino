@@ -94,17 +94,17 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Recycle() 
         {
-            _deck.AddRange(_discard);
+            Cards.AddRange(_discard);
             _discard.Clear();
             Random rnd = new();
-            int n = _deck.Count;
+            int n = Cards.Count;
 
             for (int i = 0; i < n - 1; i++)
             {
                 int j = rnd.Next(i, n);
 
                 if (j != i)
-                    (_deck[i], _deck[j]) = (_deck[j], _deck[i]);
+                    (Cards[i], Cards[j]) = (Cards[j], Cards[i]);
             }
         }
     }
