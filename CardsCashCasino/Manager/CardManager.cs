@@ -4,6 +4,10 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Markup;
+
 
 namespace CardsCashCasino.Manager
 {
@@ -19,6 +23,12 @@ namespace CardsCashCasino.Manager
         /// Initialized upon construction.
         /// </summary>
         private List<Card> _deck = new List<Card>();
+
+        /// <summary>
+        /// Internal discard queue object. Randomization is performed onto the deck when cards are shuffled.
+        /// Initialized as empty upon construction.
+        /// </summary>
+        private List<Card> _discard = new List<Card>();
 
         public CardManager() 
         {
@@ -109,6 +119,36 @@ namespace CardsCashCasino.Manager
         public void Draw(SpriteBatch spriteBatch)
         {
 
+        }
+
+        /// <summary>
+        /// Adds card to the discard queue. 
+        /// Caller must guarantee that card has been removed from whatever collection it was in prior.
+        /// </summary>
+        public void Discard(Card card)
+        {
+            _discard.Add(card);
+        }
+
+        /// <summary>
+        /// Moves all cards from discard into the deck, and randomizes the deck.  
+        /// 
+        /// Guarantees that discard's old size + deck's old size = deck's new size, and that discard's new size = 0.
+        /// </summary>
+        public void Recycle() 
+        {
+            Cards.AddRange(_discard);
+            _discard.Clear();
+            Random rnd = new();
+            int n = Cards.Count;
+
+            for (int i = 0; i < n - 1; i++)
+            {
+                int j = rnd.Next(i, n);
+
+                if (j != i)
+                    (Cards[i], Cards[j]) = (Cards[j], Cards[i]);
+            }
         }
     }
 
