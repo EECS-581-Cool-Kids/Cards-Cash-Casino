@@ -44,6 +44,9 @@ namespace CardsCashCasino.Manager
                 foreach (Card card in _deck)
                     Cards.Add(new Card(card));
             }
+
+            // Shuffle and cut the deck
+            Shuffle();
         }
 
         /// <summary>
@@ -53,6 +56,48 @@ namespace CardsCashCasino.Manager
         {
             Cards.Clear();
         }
+
+        /// <summary>
+        /// Shuffles the cards in the deck by randomizing their order twice and splitting the deck.
+        /// </summary>
+        public void Shuffle()
+        {
+            Random random = new Random(); // Random number generator
+            List<Card> splitDeck = new List<Card>(); // Temporary list to hold the split deck
+            noOfCards = Cards.Count; // Number of cards in the deck
+
+           // Shuffle the deck twice
+           for (int idx = 0; idx < 2; idx++)
+           {
+                for (int i = 0; i < noOfCards; i++)
+                {
+                    int randomIndex = random.Next(0, noOfCards);
+                    if (randomIndex != i)
+                    (Cards[i], Cards[randomIndex]) = (Cards[randomIndex], Cards[i]);
+                }
+           }
+
+           // Cuts the deck in half and stack the halves so that the last card is in the middle of the deck
+           for (int i = 0; i < noOfCards / 2; i++)
+           {
+                splitDeck.Insert((i + noOfCards / 2), Cards[i];
+                splitDeck.Insert(i, Cards[i + noOfCards / 2]);
+           }
+
+              Cards = splitDeck;
+        }
+
+        /// <summary>
+        /// Draws a card from the deck and returns it.
+        /// </summary>
+        public Card DrawCard()
+        {
+            Card card = Cards[0];
+            Cards.RemoveAt(0);
+            return card;
+        }
+
+
 
         /// <summary>
         /// Update method for the CardManager
