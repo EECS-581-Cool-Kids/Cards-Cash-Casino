@@ -4,8 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CardsCashCasino.Manager
 {
@@ -64,7 +62,7 @@ namespace CardsCashCasino.Manager
         {
             Random random = new Random(); // Random number generator
             List<Card> splitDeck = new List<Card>(); // Temporary list to hold the split deck
-            noOfCards = Cards.Count; // Number of cards in the deck
+           int noOfCards = Cards.Count; // Number of cards in the deck
 
            // Shuffle the deck twice
            for (int idx = 0; idx < 2; idx++)
@@ -73,18 +71,18 @@ namespace CardsCashCasino.Manager
                 {
                     int randomIndex = random.Next(0, noOfCards);
                     if (randomIndex != i)
-                    (Cards[i], Cards[randomIndex]) = (Cards[randomIndex], Cards[i]);
+                        (Cards[i], Cards[randomIndex]) = (Cards[randomIndex], Cards[i]);
                 }
            }
 
            // Cuts the deck in half and stack the halves so that the last card is in the middle of the deck
            for (int i = 0; i < noOfCards / 2; i++)
            {
-                splitDeck.Insert((i + noOfCards / 2), Cards[i];
+                splitDeck.Insert((i + noOfCards / 2), Cards[i]);
                 splitDeck.Insert(i, Cards[i + noOfCards / 2]);
            }
 
-              Cards = splitDeck;
+           Cards = splitDeck;
         }
 
         /// <summary>
@@ -96,9 +94,7 @@ namespace CardsCashCasino.Manager
             Cards.RemoveAt(0);
             return card;
         }
-
-
-
+        
         /// <summary>
         /// Update method for the CardManager
         /// </summary>
