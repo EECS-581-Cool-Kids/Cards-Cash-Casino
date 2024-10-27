@@ -1,4 +1,16 @@
-﻿using CardsCashCasino.Data;
+﻿/*
+ *  Module Name: CardManager.cs
+ *  Purpose: Manages the cards in the game.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus, Mo Morgan
+ *  Date: 10/26/2024
+ *  Last Modified: 10/26/2024
+ */
+
+// Import necessary libraries
+using CardsCashCasino.Data;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -7,6 +19,9 @@ using System.Linq;
 
 namespace CardsCashCasino.Manager
 {
+    /// <summary>
+    /// Class <c>CardManager</c> manages the cards in the game.
+    /// </summary>
     public class CardManager
     {
         /// <summary>
@@ -35,6 +50,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Generates however many decks are requested, and places them into the list of cards.
         /// </summary>
+        /// <param name="numDecks">The number of decks of cards to be generated.</param>
         public void GenerateDecks(int numDecks)
         {
             for (int i = 0; i < numDecks; i++)
@@ -56,13 +72,13 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        /// Shuffles the cards in the deck by randomizing their order twice and splitting the deck.
+        /// Shuffles the cards in the deck.
         /// </summary>
         public void Shuffle()
         {
             Random random = new Random(); // Random number generator
             List<Card> splitDeck = new List<Card>(); // Temporary list to hold the split deck
-           int noOfCards = Cards.Count; // Number of cards in the deck
+           int noOfCards = Cards.Count; // Number of cards currently in the game's deck
 
            // Shuffle the deck twice
            for (int idx = 0; idx < 2; idx++)
@@ -86,8 +102,9 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        /// Draws a card from the deck and returns it.
+        /// Draws a card from the deck.
         /// </summary>
+        /// <returns>The Card object removed from the deck.</returns>
         public Card DrawCard()
         {
             Card card = Cards[0];
@@ -112,6 +129,9 @@ namespace CardsCashCasino.Manager
         }
     }
 
+    /// <summary>
+    /// Class <c>CardTextures</c> holds the textures for the cards.
+    /// </summary>
     public static class CardTextures
     {
         /// <summary>
