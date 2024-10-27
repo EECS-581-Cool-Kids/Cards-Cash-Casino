@@ -101,7 +101,15 @@ namespace CardsCashCasino.Data
             else
                 return (int)blackjackValue.SecondaryValue!;
         }
-
+        /// <summary>
+        /// Returns if the card is an ace.
+        /// Used for Blackjack.
+        /// </summary>
+        /// <returns> value == Ace </returns>
+        public bool IsAce()
+        {
+            return _value == Value.ACE;
+        }
         /// <summary>
         /// Returns the poker value.
         /// </summary>
@@ -129,6 +137,9 @@ namespace CardsCashCasino.Data
         /// <inheritdoc/>
         /// </summary>
         public override int GetHashCode() { return base.GetHashCode(); }
+
+        public bool SameVal(Card card) { return _value == card._value;  }
+        public bool SameVal(Value val) { return _value == val;  }
     }
 
     /// <summary>

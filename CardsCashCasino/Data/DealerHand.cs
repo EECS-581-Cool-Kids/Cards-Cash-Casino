@@ -19,5 +19,37 @@ namespace CardsCashCasino.Data
 {
     public class DealerHand : CardHand
     {
+        public DealerHand() { }
+
+        private bool _active = true;
+        
+        /// <summary>
+        /// Returns true if Dealer will hit.
+        /// False if stand or invalid.
+        /// </summary>
+        public bool IsActive() { return _active; } 
+
+        private bool _valid = true;
+
+        /// <summary>
+        /// True if dealer busted, false otherwise.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsValid() { return _valid; } 
+
+        public void Hit(Card card)
+        {
+            _cards.Add(card);
+            int bjv = GetBlackjackValue();
+            
+            if (bjv < 17)
+                return;
+
+            _active = false;
+            
+            if (bjv > 21)
+                _valid = false;
+            
+        }
     }
 }
