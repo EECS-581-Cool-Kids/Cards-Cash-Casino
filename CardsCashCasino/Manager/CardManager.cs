@@ -157,6 +157,7 @@ namespace CardsCashCasino.Manager
 
             Shuffle();
         }
+        
     }
 
     /// <summary>

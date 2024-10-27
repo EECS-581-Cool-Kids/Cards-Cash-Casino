@@ -22,9 +22,9 @@ namespace CardsCashCasino.Data
     public abstract class CardHand
     {
         /// <summary>
-        /// Private collection of cards.
+        /// protected collection of cards.
         /// </summary>
-        private Collection<Card> _cards = new Collection<Card>();
+        protected Collection<Card> _cards = new Collection<Card>();
 
         /// <summary>
         /// ReadOnlyCollection of the cards in the hand.
@@ -72,5 +72,42 @@ namespace CardsCashCasino.Data
         {
 
         }
+
+        /// <summary>
+        /// Returns the value of this hand during blackjack.
+        /// </summary>
+        /// <returns></returns>
+        public int GetBlackjackValue()
+        {
+            int value = 0;
+            int aceCount = 0;
+
+            foreach (Card card in _cards)
+                if (card.IsAce())
+                    aceCount++;
+                else
+                    value += card.GetBlackjackValue();
+
+            // Add ace values, either as 11 or 1, as appropriate
+            for (int i = 0; i < aceCount; i++)
+            {
+                if (value + 11 <= 21)
+                {
+                    value += 11; // Ace is worth 11 if it doesn’t push over 21
+                }
+                else
+                {
+                    value += 1; // Otherwise, Ace is worth 1
+                }
+            }
+
+            return value;
+        }
+
+        public void Clear()
+        {
+            _cards.Clear();
+        }
+
     }
 }
