@@ -4,7 +4,7 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus, Mo Morgan
+ *  Developers: Jacob Wilkus, Mo Morgan, Ethan Berkley
  *  Date: 10/26/2024
  *  Last Modified: 10/26/2024
  */
@@ -148,23 +148,14 @@ namespace CardsCashCasino.Manager
 
         /// <summary>
         /// Moves all cards from discard into the deck, and randomizes the deck.  
-        /// 
         /// Guarantees that discard's old size + deck's old size = deck's new size, and that discard's new size = 0.
         /// </summary>
         public void Recycle() 
         {
             Cards.AddRange(_discard);
             _discard.Clear();
-            Random rnd = new();
-            int n = Cards.Count;
 
-            for (int i = 0; i < n - 1; i++)
-            {
-                int j = rnd.Next(i, n);
-
-                if (j != i)
-                    (Cards[i], Cards[j]) = (Cards[j], Cards[i]);
-            }
+            Shuffle();
         }
     }
 

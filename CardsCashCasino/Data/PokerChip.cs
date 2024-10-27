@@ -1,3 +1,14 @@
+/*
+ *  Module Name: PokerChip.cs
+ *  Purpose: Models a poker chip object.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Mo Morgan
+ *  Date: 10/26/2024
+ *  Last Modified: 10/26/2024
+ */
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -43,8 +54,8 @@ namespace CardsCashCasino.Data
         }
 
         public PokerChip(ChipValue value)
-        {
-            _value = (int)ChipValue.value;
+        { 
+            _value = (int)value;
         }
 
         public PokerChip(PokerChip other)
@@ -99,7 +110,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The add operator for the PokerChip class.
         /// </summary>
-        public static PokerChip operator +(PokerChip chip1, PokerChip chip2)
+        public static int operator +(PokerChip chip1, PokerChip chip2)
         {
             return chip1._value + chip2._value;
         }
@@ -107,7 +118,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The add operator for the PokerChip class with an integer.
         /// </summary>
-        public static PokerChip operator +(PokerChip chip1, int value)
+        public static int operator +(PokerChip chip1, int value)
         {
             return chip1._value + value;
         }
@@ -115,7 +126,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The subtract operator for 2 PokerChip class instances.
         /// </summary>
-        public static PokerChip operator -(PokerChip chip1, PokerChip chip2)
+        public static int operator -(PokerChip chip1, PokerChip chip2)
         {
             return chip1._value - chip2._value;
         }
@@ -123,7 +134,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The subtract operator for the PokerChip class with an integer as the subtrahend.
         /// </summary>
-        public static PokerChip operator -(PokerChip chip1, int value)
+        public static int operator -(PokerChip chip1, int value)
         {
             return chip1._value - value;
         }
@@ -131,7 +142,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The subtract operator for the PokerChip class with an integer as the minuend.
         /// </summary>
-        public static PokerChip operator -(int value, PokerChip chip1)
+        public static int operator -(int value, PokerChip chip1)
         {
             return value - chip1._value;
         }
@@ -139,12 +150,12 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The unary subtract operator for the PokerChip class.
         /// </summary>
-        public static PokerChip operator -(PokerChip chip1) => -chip1._value;
+        public static int operator -(PokerChip chip1) => -chip1._value;
 
         /// <summary>
         /// The unary add operator for the PokerChip class.
         /// </summary>
-        public static PokerChip operator +(PokerChip chip1) => chip1;
+        public static int operator +(PokerChip chip1) => chip1._value;
 
     }
 }
