@@ -1,4 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿/*
+ *  Module Name: Card.cs
+ *  Purpose: Models a card object.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus
+ *  Date: 10/26/2024
+ *  Last Modified: 10/26/2024
+ */
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -209,7 +220,7 @@ namespace CardsCashCasino.Data
         }
 
         /// <summary>
-        /// Whether or not there are two values.
+        /// Whether or not a card has two values.
         /// </summary>
         public bool HasTwoValues
         {

@@ -1,3 +1,14 @@
+/*
+ *  Module Name: ChipManager.cs
+ *  Purpose: Manages the poker chips in the game.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Mo Morgan
+ *  Date: 10/26/2024
+ *  Last Modified: 10/26/2024
+ */
+
 using CardsCashCasino.Data;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -36,23 +47,16 @@ namespace CardsCashCasino.Manager
                 return cashValue;
             }
         }
-
+        
         public ChipManager()
         {
             _chips = new List<PokerChip>();
         }
-
-        public void LoadContent(ContentManager content)
-        {
-            foreach (PokerChip.ChipValue value in Enum.GetValues(typeof(PokerChip.ChipValue)))
-            {
-                PokerChip chip = new PokerChip(value);
-                chip.LoadContent(content);
-                _chips.Add(chip);
-            }
-        }
+        
         /// <summary>
         /// Draw method for the ChipManager.
+        /// </summary>
+        /// <param name="spriteBatch">Holds the logic that draws the poker chips.</param>
         public void Draw(SpriteBatch spriteBatch)
         {
 
@@ -77,6 +81,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Adds a chip to the user's chips.
         /// </summary>
+        /// <param name="chip">A <c>PokerChip</c> object</param>
         public void AddChip(PokerChip chip)
         {
             UserChips.Add(chip);
@@ -85,15 +90,16 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Removes a chip from the user's chips.
         /// </summary>
+        /// <param name="chip">A <c>PokerChip</c> object</param>
         public void RemoveChip(PokerChip chip)
         {
             UserChips.Remove(chip);
         }
 
         /// <summary>
-        /// Takes a value, converts it into the least number of chips, and adds them to the user's current chips.
-        /// Uses greedy algorithm to determine the least number of chips.
+        /// Turns the user's cash winnings into chips.
         /// </summary>
+        /// <param name="cashValue">The amount of cash to turn into chips.</param>
         public void CashToChips(int cashValue)
         {
             UserChips.Clear();
@@ -109,7 +115,10 @@ namespace CardsCashCasino.Manager
             }
         }
     }
-
+    
+    /// <summary>
+    /// Static class <c>ChipTextures</c> holds the textures for the different chips.
+    /// </summary>
     public static class ChipTextures
     {
         /// <summary>
