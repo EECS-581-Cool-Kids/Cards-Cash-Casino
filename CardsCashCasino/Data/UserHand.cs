@@ -1,12 +1,12 @@
 ﻿/*
  *  Module Name: UserHand.cs
- *  Purpose: Models the user's hand of cards.
+ *  Purpose: Models the user's hand of cards. This class is used in the Blackjack game.
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
+ *  Developers: Jacob Wilkus, Ethan Berkley, Mo Morgan
  *  Date: 10/26/2024
- *  Last Modified: 10/26/2024
+ *  Last Modified: 11/3/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -40,7 +40,7 @@ namespace CardsCashCasino.Data
         /// If this hand is able to be split, return the index of a card that can be split.
         /// Else, return -1.
         /// </summary>
-        /// <returns>Idx of card to be removed.</returns>
+        /// <returns>Index of card to be removed.</returns>
         private int splittable()
         {
             for (int i = 1; i < _cards.Count; i++)
