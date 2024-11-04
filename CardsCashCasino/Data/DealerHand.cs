@@ -1,12 +1,12 @@
 ﻿/*
  *  Module Name: DealerHand.cs
- *  Purpose: Models the dealer's hand of cards.
+ *  Purpose: Models the dealer's hand of cards. This class is used in the Blackjack game.
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
+ *  Developers: Jacob Wilkus, Ethan Berkley, Mo Morgan
  *  Date: 10/26/2024
- *  Last Modified: 10/26/2024
+ *  Last Modified: 11/3/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -23,6 +23,9 @@ using System.Threading.Tasks;
 
 namespace CardsCashCasino.Data
 {
+    /// <summary>
+    /// The <c>DealerHand</c> class in Blackjack.
+    /// </summary>
     public class DealerHand : CardHand
     {
         public DealerHand() { }
