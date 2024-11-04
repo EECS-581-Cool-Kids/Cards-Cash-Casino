@@ -101,7 +101,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// A dictionary that tracks which player has what role.
         /// </summary>
-        private Dictionary<int, PlayerRole?> _players { get; set; }
+        private Dictionary<PlayerRole, int> _players { get; set; }
         
         private List<CardHand> _playerHands { get; set; }
 
@@ -132,11 +132,11 @@ namespace CardsCashCasino.Manager
             }
             
             // Initialize the player roles. The user starts as the dealer. 
-            _players = new Dictionary<int, PlayerRole?>
+            _players = new Dictionary<PlayerRole, int>
             {
-                {0, PlayerRole.DEALER},
-                {1, PlayerRole.SMALL_BLIND},
-                {2, PlayerRole.BIG_BLIND}
+                {PlayerRole.DEALER, 0},
+                {PlayerRole.SMALL_BLIND, 1},
+                {PlayerRole.BIG_BLIND, 2}
             };
         }
 
@@ -153,22 +153,16 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void DealCards()
         {
-            int currentIndex = 0; // The index of the current player.
-                                  // Initialized to avoid a null reference exception in line 171.
-            
-            // Deal two cards to each player, starting with the player with the small blind.
-            foreach (var player in _players)
-            {
-                if (player.Value == PlayerRole.SMALL_BLIND)
-                {
-                    currentIndex = player.Key; // Set the current index to the small blind.
-                    break;
-                }
-            }
+            // The index of the current player with the small blind.
+            // Initialized to avoid a null reference exception in line 171.
+            int currentIndex = _players[PlayerRole.SMALL_BLIND];
 
+            // Iterates through the players in a circular fashion, starting with the player with the small blind.
             for (int i = 0; i < _players.Count; i++) 
             {
-                int playerIndex = (currentIndex + i) % _players.Count; // Get the index of the current player.
+                int playerIndex = (currentIndex + i) % _players.Count;
+                
+                // Deals two cards to each player.
                 _playerHands[playerIndex].AddCard(_cardManager.DrawCard());
                 _playerHands[playerIndex].AddCard(_cardManager.DrawCard());
             }
