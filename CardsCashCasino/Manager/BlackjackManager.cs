@@ -21,7 +21,7 @@ using System.Reflection;
 using CardsCashCasino.Manager;
 using CardsCashCasino.Data;
 
-namespace CardsCashCasino.Game
+namespace CardsCashCasino.Manager
 {
 
     public enum Action
