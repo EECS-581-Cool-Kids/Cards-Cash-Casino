@@ -154,7 +154,7 @@ namespace CardsCashCasino.Manager
         public void DealCards()
         {
             int currentIndex = 0; // The index of the current player.
-                                  // Initialized to avoid a null reference exception in line 167.
+                                  // Initialized to avoid a null reference exception in line 171.
             
             // Deal two cards to each player, starting with the player with the small blind.
             foreach (var player in _players)
