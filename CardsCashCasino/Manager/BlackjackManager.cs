@@ -1,6 +1,6 @@
 ﻿/*
- *  Module Name: UserHand.cs
- *  Purpose: Models the user's hand of cards.
+ *  Module Name: BlackjackManager.cs
+ *  Purpose: Manages the game of blackjack.
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
@@ -150,7 +150,7 @@ namespace CardsCashCasino.Game
         /// <returns>The action selected</returns>
         private Action getAction()
         {
-            /// TODO: Implement logic to have player select a move.
+            // TODO: Implement logic to have player select a move.
             return Action.HIT;
         }
 
