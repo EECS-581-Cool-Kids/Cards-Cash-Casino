@@ -113,10 +113,5 @@ namespace CardsCashCasino.Data
             }
             _active = false;
         }
-
-
-
-
-    
     }
 }
