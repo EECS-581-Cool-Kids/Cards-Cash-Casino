@@ -114,6 +114,5 @@ namespace CardsCashCasino.Data
         {
             _cards.Clear();
         }
-
     }
 }
