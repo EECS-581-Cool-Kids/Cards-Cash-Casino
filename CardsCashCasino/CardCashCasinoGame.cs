@@ -15,6 +15,7 @@
  *  Known Faults: None encountered
  */
 
+using CardsCashCasino.Data;
 using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -22,7 +23,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CardsCashCasino
 {
-    public class CardCashCasinoGame : Game
+    public class CardCashCasinoGame : Microsoft.Xna.Framework.Game
     {
         /// <summary>
         /// The graphics device manager for the project.
@@ -33,6 +34,11 @@ namespace CardsCashCasino
         /// The sprite batch for the project.
         /// </summary>
         private SpriteBatch? _spriteBatch;
+        
+        // /// <summary>
+        // /// The internal Main menu object.
+        // /// </summary>
+        // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
 
         /// <summary>
         /// The card manager for the game.
