@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using CardsCashCasino.Data;
+using MonoGame.Framework.Utilities.Deflate;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace CardsCashCasino.Manager
 {
@@ -118,6 +120,9 @@ namespace CardsCashCasino.Manager
             _bigBlind = 0;
             _ante = 0;
 
+            _playerHands = new();
+
+
             // Initialize the player hands. The first player is the user.
             for (int i = 0; i < Constants.AI_PLAYER_COUNT; i++)
             {
@@ -166,6 +171,19 @@ namespace CardsCashCasino.Manager
                 _playerHands[playerIndex].AddCard(_cardManager.DrawCard());
                 _playerHands[playerIndex].AddCard(_cardManager.DrawCard());
             }
+        }
+
+        /// <summary>
+        /// The top card of the deck is added to the discard pile
+        /// The next card of the deck is dealt to the board face up
+        /// A round of betting begins with the first player to the left of the dealer who has not folded
+        /// </summary>
+        public void River()
+        {
+            _cardManager.Discard(_cardManager.DrawCard());
+
+
+
         }
         
     }
