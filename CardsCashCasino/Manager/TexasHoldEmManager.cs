@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Timers;
 using CardsCashCasino.Data;
+using MonoGame.Framework.Utilities.Deflate;
+using static System.Net.Mime.MediaTypeNames;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -467,5 +469,19 @@ namespace CardsCashCasino.Manager
             return new Point(_buttonRectangle.X - 8, _buttonRectangle.Y - 8);
         }
         #endregion Methods
+
+        /// <summary>
+        /// The top card of the deck is added to the discard pile
+        /// The next card of the deck is dealt to the board face up
+        /// A round of betting begins with the first player to the left of the dealer who has not folded
+        /// </summary>
+        public void River()
+        {
+            _cardManager.Discard(_cardManager.DrawCard());
+
+
+
+        }
+        
     }
 }
