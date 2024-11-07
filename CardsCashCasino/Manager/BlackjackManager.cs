@@ -94,7 +94,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The timeout for the user "hitting" their deck.
         /// </summary>
-        private Timer? _hitTimeout;
+        private Timer? _userMoveTimeout;
 
         /// <summary>
         /// The timeout for the dealer "hitting" their deck.
@@ -253,6 +253,9 @@ namespace CardsCashCasino.Manager
             }
             else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
             {
+                if (_userMoveTimeout is not null && _userMoveTimeout.Enabled)
+                    return;
+
                 switch (_currentCursorPos)
                 {
                     case 0: // Hit
@@ -271,6 +274,10 @@ namespace CardsCashCasino.Manager
                         Forfeit();
                         break;
                 }
+
+                _userMoveTimeout = new(200);
+                _userMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _userMoveTimeout.Start();
             }
         }
 
@@ -331,9 +338,9 @@ namespace CardsCashCasino.Manager
             _userHandValueIndicator!.SetPosition(379, 200); // TODO do dynamically
             _dealerHandValueIndicator!.SetPosition(379, 150); // TODO do dynamically
 
-            initialHand.AddCard(RequestCard!.Invoke());
+            initialHand.AddCard(new Card(Suit.CLUBS, Value.FIVE));
             _dealerHand.AddCard(RequestCard!.Invoke());
-            initialHand.AddCard(RequestCard!.Invoke());
+            initialHand.AddCard(new Card(Suit.DIAMONDS, Value.FIVE));
             _dealerHand.AddCard(RequestCard!.Invoke());
 
             _userHands.Add(initialHand);
@@ -365,18 +372,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void Hit()
         {
-            if (_hitTimeout is not null && _hitTimeout.Enabled)
-                return;
-
             UserHand currentHand = _userHands[_selectedUserHand];
             currentHand.AddCard(RequestCard!.Invoke());
 
             if (currentHand.GetBlackjackValue() <= 21)
             {
-                _hitTimeout = new(200);
-                _hitTimeout.Elapsed += OnTimeoutEvent!;
-                _hitTimeout.Start();
-
                 _userHandValueIndicator!.Update(currentHand.GetBlackjackValue());
             }
             else
@@ -412,6 +412,10 @@ namespace CardsCashCasino.Manager
             UserHand newHand = new();
             newHand.AddCard(currentHand.RemoveLastCard());
 
+            _userHands.Add(newHand);
+
+            currentHand.RecalculateCardPositions();
+
             _userHandValueIndicator!.Update(currentHand.GetBlackjackValue());
         }
 
@@ -438,6 +442,10 @@ namespace CardsCashCasino.Manager
             {
                 _selectedUserHand--;
                 BeginDealerTurn();
+            }
+            else
+            {
+                _userHandValueIndicator!.Update(_userHands[_selectedUserHand].GetBlackjackValue());
             }
         }
 

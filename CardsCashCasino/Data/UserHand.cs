@@ -32,7 +32,7 @@ namespace CardsCashCasino.Data
         /// </summary>
         public bool CanSplit()
         {
-            if (_cards.Count > 2)
+            if (_cards.Count != 2)
                 return false;
 
             return _cards[0] == _cards[1];

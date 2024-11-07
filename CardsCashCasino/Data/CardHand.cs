@@ -79,7 +79,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// Recalculates the card positions.
         /// </summary>
-        private void RecalculateCardPositions()
+        public void RecalculateCardPositions()
         {
             if (_center is null)
                 return;
