@@ -15,6 +15,7 @@
  *  Known Faults: None encountered
  */
 
+using CardsCashCasino.Data;
 using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -61,6 +62,10 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Initialize()
         {
+            _graphics.PreferredBackBufferHeight = Constants.WINDOW_HEIGHT;
+            _graphics.PreferredBackBufferWidth = Constants.WINDOW_WIDTH;
+            _graphics.ApplyChanges();
+
             _blackjackManager.RequestCardManagerCleared = _cardManager.ClearDecks;
             _blackjackManager.RequestDecksOfCards = _cardManager.GenerateDecks;
             _blackjackManager.RequestCard = _cardManager.DrawCard;

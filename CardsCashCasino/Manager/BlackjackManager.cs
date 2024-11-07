@@ -124,11 +124,14 @@ namespace CardsCashCasino.Manager
         {
             BlackjackTextures.LoadContent(content);
 
-            _hitButton = new(BlackjackTextures.HitEnabledTexture!, BlackjackTextures.HitDisabledTexture!, 50, 400); // TODO dynamically get these sizes.
-            _standButton = new(BlackjackTextures.StandEnabledTexture!, BlackjackTextures.StandDisabledTexture!, 194, 400); // TODO dynamically get these sizes.
-            _doubleDownButton = new(BlackjackTextures.DoubleDownEnabledTexture!, BlackjackTextures.DoubleDownDisabledTexture!, 338, 400); // TODO dynamically get these sizes.
-            _splitButton = new(BlackjackTextures.SplitEnabledTexture!, BlackjackTextures.SplitDisabledTexture!, 482, 400); // TODO dynamically get these sizes.
-            _forfeitButton = new(BlackjackTextures.ForfeitEnabledTexture!, BlackjackTextures.ForfeitDisabledTexture!, 626, 400); // TODO dynamically get these sizes.
+            int widthBuffer = (Constants.WINDOW_WIDTH - 750) / 2;
+            int buttonYPos = Constants.WINDOW_HEIGHT - 100;
+
+            _hitButton = new(BlackjackTextures.HitEnabledTexture!, BlackjackTextures.HitDisabledTexture!, widthBuffer, buttonYPos);
+            _standButton = new(BlackjackTextures.StandEnabledTexture!, BlackjackTextures.StandDisabledTexture!, widthBuffer + 150, buttonYPos); 
+            _doubleDownButton = new(BlackjackTextures.DoubleDownEnabledTexture!, BlackjackTextures.DoubleDownDisabledTexture!, widthBuffer + 300, buttonYPos); 
+            _splitButton = new(BlackjackTextures.SplitEnabledTexture!, BlackjackTextures.SplitDisabledTexture!, widthBuffer + 450, buttonYPos); 
+            _forfeitButton = new(BlackjackTextures.ForfeitEnabledTexture!, BlackjackTextures.ForfeitDisabledTexture!, widthBuffer + 600, buttonYPos); 
 
             _hitButton.IsEnabled = true;
             _standButton.IsEnabled = true;
@@ -240,7 +243,7 @@ namespace CardsCashCasino.Manager
                 _currentCursorPos--;
 
                 if (_currentCursorPos < 0)
-                    _currentCursorPos = 0;
+                    _currentCursorPos = 4;
 
                 if (!_userHands[_selectedUserHand].CanSplit() && _currentCursorPos == 3)
                     _currentCursorPos--;
@@ -332,11 +335,14 @@ namespace CardsCashCasino.Manager
 
             UserHand initialHand = new();
 
-            initialHand.SetCenter(400, 300); // TODO do dynamically
-            _dealerHand.SetCenter(400, 75); // TODO do dynamically
+            int handXPos = Constants.WINDOW_WIDTH / 2;
+            int valueIndicatorXPos = handXPos - 21;
 
-            _userHandValueIndicator!.SetPosition(379, 200); // TODO do dynamically
-            _dealerHandValueIndicator!.SetPosition(379, 150); // TODO do dynamically
+            initialHand.SetCenter(handXPos, Constants.WINDOW_HEIGHT - 200);
+            _dealerHand.SetCenter(handXPos, 75);
+
+            _userHandValueIndicator!.SetPosition(valueIndicatorXPos, Constants.WINDOW_HEIGHT - 300);
+            _dealerHandValueIndicator!.SetPosition(valueIndicatorXPos, 150);
 
             initialHand.AddCard(new Card(Suit.CLUBS, Value.FIVE));
             _dealerHand.AddCard(RequestCard!.Invoke());
