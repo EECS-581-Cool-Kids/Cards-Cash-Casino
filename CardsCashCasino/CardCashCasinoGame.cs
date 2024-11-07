@@ -37,12 +37,17 @@ namespace CardsCashCasino
         /// <summary>
         /// The card manager for the game.
         /// </summary>
-        private CardManager cardManager = new();
+        private CardManager _cardManager = new();
 
         /// <summary>
         /// The chip manager for the game.
         /// </summary>
-        private ChipManager chipManager = new();
+        private ChipManager _chipManager = new();
+
+        /// <summary>
+        /// The blackjack manager for the game.
+        /// </summary>
+        private BlackjackManager _blackjackManager = new();
 
         public CardCashCasinoGame()
         {
@@ -56,6 +61,10 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Initialize()
         {
+            _blackjackManager.RequestCardManagerCleared = _cardManager.ClearDecks;
+            _blackjackManager.RequestDecksOfCards = _cardManager.GenerateDecks;
+            _blackjackManager.RequestCard = _cardManager.DrawCard;
+
             base.Initialize();
         }
 
@@ -66,8 +75,12 @@ namespace CardsCashCasino
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            // Load the card textures.
+            //MainMenuTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
+            //ChipTextures.LoadContent(Content);
+            _blackjackManager.LoadContent(Content);
+            //TexasHoldEmTextures.LoadContent(Content);
+            //FiveCardDrawTextures.LoadContent(Content);
         }
 
         /// <summary>
@@ -78,6 +91,12 @@ namespace CardsCashCasino
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
+            // same for the main menu
+            if (_blackjackManager.IsPlaying)
+                _blackjackManager.Update();
+            // same for texas hold em
+            // same for five card draw
+
             base.Update(gameTime);
         }
 
@@ -86,7 +105,15 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Green);
+
+            _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
+            // same for the main menu
+            if (_blackjackManager.IsPlaying)
+                _blackjackManager.Draw(_spriteBatch!);
+            // same for texas hold em
+            // same for five card draw
+            _spriteBatch!.End();
 
             base.Draw(gameTime);
         }

@@ -15,6 +15,7 @@
  *  Known Faults: None encountered
  */
 
+using CardsCashCasino.Manager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,34 +28,20 @@ namespace CardsCashCasino.Data
     {
         public DealerHand() { }
 
-        private bool _active = true;
-        
         /// <summary>
-        /// Returns true if Dealer will hit.
-        /// False if stand or invalid.
+        /// Overrides "AddCard" to set the texture of the second card to be hidden.
         /// </summary>
-        public bool IsActive() { return _active; } 
-
-        private bool _valid = true;
-
-        /// <summary>
-        /// True if dealer busted, false otherwise.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsValid() { return _valid; } 
-
-        public void Hit(Card card)
+        public override void AddCard(Card card)
         {
-            _cards.Add(card);
-            int bjv = GetBlackjackValue();
-            
-            if (bjv < 17)
-                return;
+            if (_cards.Count == 1)
+                card.HideTexture();
 
-            _active = false;
-            
-            if (bjv > 21)
-                _valid = false;
+            base.AddCard(card);
+        }
+
+
+        public void UnhideCard()
+        {
             
         }
     }

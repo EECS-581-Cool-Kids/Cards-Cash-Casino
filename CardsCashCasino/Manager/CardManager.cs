@@ -14,7 +14,9 @@ using CardsCashCasino.Data;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -87,27 +89,30 @@ namespace CardsCashCasino.Manager
         {
             Random random = new Random(); // Random number generator
             List<Card> splitDeck = new List<Card>(); // Temporary list to hold the split deck
-           int noOfCards = Cards.Count; // Number of cards currently in the game's deck
+            int noOfCards = Cards.Count; // Number of cards currently in the game's deck
 
-           // Shuffle the deck twice
-           for (int idx = 0; idx < 2; idx++)
-           {
+            // Shuffle the deck twice
+            for (int idx = 0; idx < 2; idx++)
+            {
                 for (int i = 0; i < noOfCards; i++)
                 {
                     int randomIndex = random.Next(0, noOfCards);
                     if (randomIndex != i)
                         (Cards[i], Cards[randomIndex]) = (Cards[randomIndex], Cards[i]);
                 }
-           }
+            }
 
-           // Cuts the deck in half and stack the halves so that the last card is in the middle of the deck
-           for (int i = 0; i < noOfCards / 2; i++)
-           {
-                splitDeck.Insert((i + noOfCards / 2), Cards[i]);
-                splitDeck.Insert(i, Cards[i + noOfCards / 2]);
-           }
+            // Cuts the deck in half and stack the halves so that the last card is in the middle of the deck
+            for (int i = noOfCards / 2; i < noOfCards; i++)
+            {
+                splitDeck.Add(Cards[i]);
+            }
+            for (int i = 0; i < noOfCards / 2; i++)
+            {
+                splitDeck.Add(Cards[i]);
+            }
 
-           Cards = splitDeck;
+            Cards = splitDeck;
         }
 
         /// <summary>
@@ -435,59 +440,165 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static void LoadContent(ContentManager content)
         {
-            CardBackTexture = content.Load<Texture2D>("TEMP_CARD");
-            AceOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            TwoOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            ThreeOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            FourOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            FiveOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            SixOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            SevenOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            EightOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            NineOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            TenOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            JackOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            QueenOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            KingOfClubsTexture = content.Load<Texture2D>("TEMP_CARD");
-            AceOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            TwoOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            ThreeOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            FourOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            FiveOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            SixOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            SevenOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            EightOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            NineOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            TenOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            JackOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            QueenOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            KingOfDiamondsTexture = content.Load<Texture2D>("TEMP_CARD");
-            AceOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            TwoOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            ThreeOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            FourOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            FiveOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            SixOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            SevenOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            EightOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            NineOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            TenOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            JackOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            QueenOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            KingOfHeartsTexture = content.Load<Texture2D>("TEMP_CARD");
-            AceOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            TwoOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            ThreeOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            FourOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            FiveOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            SixOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            SevenOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            EightOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            NineOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            TenOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            JackOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            QueenOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
-            KingOfSpadesTexture = content.Load<Texture2D>("TEMP_CARD");
+            CardBackTexture = content.Load<Texture2D>("Card_Back");
+            AceOfClubsTexture = content.Load<Texture2D>("Clubs_A");
+            TwoOfClubsTexture = content.Load<Texture2D>("Clubs_2");
+            ThreeOfClubsTexture = content.Load<Texture2D>("Clubs_3");
+            FourOfClubsTexture = content.Load<Texture2D>("Clubs_4");
+            FiveOfClubsTexture = content.Load<Texture2D>("Clubs_5");
+            SixOfClubsTexture = content.Load<Texture2D>("Clubs_6");
+            SevenOfClubsTexture = content.Load<Texture2D>("Clubs_7");
+            EightOfClubsTexture = content.Load<Texture2D>("Clubs_8");
+            NineOfClubsTexture = content.Load<Texture2D>("Clubs_9");
+            TenOfClubsTexture = content.Load<Texture2D>("Clubs_10");
+            JackOfClubsTexture = content.Load<Texture2D>("Clubs_J");
+            QueenOfClubsTexture = content.Load<Texture2D>("Clubs_Q");
+            KingOfClubsTexture = content.Load<Texture2D>("Clubs_K");
+            AceOfDiamondsTexture = content.Load<Texture2D>("Diamonds_A");
+            TwoOfDiamondsTexture = content.Load<Texture2D>("Diamonds_2");
+            ThreeOfDiamondsTexture = content.Load<Texture2D>("Diamonds_3");
+            FourOfDiamondsTexture = content.Load<Texture2D>("Diamonds_4");
+            FiveOfDiamondsTexture = content.Load<Texture2D>("Diamonds_5");
+            SixOfDiamondsTexture = content.Load<Texture2D>("Diamonds_6");
+            SevenOfDiamondsTexture = content.Load<Texture2D>("Diamonds_7");
+            EightOfDiamondsTexture = content.Load<Texture2D>("Diamonds_8");
+            NineOfDiamondsTexture = content.Load<Texture2D>("Diamonds_9");
+            TenOfDiamondsTexture = content.Load<Texture2D>("Diamonds_10");
+            JackOfDiamondsTexture = content.Load<Texture2D>("Diamonds_J");
+            QueenOfDiamondsTexture = content.Load<Texture2D>("Diamonds_Q");
+            KingOfDiamondsTexture = content.Load<Texture2D>("Diamonds_K");
+            AceOfHeartsTexture = content.Load<Texture2D>("Hearts_A");
+            TwoOfHeartsTexture = content.Load<Texture2D>("Hearts_2");
+            ThreeOfHeartsTexture = content.Load<Texture2D>("Hearts_3");
+            FourOfHeartsTexture = content.Load<Texture2D>("Hearts_4");
+            FiveOfHeartsTexture = content.Load<Texture2D>("Hearts_5");
+            SixOfHeartsTexture = content.Load<Texture2D>("Hearts_6");
+            SevenOfHeartsTexture = content.Load<Texture2D>("Hearts_7");
+            EightOfHeartsTexture = content.Load<Texture2D>("Hearts_8");
+            NineOfHeartsTexture = content.Load<Texture2D>("Hearts_9");
+            TenOfHeartsTexture = content.Load<Texture2D>("Hearts_10");
+            JackOfHeartsTexture = content.Load<Texture2D>("Hearts_J");
+            QueenOfHeartsTexture = content.Load<Texture2D>("Hearts_Q");
+            KingOfHeartsTexture = content.Load<Texture2D>("Hearts_K");
+            AceOfSpadesTexture = content.Load<Texture2D>("Spades_A");
+            TwoOfSpadesTexture = content.Load<Texture2D>("Spades_2");
+            ThreeOfSpadesTexture = content.Load<Texture2D>("Spades_3");
+            FourOfSpadesTexture = content.Load<Texture2D>("Spades_4");
+            FiveOfSpadesTexture = content.Load<Texture2D>("Spades_5");
+            SixOfSpadesTexture = content.Load<Texture2D>("Spades_6");
+            SevenOfSpadesTexture = content.Load<Texture2D>("Spades_7");
+            EightOfSpadesTexture = content.Load<Texture2D>("Spades_8");
+            NineOfSpadesTexture = content.Load<Texture2D>("Spades_9");
+            TenOfSpadesTexture = content.Load<Texture2D>("Spades_10");
+            JackOfSpadesTexture = content.Load<Texture2D>("Spades_J");
+            QueenOfSpadesTexture = content.Load<Texture2D>("Spades_Q");
+            KingOfSpadesTexture = content.Load<Texture2D>("Spades_K");
+        }
+
+        /// <summary>
+        /// Returns the card texture.
+        /// </summary>
+        public static Texture2D GetCardTexture(Value value, Suit suit)
+        {
+            return suit switch
+            {
+                Suit.CLUBS => GetClubsTexture(value),
+                Suit.DIAMONDS => GetDiamondsTexture(value),
+                Suit.HEARTS => GetHeartsTexture(value),
+                _ => GetSpadesTexture(value)
+            };
+        }
+
+        /// <summary>
+        /// Returns the Clubs card texture.
+        /// </summary>
+        private static Texture2D GetClubsTexture(Value value)
+        {
+            return value switch
+            {
+                Value.ACE => AceOfClubsTexture!,
+                Value.TWO => TwoOfClubsTexture!,
+                Value.THREE => ThreeOfClubsTexture!,
+                Value.FOUR => FourOfClubsTexture!,
+                Value.FIVE => FiveOfClubsTexture!,
+                Value.SIX => SixOfClubsTexture!,
+                Value.SEVEN => SevenOfClubsTexture!,
+                Value.EIGHT => EightOfClubsTexture!,
+                Value.NINE => NineOfClubsTexture!,
+                Value.TEN => TenOfClubsTexture!,
+                Value.JACK => JackOfClubsTexture!,
+                Value.QUEEN => QueenOfClubsTexture!,
+                _ => KingOfClubsTexture!
+            };
+        }
+
+        /// <summary>
+        /// Returns the Diamonds card texture.
+        /// </summary>
+        private static Texture2D GetDiamondsTexture(Value value)
+        {
+            return value switch
+            {
+                Value.ACE => AceOfDiamondsTexture!,
+                Value.TWO => TwoOfDiamondsTexture!,
+                Value.THREE => ThreeOfDiamondsTexture!,
+                Value.FOUR => FourOfDiamondsTexture!,
+                Value.FIVE => FiveOfDiamondsTexture!,
+                Value.SIX => SixOfDiamondsTexture!,
+                Value.SEVEN => SevenOfDiamondsTexture!,
+                Value.EIGHT => EightOfDiamondsTexture!,
+                Value.NINE => NineOfDiamondsTexture!,
+                Value.TEN => TenOfDiamondsTexture!,
+                Value.JACK => JackOfDiamondsTexture!,
+                Value.QUEEN => QueenOfDiamondsTexture!,
+                _ => KingOfDiamondsTexture!
+            };
+        }
+
+        /// <summary>
+        /// Returns the Hearts card texture.
+        /// </summary>
+        private static Texture2D GetHeartsTexture(Value value)
+        {
+            return value switch
+            {
+                Value.ACE => AceOfHeartsTexture!,
+                Value.TWO => TwoOfHeartsTexture!,
+                Value.THREE => ThreeOfHeartsTexture!,
+                Value.FOUR => FourOfHeartsTexture!,
+                Value.FIVE => FiveOfHeartsTexture!,
+                Value.SIX => SixOfHeartsTexture!,
+                Value.SEVEN => SevenOfHeartsTexture!,
+                Value.EIGHT => EightOfHeartsTexture!,
+                Value.NINE => NineOfHeartsTexture!,
+                Value.TEN => TenOfHeartsTexture!,
+                Value.JACK => JackOfHeartsTexture!,
+                Value.QUEEN => QueenOfHeartsTexture!,
+                _ => KingOfHeartsTexture!
+            };
+        }
+
+        /// <summary>
+        /// Returns the Spades card texture.
+        /// </summary>
+        private static Texture2D GetSpadesTexture(Value value)
+        {
+            return value switch
+            {
+                Value.ACE => AceOfSpadesTexture!,
+                Value.TWO => TwoOfSpadesTexture!,
+                Value.THREE => ThreeOfSpadesTexture!,
+                Value.FOUR => FourOfSpadesTexture!,
+                Value.FIVE => FiveOfSpadesTexture!,
+                Value.SIX => SixOfSpadesTexture!,
+                Value.SEVEN => SevenOfSpadesTexture!,
+                Value.EIGHT => EightOfSpadesTexture!,
+                Value.NINE => NineOfSpadesTexture!,
+                Value.TEN => TenOfSpadesTexture!,
+                Value.JACK => JackOfSpadesTexture!,
+                Value.QUEEN => QueenOfSpadesTexture!,
+                _ => KingOfSpadesTexture!
+            };
         }
     }
 }

@@ -15,10 +15,12 @@
  *  Known Faults: None encountered
  */
 
+using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -44,12 +46,17 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The card's rectangle object.
         /// </summary>
-        private Rectangle _cardRectangle;
+        private Rectangle? _cardRectangle;
 
         /// <summary>
         /// The card's texture.
         /// </summary>
         private Texture2D? _cardTexture;
+
+        /// <summary>
+        /// The static size of each card.
+        /// </summary>
+        private static Point _cardSize = new Point(99, 141);
 
         /// <summary>
         /// Whether or not the card can be drawn.
@@ -63,12 +70,14 @@ namespace CardsCashCasino.Data
         {
             _suit = suit;
             _value = value;
+            GetTexture();
         }
 
         public Card(Card other)
         {
             _suit = other._suit;
             _value = other._value;
+            GetTexture();
         }
 
         /// <summary>
@@ -76,16 +85,37 @@ namespace CardsCashCasino.Data
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_cardTexture, _cardRectangle, Color.White);
+            if (_cardRectangle is null)
+                return;
+
+            if (_cardTexture is null)
+                GetTexture();
+
+            spriteBatch.Draw(_cardTexture, (Rectangle)_cardRectangle, Color.White);
         }
 
         /// <summary>
-        /// Adds the attributes to draw the card to the screen.
+        /// Creates the rectangle so it can be drawn to the screen.
         /// </summary>
-        public void SetDrawableObject(Rectangle rectangle, Texture2D cardTexture)
+        public void SetRectangle(int xPos, int yPos)
         {
-            _cardRectangle = rectangle;
-            _cardTexture = cardTexture;
+            _cardRectangle = new Rectangle(xPos, yPos, _cardSize.X, _cardSize.Y);
+        }
+
+        /// <summary>
+        /// Changes the card texture to hide the value.
+        /// </summary>
+        public void HideTexture()
+        {
+            _cardTexture = CardTextures.CardBackTexture;
+        }
+
+        /// <summary>
+        /// Changes the card texture to show the value.
+        /// </summary>
+        public void GetTexture()
+        {
+            _cardTexture = CardTextures.GetCardTexture(_value, _suit);
         }
 
         /// <summary>
@@ -107,15 +137,7 @@ namespace CardsCashCasino.Data
             else
                 return (int)blackjackValue.SecondaryValue!;
         }
-        /// <summary>
-        /// Returns if the card is an ace.
-        /// Used for Blackjack.
-        /// </summary>
-        /// <returns> value == Ace </returns>
-        public bool IsAce()
-        {
-            return _value == Value.ACE;
-        }
+
         /// <summary>
         /// Returns the poker value.
         /// </summary>

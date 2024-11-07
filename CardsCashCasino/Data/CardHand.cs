@@ -19,6 +19,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,11 +46,17 @@ namespace CardsCashCasino.Data
         }
 
         /// <summary>
+        /// The center of the card hand on the screen.
+        /// </summary>
+        private Point? _center;
+
+        /// <summary>
         /// Adds a card to the hand.
         /// </summary>
-        public void AddCard(Card card)
+        public virtual void AddCard(Card newCard)
         {
-            _cards.Add(card);
+            _cards.Add(newCard);
+            RecalculateCardPositions();
         }
 
         /// <summary>
@@ -60,15 +67,36 @@ namespace CardsCashCasino.Data
         {
             Card card = _cards[index];
             _cards.RemoveAt(index);
+            RecalculateCardPositions();
             return card;
         }
 
         /// <summary>
-        /// Update method for the CardHand
+        /// Recalculates the card positions.
         /// </summary>
-        public void Update()
+        private void RecalculateCardPositions()
         {
+            if (_center is null)
+                return;
 
+            int cardCount = _cards.Count;
+            int width = (cardCount * 99) + ((cardCount - 1) * 25);
+            int xPos = ((Point)_center).X - (width / 2);
+            int yPos = ((Point)_center).Y - 70;
+
+            foreach (Card card in _cards)
+            {
+                card.SetRectangle(xPos, yPos);
+                xPos += 124;
+            }
+        }
+
+        /// <summary>
+        /// Sets the center of the card hand.
+        /// </summary>
+        public void SetCenter(int xPos, int yPos)
+        {
+            _center = new Point(xPos, yPos);
         }
 
         /// <summary>
@@ -76,44 +104,18 @@ namespace CardsCashCasino.Data
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-
+            foreach (Card card in _cards)
+            {
+                card.Draw(spriteBatch);
+            }
         }
 
         /// <summary>
-        /// Returns the value of this hand during blackjack.
+        /// Clears the hand.
         /// </summary>
-        /// <returns></returns>
-        public int GetBlackjackValue()
-        {
-            int value = 0;
-            int aceCount = 0;
-
-            foreach (Card card in _cards)
-                if (card.IsAce())
-                    aceCount++;
-                else
-                    value += card.GetBlackjackValue();
-
-            // Add ace values, either as 11 or 1, as appropriate
-            for (int i = 0; i < aceCount; i++)
-            {
-                if (value + 11 <= 21)
-                {
-                    value += 11; // Ace is worth 11 if it doesn’t push over 21
-                }
-                else
-                {
-                    value += 1; // Otherwise, Ace is worth 1
-                }
-            }
-
-            return value;
-        }
-
         public void Clear()
         {
             _cards.Clear();
         }
-
     }
 }
