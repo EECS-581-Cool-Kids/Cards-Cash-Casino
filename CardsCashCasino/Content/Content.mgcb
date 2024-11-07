@@ -25,6 +25,18 @@
 /processorParam:TextureFormat=Color
 /build:BlackjackCursor.png
 
+#begin bustIcon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:bustIcon.png
+
 #begin Card_Back.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -613,6 +625,18 @@
 /processorParam:TextureFormat=Color
 /build:HitEnabled.png
 
+#begin lossIcon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:lossIcon.png
+
 #begin nine.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -636,6 +660,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:one.png
+
+#begin pushIcon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:pushIcon.png
 
 #begin seven.png
 /importer:TextureImporter
@@ -900,6 +936,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:two.png
+
+#begin winIcon.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:winIcon.png
 
 #begin zero.png
 /importer:TextureImporter
