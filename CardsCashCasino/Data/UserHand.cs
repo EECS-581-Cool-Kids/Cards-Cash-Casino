@@ -1,12 +1,12 @@
 ﻿/*
  *  Module Name: UserHand.cs
- *  Purpose: Models the user's hand of cards. This class is used in the Blackjack game.
+ *  Purpose: Models the user's hand of cards.
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
  *  Developers: Jacob Wilkus, Ethan Berkley, Mo Morgan
  *  Date: 10/26/2024
- *  Last Modified: 11/3/2024
+ *  Last Modified: 11/7/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
