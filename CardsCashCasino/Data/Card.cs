@@ -127,12 +127,12 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The equals operator between two card objects.
         /// </summary>
-        public static bool operator ==(Card card1, Card card2) { return card1._value == card2._value && card1._suit == card2._suit; }
+        public static bool operator ==(Card card1, Card card2) { return card1._value == card2._value; }
 
         /// <summary>
         /// The not equals operator between two card objects.
         /// </summary>
-        public static bool operator !=(Card card1, Card card2) { return card1._value != card2._value || card1._suit != card2._suit; }
+        public static bool operator !=(Card card1, Card card2) { return card1._value != card2._value; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -143,9 +143,6 @@ namespace CardsCashCasino.Data
         /// <inheritdoc/>
         /// </summary>
         public override int GetHashCode() { return base.GetHashCode(); }
-
-        public bool SameVal(Card card) { return _value == card._value;  }
-        public bool SameVal(Value val) { return _value == val;  }
     }
 
     /// <summary>

@@ -47,7 +47,7 @@ namespace CardsCashCasino.Data
             {
                 for (int j = 0; j < i; j++)
                 {
-                    if (_cards[i].SameVal(_cards[j]))
+                    if (_cards[i] == _cards[j])
                     {
                         return i;
                     }

@@ -22,7 +22,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CardsCashCasino
 {
-    public class CardCashCasinoGame : Game
+    public class CardCashCasinoGame : Microsoft.Xna.Framework.Game
     {
         /// <summary>
         /// The graphics device manager for the project.
