@@ -39,6 +39,11 @@ namespace CardsCashCasino
         /// </summary>
         private CardManager cardManager = new();
 
+        /// <summary>
+        /// The chip manager for the game.
+        /// </summary>
+        private ChipManager chipManager = new();
+
         public CardCashCasinoGame()
         {
             _graphics = new GraphicsDeviceManager(this);

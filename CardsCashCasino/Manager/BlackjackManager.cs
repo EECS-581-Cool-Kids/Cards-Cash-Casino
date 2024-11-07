@@ -17,14 +17,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using CardsCashCasino.Manager;
 using CardsCashCasino.Data;
 
-namespace CardsCashCasino.Game
+namespace CardsCashCasino.Manager
 {
 
-    public enum Action
+    public enum BlackjackAction
     {
         HIT,
         STAND,
@@ -35,52 +33,77 @@ namespace CardsCashCasino.Game
 
     public enum Status
     {
-        [StatusString("Player Bust! Dealer Wins!")]
+        [Status("Player Bust! Dealer Wins!")]
         PLAYER_BUST,
-        [StatusString("Dealer Bust! Player Wins!")]
+
+        [Status("Dealer Bust! Player Wins!")]
         DEALER_BUST,
-        [StatusString("Push")]
+
+        [Status("Push")]
         PUSH,
-        [StatusString("Player Wins!")]
+
+        [Status("Player Wins!")]
         PLAYER_WIN,
-        [StatusString("Dealer Wins!")]
+
+        [Status("Dealer Wins!")]
         DEALER_WIN,
-        [StatusString("Player has Blackjack! Player Wins!")]
+
+        [Status("Player has Blackjack! Player Wins!")]
         PLAYER_BLACKJACK,
-        [StatusString("Dealer has Blackjack! Dealer Wins!")]
+
+        [Status("Dealer has Blackjack! Dealer Wins!")]
         DEALER_BLACKJACK
     }
 
-    public class StatusStringAttribute : Attribute {
-        public string Val { get; private set; }
-        internal StatusStringAttribute(string str)
+    public class StatusAttribute : Attribute
+    {
+        /// <summary>
+        /// The status value.
+        /// </summary>
+        public string Value { get; private set; }
+
+        internal StatusAttribute(string str)
         {
-            Val = str;
+            Value = str;
         }
     }
 
     public class BlackjackManager
     {
+        /// <summary>
+        /// The dealer hand.
+        /// </summary>
+        private DealerHand _dealerHand = new();
 
-        private CardManager _cardManager; // Instance of CardManager for deck management
-        private DealerHand _dealerHand; // Dealer's hand
-        private List<UserHand> _playerHands; // List of all player's hands
-        private bool _gameOver; // if player busts, allows game to skip dealer action
+        /// <summary>
+        /// The user's hand(s). Can have multiple due to splitting.
+        /// </summary>
+        private List<UserHand> _playerHands = new();
 
-        private ChipManager _chipManager;
+        /// <summary>
+        /// Whether or not the game has finished.
+        /// </summary>
+        private bool _gameOver = false;
 
-        public BlackjackManager()
-        {
-            _cardManager = new CardManager();
+        /// <summary>
+        /// Call to request clearing the stored decks of cards.
+        /// </summary>
+        public Action? RequestCardsCleared { get; set; }
 
-            // TODO: somehow keep _chipManager static?
-            _chipManager = new ChipManager();
+        /// <summary>
+        /// Call to request the discarded cards are reshuffled in.
+        /// </summary>
+        public Action? RequestCardsReshuffled { get; set; }
 
-            _dealerHand = new();
-            _playerHands = new();
-            _gameOver = false;
+        /// <summary>
+        /// Call to request decks of cards be added to the queue of cards.
+        /// </summary>
+        public Action<int>? RequestDecksOfCards { get; set; }
 
-        }
+        /// <summary>
+        /// Call to request an individual card be added.
+        /// </summary>
+        public Func<Card>? RequestCard { get; set; }
 
         /// <summary>
         /// Starts a new game by generating and shuffling the deck, then dealing initial cards.
@@ -91,21 +114,20 @@ namespace CardsCashCasino.Game
             _dealerHand.Clear();
             _gameOver = false;
 
-            _cardManager.ClearDecks();
-            _cardManager.GenerateDecks(1);
+            RequestCardsCleared!.Invoke();
+            RequestDecksOfCards!.Invoke(4); // Request four decks of cards. Blackjack only works with multiple decks shuffled in.
 
-            // Player always starts with 1 hand, may add more later
             UserHand hand = new();
 
-            hand.AddCard(_cardManager.DrawCard());
-            _dealerHand.AddCard(_cardManager.DrawCard());
-            hand.AddCard(_cardManager.DrawCard());
-            _dealerHand.AddCard(_cardManager.DrawCard());
+            hand.AddCard(RequestCard!.Invoke());
+            _dealerHand.AddCard(RequestCard!.Invoke());
+            hand.AddCard(RequestCard!.Invoke());
+            _dealerHand.AddCard(RequestCard!.Invoke());
 
             _playerHands.Add(hand);
         }
 
-        
+
         /// <summary>
         /// Determines if the player has won, lost, or if the game is still ongoing.
         /// </summary>
@@ -148,10 +170,10 @@ namespace CardsCashCasino.Game
         /// Get the action that a player is trying to make for a given hand.
         /// </summary>
         /// <returns>The action selected</returns>
-        private Action getAction()
+        private BlackjackAction getAction()
         {
             /// TODO: Implement logic to have player select a move.
-            return Action.HIT;
+            return BlackjackAction.HIT;
         }
 
         /// <summary>
@@ -169,25 +191,25 @@ namespace CardsCashCasino.Game
                 finished = false;
                 switch (getAction())
                 {
-                    case Action.HIT:
+                    case BlackjackAction.HIT:
                         hand.Hit(_cardManager.DrawCard());
                         break;
 
-                    case Action.STAND:
+                    case BlackjackAction.STAND:
                         hand.Stand();
                         break;
 
-                    case Action.FORFEIT:
+                    case BlackjackAction.FORFEIT:
                         // Half wager code here
                         hand.Forfeit();
                         break;
 
-                    case Action.DOUBLE_DOWN:
+                    case BlackjackAction.DOUBLE_DOWN:
                         // double wager code here
                         hand.DoubleDown(_cardManager.DrawCard());
                         break;
 
-                    case Action.SPLIT:
+                    case BlackjackAction.SPLIT:
                         UserHand newHand = hand.Split();
                         newHand.Hit(_cardManager.DrawCard());
                         _playerHands.Add(newHand);
@@ -218,10 +240,10 @@ namespace CardsCashCasino.Game
             }
             _gameOver = true;
 
-            foreach(UserHand hand in _playerHands)
+            foreach (UserHand hand in _playerHands)
             {
                 // TODO: Do something with this, or do something with chips?
-                string handOutcome = GetGameStatus(hand).GetAttribute<StatusStringAttribute>()!.Val;
+                string handOutcome = GetGameStatus(hand).GetAttribute<StatusAttribute>()!.Value;
             }
 
             // Just replace everything so that we don't need to worry about discarding
