@@ -25,14 +25,6 @@ namespace CardsCashCasino.Data
 {
     public class UserHand : CardHand
     {
-        public bool HasBust
-        {
-            get
-            {
-                return false; // TODO bust logic
-            }
-        }
-
         public UserHand() { }
 
         /// <summary>
@@ -46,12 +38,22 @@ namespace CardsCashCasino.Data
             return _cards[0] == _cards[1];
         }
 
-
+        /// <summary>
+        /// Removes the last card and returns it.
+        /// </summary>
         public Card RemoveLastCard()
         {
             Card toReturn = _cards.Last();
             _cards.Remove(_cards.Last());
             return toReturn;
+        }
+
+        /// <summary>
+        /// Returns the poker value of the hand.
+        /// </summary>
+        public int GetPokerValue()
+        {
+            return 0; // TODO
         }
     }
 }

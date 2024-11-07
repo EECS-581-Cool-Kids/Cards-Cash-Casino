@@ -66,6 +66,14 @@ namespace CardsCashCasino.Data
             get { return _cardTexture is not null; }
         }
 
+        /// <summary>
+        /// Whether or not it is an ace in blackjack.
+        /// </summary>
+        public bool IsBlackjackAce
+        {
+            get { return _value.GetAttribute<BlackjackValueAttribute>()!.HasTwoValues; }
+        }
+
         public Card(Suit suit, Value value)
         {
             _suit = suit;
@@ -132,7 +140,7 @@ namespace CardsCashCasino.Data
         public int GetSecondaryBlackjackValue()
         {
             BlackjackValueAttribute blackjackValue = _value.GetAttribute<BlackjackValueAttribute>()!;
-            if (blackjackValue.HasTwoValues)
+            if (!blackjackValue.HasTwoValues)
                 return -1;
             else
                 return (int)blackjackValue.SecondaryValue!;
@@ -184,7 +192,7 @@ namespace CardsCashCasino.Data
     /// </summary>
     public enum Value
     {
-        [BlackjackValue(11, 1)]
+        [BlackjackValue(1, 11)]
         [PokerValue(1)]
         ACE,
         
