@@ -28,6 +28,14 @@ namespace CardsCashCasino.Data
         public UserHand() { }
 
         /// <summary>
+        /// Whether or not you can double down the hand in a game of blackjack.
+        /// </summary>
+        public bool CanDoubleDown()
+        {
+            return _cards.Count == 2;
+        }
+
+        /// <summary>
         /// Whether or not you can split the hand in a game of blackjack
         /// </summary>
         public bool CanSplit()

@@ -133,11 +133,6 @@ namespace CardsCashCasino.Manager
             _splitButton = new(BlackjackTextures.SplitEnabledTexture!, BlackjackTextures.SplitDisabledTexture!, widthBuffer + 450, buttonYPos); 
             _forfeitButton = new(BlackjackTextures.ForfeitEnabledTexture!, BlackjackTextures.ForfeitDisabledTexture!, widthBuffer + 600, buttonYPos); 
 
-            _hitButton.IsEnabled = true;
-            _standButton.IsEnabled = true;
-            _doubleDownButton.IsEnabled = true;
-            _forfeitButton.IsEnabled = true;
-
             _cursor = new(BlackjackTextures.CursorTexture!, _hitButton.GetAdjustedPos());
 
             _dealerHandValueIndicator = new(BlackjackTextures.ZeroTexture!, BlackjackTextures.ZeroTexture!);
@@ -174,7 +169,7 @@ namespace CardsCashCasino.Manager
 
                 _dealerHandValueIndicator!.Update(dealerHandValue);
 
-                _dealerMoveTimeout = new(1000);
+                _dealerMoveTimeout = new(500);
                 _dealerMoveTimeout.Elapsed += OnTimeoutEvent!;
                 _dealerMoveTimeout.Start();
             }
@@ -220,6 +215,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+            _doubleDownButton!.IsEnabled = _userHands[_selectedUserHand].CanDoubleDown();
             _splitButton!.IsEnabled = _userHands[_selectedUserHand].CanSplit();
 
             if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
@@ -229,7 +225,9 @@ namespace CardsCashCasino.Manager
                 if (_currentCursorPos >= 5)
                     _currentCursorPos = 0;
 
-                if (!_userHands[_selectedUserHand].CanSplit() && _currentCursorPos == 3)
+                if (!_doubleDownButton!.IsEnabled && _currentCursorPos == 2)
+                    _currentCursorPos++;
+                if (!_splitButton!.IsEnabled && _currentCursorPos == 3)
                     _currentCursorPos++;
 
                 _cursor!.UpdateLocation(GetNewCursorPos());
@@ -246,6 +244,8 @@ namespace CardsCashCasino.Manager
                     _currentCursorPos = 4;
 
                 if (!_userHands[_selectedUserHand].CanSplit() && _currentCursorPos == 3)
+                    _currentCursorPos--;
+                if (!_doubleDownButton!.IsEnabled && _currentCursorPos == 2)
                     _currentCursorPos--;
 
                 _cursor!.UpdateLocation(GetNewCursorPos());
@@ -330,32 +330,41 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
+            // Reset the cards.
             RequestCardManagerCleared!.Invoke();
             RequestDecksOfCards!.Invoke(4);
 
             UserHand initialHand = new();
 
+            // Calculate the basic position locations.
             int handXPos = Constants.WINDOW_WIDTH / 2;
             int valueIndicatorXPos = handXPos - 21;
 
+            // Set position of the card hands
             initialHand.SetCenter(handXPos, Constants.WINDOW_HEIGHT - 200);
             _dealerHand.SetCenter(handXPos, 75);
 
-            _userHandValueIndicator!.SetPosition(valueIndicatorXPos, Constants.WINDOW_HEIGHT - 300);
-            _dealerHandValueIndicator!.SetPosition(valueIndicatorXPos, 150);
-
+            // Add the two initial cards.
             initialHand.AddCard(new Card(Suit.CLUBS, Value.FIVE));
             _dealerHand.AddCard(RequestCard!.Invoke());
             initialHand.AddCard(new Card(Suit.DIAMONDS, Value.FIVE));
             _dealerHand.AddCard(RequestCard!.Invoke());
 
+            // Add the initial hand to the list of user hands.
             _userHands.Add(initialHand);
 
-            _dealerHandValueIndicator.Update(_dealerHand.GetBlackjackValue());
-            _userHandValueIndicator.Update(initialHand.GetBlackjackValue());
+            // Set the position of the hand value indicators
+            _userHandValueIndicator!.SetPosition(valueIndicatorXPos, Constants.WINDOW_HEIGHT - 300);
+            _userHandValueIndicator!.Update(initialHand.GetBlackjackValue());
+            _dealerHandValueIndicator!.SetPosition(valueIndicatorXPos, 150);
+            _dealerHandValueIndicator!.Update(_dealerHand.GetBlackjackValue());
 
             IsPlaying = true;
             _userPlaying = true;
+
+            _hitButton!.IsEnabled = true;
+            _standButton!.IsEnabled = true;
+            _forfeitButton!.IsEnabled = true;
         }
 
         /// <summary>
@@ -363,10 +372,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void EndGame()
         {
-            // TODO add option to select a new game
-
             _dealerHand.Clear();
             _userHands.Clear();
+            _selectedUserHand = 0;
+
+            // TODO add option to select a new game
 
             System.Threading.Thread.Sleep(500); // temp
 
@@ -384,6 +394,12 @@ namespace CardsCashCasino.Manager
             if (currentHand.GetBlackjackValue() <= 21)
             {
                 _userHandValueIndicator!.Update(currentHand.GetBlackjackValue());
+            }
+            else if (_selectedUserHand < _userHands.Count)
+            {
+                Debug.WriteLine("User's hand has bust! Moving to the next hand."); // TODO remove once we decide how to indicate round transition.
+
+                FinishHand();
             }
             else
             {
@@ -417,6 +433,7 @@ namespace CardsCashCasino.Manager
 
             UserHand newHand = new();
             newHand.AddCard(currentHand.RemoveLastCard());
+            newHand.SetCenter(Constants.WINDOW_WIDTH / 2, Constants.WINDOW_HEIGHT - 200);
 
             _userHands.Add(newHand);
 
@@ -451,7 +468,10 @@ namespace CardsCashCasino.Manager
             }
             else
             {
-                _userHandValueIndicator!.Update(_userHands[_selectedUserHand].GetBlackjackValue());
+                UserHand nextHand = _userHands[_selectedUserHand];
+
+                _userHandValueIndicator!.Update(nextHand.GetBlackjackValue());
+                nextHand.RecalculateCardPositions();
             }
         }
 
@@ -463,6 +483,16 @@ namespace CardsCashCasino.Manager
             _dealerHand.UnhideCard();
             _dealerHandValueIndicator!.Update(_dealerHand.GetBlackjackValue());
             _userPlaying = false;
+
+            _hitButton!.IsEnabled = false;
+            _standButton!.IsEnabled = false;
+            _doubleDownButton!.IsEnabled = false;
+            _splitButton!.IsEnabled = false;
+            _forfeitButton!.IsEnabled = false;
+
+            _dealerMoveTimeout = new(500);
+            _dealerMoveTimeout.Elapsed += OnTimeoutEvent!;
+            _dealerMoveTimeout.Start();
         }
 
         /// <summary>
