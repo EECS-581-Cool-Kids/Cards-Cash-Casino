@@ -33,17 +33,6 @@ namespace CardsCashCasino.Manager
         RAISE,
         ALL_IN
     }
-
-    /// <summary>
-    /// The possible roles that a player can have in Texas Hold Em.
-    /// The Small Blind is always left of the Dealer.
-    /// </summary>
-    public enum PlayerRole
-    {
-        DEALER,
-        SMALL_BLIND,
-        BIG_BLIND,
-    }
     
     public class TexasHoldEmManager
     {
