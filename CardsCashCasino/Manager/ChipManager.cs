@@ -124,32 +124,32 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The texture for the $1 chip.
         /// </summary>
-        public static Texture2D OneChipTexture { get; set; }
+        public static Texture2D? OneChipTexture { get; set; }
 
         /// <summary>
         /// The texture for the $5 chip.
         /// </summary>
-        public static Texture2D FiveChipTexture { get; set; }
+        public static Texture2D? FiveChipTexture { get; set; }
 
         /// <summary>
         /// The texture for the $10 chip.
         /// </summary>
-        public static Texture2D TenChipTexture { get; set; }
+        public static Texture2D? TenChipTexture { get; set; }
 
         /// <summary>
         /// The texture for the $25 chip.
         /// </summary>
-        public static Texture2D TwentyFiveChipTexture { get; set; }
+        public static Texture2D? TwentyFiveChipTexture { get; set; }
 
         /// <summary>
         /// The texture for the $100 chip.
         /// </summary>
-        public static Texture2D OneHundredChipTexture { get; set; }
+        public static Texture2D? OneHundredChipTexture { get; set; }
 
         /// <summary>
         /// The texture for the $500 chip.
         /// </summary>
-        public static Texture2D FiveHundredChipTexture { get; set; }
+        public static Texture2D? FiveHundredChipTexture { get; set; }
 
         /// <summary>
         /// Loads the content for the chip textures.
