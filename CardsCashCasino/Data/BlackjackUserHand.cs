@@ -1,5 +1,5 @@
 ﻿/*
- *  Module Name: UserHand.cs
+ *  Module Name: BlackjackUserHand.cs
  *  Purpose: Models the user's hand of cards.
  *  Inputs: None
  *  Outputs: None
@@ -23,9 +23,9 @@ using System.Threading.Tasks;
 
 namespace CardsCashCasino.Data
 {
-    public class UserHand : CardHand
+    public class BlackjackUserHand : BlackjackHand
     {
-        public UserHand() { }
+        public BlackjackUserHand() { }
 
         /// <summary>
         /// Whether or not you can double down the hand in a game of blackjack.

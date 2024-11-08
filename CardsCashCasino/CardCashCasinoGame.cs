@@ -17,6 +17,7 @@
 
 using CardsCashCasino.Data;
 using CardsCashCasino.Manager;
+using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -81,6 +82,7 @@ namespace CardsCashCasino
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             //MainMenuTextures.LoadContent(Content);
+            DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
             //ChipTextures.LoadContent(Content);
             _blackjackManager.LoadContent(Content);
