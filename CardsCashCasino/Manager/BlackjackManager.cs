@@ -156,8 +156,8 @@ namespace CardsCashCasino.Manager
 
             _cursor = new(BlackjackTextures.CursorTexture!, _hitButton.GetAdjustedPos());
 
-            _dealerHandValueIndicator = new(BlackjackTextures.ZeroTexture!, BlackjackTextures.ZeroTexture!);
-            _userHandValueIndicator = new(BlackjackTextures.ZeroTexture!, BlackjackTextures.ZeroTexture!);
+            _dealerHandValueIndicator = new();
+            _userHandValueIndicator = new();
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
 
@@ -803,10 +803,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private int _previousValue = 0;
 
-        public BlackjackHandValueIndicator(Texture2D firstDigitTexture, Texture2D secondDigitTexture)
+        public BlackjackHandValueIndicator()
         {
-            _firstDigitTexture = firstDigitTexture;
-            _secondDigitTexture = secondDigitTexture;
+            _firstDigitTexture = DisplayIndicatorUtil.GetDigitTexture(0);
+            _secondDigitTexture = DisplayIndicatorUtil.GetDigitTexture(0);
         }
 
         /// <summary>
