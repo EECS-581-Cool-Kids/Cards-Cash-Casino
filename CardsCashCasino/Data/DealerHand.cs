@@ -1,6 +1,6 @@
 ﻿/*
  *  Module Name: DealerHand.cs
- *  Purpose: Models the dealer's hand of cards.
+ *  Purpose: Models the dealer's hand of cards. Used in blackjack.
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
@@ -15,6 +15,7 @@
  *  Known Faults: None encountered
  */
 
+using CardsCashCasino.Manager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,37 +26,45 @@ namespace CardsCashCasino.Data
 {
     public class DealerHand : CardHand
     {
+        /// <summary>
+        /// Whether or not the second card is hidden.
+        /// </summary>
+        private bool _isSecondCardHidden = false;
+
         public DealerHand() { }
 
-        private bool _active = true;
-        
         /// <summary>
-        /// Returns true if Dealer will hit.
-        /// False if stand or invalid.
+        /// Overrides "AddCard" to set the texture of the second card to be hidden.
         /// </summary>
-        public bool IsActive() { return _active; } 
-
-        private bool _valid = true;
-
-        /// <summary>
-        /// True if dealer busted, false otherwise.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsValid() { return _valid; } 
-
-        public void Hit(Card card)
+        public override void AddCard(Card card)
         {
-            _cards.Add(card);
-            int bjv = GetBlackjackValue();
-            
-            if (bjv < 17)
-                return;
+            if (_cards.Count == 1)
+            {
+                card.HideTexture();
+                _isSecondCardHidden = true;
+            }
 
-            _active = false;
-            
-            if (bjv > 21)
-                _valid = false;
-            
+            base.AddCard(card);
+        }
+
+        /// <summary>
+        /// Unhides the initial card.
+        /// </summary>
+        public void UnhideCard()
+        {
+            _cards[1].GetTexture();
+            _isSecondCardHidden = false;
+        }
+
+        /// <summary>
+        /// Updates the blackjack value displayed.
+        /// </summary>
+        public override int GetBlackjackValue()
+        {
+            if (_isSecondCardHidden)
+                return base.GetBlackjackValue() - _cards[1].GetBlackjackValue();
+            else
+                return base.GetBlackjackValue();
         }
     }
 }
