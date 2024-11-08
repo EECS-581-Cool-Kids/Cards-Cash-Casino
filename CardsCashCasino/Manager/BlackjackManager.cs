@@ -779,35 +779,19 @@ namespace CardsCashCasino.Manager
     public class BlackjackHandValueIndicator
     {
         /// <summary>
-        /// Texture for the first digit.
+        /// The first digit.
         /// </summary>
-        private Texture2D _firstDigitTexture;
+        private IndicatorDigit _firstDigit = new();
 
         /// <summary>
-        /// Texture for the second digit.
+        /// The second digit.
         /// </summary>
-        private Texture2D _secondDigitTexture;
-
-        /// <summary>
-        /// Rectnagle for the first digit.
-        /// </summary>
-        private Rectangle? _firstDigitRectangle;
-
-        /// <summary>
-        /// Rectangle for the second digit.
-        /// </summary>
-        private Rectangle? _secondDigitRectangle;
+        private IndicatorDigit _secondDigit = new();
 
         /// <summary>
         /// The previous value.
         /// </summary>
         private int _previousValue = 0;
-
-        public BlackjackHandValueIndicator()
-        {
-            _firstDigitTexture = DisplayIndicatorUtil.GetDigitTexture(0);
-            _secondDigitTexture = DisplayIndicatorUtil.GetDigitTexture(0);
-        }
 
         /// <summary>
         /// Sets the position of the indicator.
@@ -816,8 +800,8 @@ namespace CardsCashCasino.Manager
         /// <param name="yPos">The y coordinate</param>
         public void SetPosition(int xPos, int yPos)
         {
-            _firstDigitRectangle = new Rectangle(xPos, yPos, 21, 24);
-            _secondDigitRectangle = new Rectangle(xPos + 21, yPos, 21, 24);
+            _firstDigit.SetPosition(xPos, yPos);
+            _secondDigit.SetPosition(xPos+21, yPos);
         }
 
         /// <summary>
@@ -831,8 +815,8 @@ namespace CardsCashCasino.Manager
             int firstDigit = handValue / 10;
             int secondDigit = handValue % 10;
 
-            _firstDigitTexture = DisplayIndicatorUtil.GetDigitTexture(firstDigit);
-            _secondDigitTexture = DisplayIndicatorUtil.GetDigitTexture(secondDigit);
+            _firstDigit.Update(firstDigit);
+            _secondDigit.Update(secondDigit);
 
             _previousValue = handValue;
         }
@@ -842,10 +826,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (_firstDigitRectangle is not null)
-                spriteBatch.Draw(_firstDigitTexture, (Rectangle)_firstDigitRectangle, Color.White);
-            if (_secondDigitRectangle is not null)
-                spriteBatch.Draw(_secondDigitTexture, (Rectangle)_secondDigitRectangle, Color.White);
+            _firstDigit.Draw(spriteBatch);
+            _secondDigit.Draw(spriteBatch);
         }
     }
 

@@ -11,6 +11,9 @@ namespace CardsCashCasino.Util
 {
     public static class DisplayIndicatorUtil
     {
+        /// <summary>
+        /// Returns the texture for a given digit.
+        /// </summary>
         public static Texture2D GetDigitTexture(int digit)
         {
             return digit switch
@@ -82,6 +85,11 @@ namespace CardsCashCasino.Util
         public static Texture2D? NineTexture { get; private set; }
 
         /// <summary>
+        /// Texture for the dollar sign.
+        /// </summary>
+        public static Texture2D? DollarSignTexture { get; private set; }
+
+        /// <summary>
         /// Loads the content for the util.
         /// </summary>
         public static void LoadContent(ContentManager content)
@@ -96,6 +104,7 @@ namespace CardsCashCasino.Util
             SevenTexture = content.Load<Texture2D>("seven");
             EightTexture = content.Load<Texture2D>("eight");
             NineTexture = content.Load<Texture2D>("nine");
+            DollarSignTexture = content.Load<Texture2D>("dollarSign");
         }
     }
 }

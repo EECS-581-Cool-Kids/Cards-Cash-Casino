@@ -44,7 +44,7 @@ namespace CardsCashCasino
         /// <summary>
         /// The chip manager for the game.
         /// </summary>
-        private ChipManager _chipManager = new();
+        private BettingManager _bettingManager = new();
 
         /// <summary>
         /// The blackjack manager for the game.
@@ -84,7 +84,7 @@ namespace CardsCashCasino
             //MainMenuTextures.LoadContent(Content);
             DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
-            //ChipTextures.LoadContent(Content);
+            BettingTextures.LoadContent(Content);
             _blackjackManager.LoadContent(Content);
             //TexasHoldEmTextures.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
