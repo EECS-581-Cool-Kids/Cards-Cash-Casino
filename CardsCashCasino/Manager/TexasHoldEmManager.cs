@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Timers;
 using CardsCashCasino.Data;
 using Microsoft.Xna.Framework;
@@ -115,24 +114,29 @@ namespace CardsCashCasino.Manager
         /// The index of the player that is the dealer for the current round.
         /// Increments by one each round.
         /// </summary>
-        private int _currentDealer;
+        private static int _currentDealer = new Random().Next(0, Constants.AI_PLAYER_COUNT + 1);
 
         /// <summary>
         /// The index of the player that is the small blind for the current round.
         /// Increments by one each round.
         /// </summary>
-        private int _currentSmallBlind;
+        private static int _currentSmallBlind = (_currentDealer + 1) % (Constants.AI_PLAYER_COUNT + 1);
 
         /// <summary>
         /// The index of the player that is the big blind for the current round.
         /// </summary>
-        private int _currentBigBlind;
+        private static int _currentBigBlind = (_currentSmallBlind + 1) % (Constants.AI_PLAYER_COUNT + 1);
 
         /// <summary>
         /// The number of rounds left until the blinds increase.
         /// If this value is zero at the top of the round, the blinds increase.
         /// </summary>
         private int _blindIncreaseCountdown;
+        
+        /// <summary>
+        /// The capacity of the deck.
+        /// </summary>
+        private int _capacity;
 
         /// <summary>
         /// A list of each player's hand.
@@ -200,6 +204,11 @@ namespace CardsCashCasino.Manager
         public Action? RequestShuffle { get; set; }
         
         /// <summary>
+        /// Call to request the deck's size from card manager.
+        /// </summary>
+        public Func<int>? RequestDeckSize { get; set; }
+        
+        /// <summary>
         /// Call to request the card manager to draw a card.
         /// </summary>
         public Func<Card>? RequestCard { get; set; }
@@ -208,6 +217,11 @@ namespace CardsCashCasino.Manager
         /// Call to request the card manager to recycle the discard into the deck.
         /// </summary>
         public Action? RequestRecycle { get; set; }
+        
+        /// <summary>
+        /// Call to request the card manager to put a card in the discard pile.
+        /// </summary>
+        public Action<Card>? RequestCardDiscard { get; set; }
         #endregion Properties
         
         #region Methods
@@ -219,11 +233,11 @@ namespace CardsCashCasino.Manager
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
 
-            _checkButton = new (TexasHoldEmTextures.CheckButtonTexture!, disabledTexture=null,widthBuffer, buttonYPos);
-            _callButton = new (TexasHoldEmTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos);
-            _raiseButton = new (TexasHoldEmTextures.RaiseButtonTexture!, disabledTexture=null, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos);
-            _allInButton = new (TexasHoldEmTextures.AllInButtonTexture!, disabledTexture=null, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
-            _foldButton = new (TexasHoldEmTextures.FoldButtonTexture!, disabledTexture=null , widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
+            _checkButton = new (TexasHoldEmTextures.CheckButtonTexture!, widthBuffer, buttonYPos);
+            _callButton = new (TexasHoldEmTextures.CallButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos,TexasHoldEmTextures.CallButtonDisabledTexture!);
+            _raiseButton = new (TexasHoldEmTextures.RaiseButtonTexture!,widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos);
+            _allInButton = new (TexasHoldEmTextures.AllInButtonTexture!,widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
+            _foldButton = new (TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
 
@@ -249,12 +263,92 @@ namespace CardsCashCasino.Manager
         {
             return;
         }
-
-        private StartGame()
+        public void Draw(SpriteBatch spriteBatch)
         {
-            // Reset the cards.
-            RequestCardManagerClear!.Invoke();
-            RequestDecksOfCards!.Invoke(Constants.POKER_DECK_COUNT);
+            // Draw the buttons
+            _callButton.Draw(spriteBatch);
+            _checkButton.Draw(spriteBatch);
+            _raiseButton.Draw(spriteBatch);
+            _allInButton.Draw(spriteBatch);
+            _foldButton.Draw(spriteBatch);
+            
+            // Draw the cursor
+            _cursor.Draw(spriteBatch);
+            
+            // Draw the player hands
+            foreach (CardHand hand in _playerHands)
+            {
+                hand.Draw(spriteBatch);
+            }
+        }
+
+        private void Initialize()
+        {
+            _gameOver = false;
+            _userPlaying = false;
+            _roundFinished = false;
+            _userFolded = false;
+            _mainPot = 0;
+            _sidePot = 0;
+            // _currentBet = _bigBlindBet;
+            // _blindIncreaseCountdown = 5;
+            _playerHands = new List<CardHand>(); // Initialize the list of player hands.
+            RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
+            _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
+        }
+        private void StartGame()
+        {
+            // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
+            if (RequestDeckSize!.Invoke() < (_capacity / 2))
+                RequestRecycle!();
+            
+            // If there are no hands, generate the player hands
+            if (_playerHands.Count == 0)
+                GeneratePlayerHands();
+            
+            // Calculate the position of the user hand.
+            int userHandXPos = Constants.WINDOW_WIDTH / 2;
+            
+            // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
+            int aiHandXPos = 100;
+            
+            
+            // Set the position of the card hands. The user hand is centered at the bottom of the screen.
+            // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
+            _playerHands![0].SetCenter( userHandXPos, Constants.WINDOW_HEIGHT - 200);
+            
+            for (int i = 1; i < Constants.AI_PLAYER_COUNT; i++)
+            {
+                _playerHands[i].SetCenter(aiHandXPos, 100);
+                aiHandXPos += 200;
+            }
+            
+            // Deal 2 cards to each player one at a time, starting with the small blind.
+            int dealStartIndex = _currentSmallBlind;
+            
+            for (int i = 0; i < _playerHands.Count * 2; i++)
+            {
+                _playerHands[dealStartIndex].AddCard(RequestCard!());
+                dealStartIndex = (dealStartIndex + 1) % _playerHands.Count;
+            }
+        }
+
+        private void EndGame()
+        {
+            // Discard cards from, and clear, each hand.
+            foreach (CardHand hand in _playerHands)
+            {
+                foreach (Card card in hand.Cards)
+                {
+                    RequestCardDiscard!(card);
+                }
+                hand.Clear();
+            }   
+            
+            // Increment the player roles.
+            _currentDealer = _currentSmallBlind;
+            _currentSmallBlind = _currentBigBlind;
+            _currentBigBlind = (_currentBigBlind + 1) % _playerHands.Count;
         }
         /// <summary>
         /// Creates the list of player hands. The first player is the user.
@@ -352,7 +446,7 @@ namespace CardsCashCasino.Manager
         #endregion Properties
         
         #region Methods
-        public PokerActionButton(Texture2D enabledTexture, Texture2D disabledTexture, int x, int y)
+        public PokerActionButton(Texture2D enabledTexture, int x, int y, Texture2D disabledTexture=null)
         {
             _enabledTexture = enabledTexture;
             _disabledTexture = disabledTexture;

@@ -40,6 +40,11 @@ namespace CardsCashCasino.Data
         /// The width of a button.
         /// </summary>
         public const int BUTTON_WIDTH = 150;
+
+        /// <summary>
+        /// The height of a button.
+        /// </summary>
+        public const int BUTTON_HEIGHT = 64;
         #endregion General
 
         #region Blackjack
@@ -124,7 +129,11 @@ namespace CardsCashCasino.Data
         /// The number of card decks used to play poker.
         /// </summary>
         public const int POKER_DECK_COUNT = 1;
-
+        
+        /// <summary>
+        /// The number of buttons in poker.
+        /// </summary>
+        public const int POKER_BUTTON_COUNT = 5;
         #endregion Poker
     }
 }

@@ -156,7 +156,7 @@ namespace CardsCashCasino.Manager
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
 
-            StartGame(); // temporary call. TODO remove when main menu is implemented or comment out to test Poker implementation.
+            // StartGame(); // temporary call. TODO remove when main menu is implemented or comment out to test Poker implementation.
         }
 
         /// <summary>
