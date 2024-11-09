@@ -115,7 +115,6 @@ namespace CardsCashCasino
             // same for the main menu
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
-            // same for texas hold em
             if (_texasHoldEmManager.IsPlaying)
                 _texasHoldEmManager.Update();
             // same for five card draw
