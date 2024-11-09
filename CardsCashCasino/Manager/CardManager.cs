@@ -163,6 +163,14 @@ namespace CardsCashCasino.Manager
             Shuffle();
         }
         
+        /// <summary>
+        /// Gets the current size of a game's playable deck.
+        /// </summary>
+        /// <returns>An int representing the size of the deck.</returns>
+        public int GetDeckSize()
+        {
+            return Cards.Count;
+        }
     }
 
     /// <summary>

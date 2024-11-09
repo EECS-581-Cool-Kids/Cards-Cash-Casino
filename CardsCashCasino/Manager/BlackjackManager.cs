@@ -1,14 +1,10 @@
-﻿using CardsCashCasino.Data;
+using CardsCashCasino.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
 
 namespace CardsCashCasino.Manager
@@ -160,7 +156,7 @@ namespace CardsCashCasino.Manager
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
 
-            StartGame(); // temporary call. TODO remove when main menu is implemented or comment out to test Poker implementation.
+            // StartGame(); // temporary call. TODO remove when main menu is implemented or comment out to test Poker implementation.
         }
 
         /// <summary>
