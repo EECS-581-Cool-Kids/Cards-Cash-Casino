@@ -141,10 +141,8 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The LoadContent method for blackjack.
         /// </summary>
-        public void LoadContent(ContentManager content)
+        public void LoadContent()
         {
-            BlackjackTextures.LoadContent(content);
-
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.BLACKJACK_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
 

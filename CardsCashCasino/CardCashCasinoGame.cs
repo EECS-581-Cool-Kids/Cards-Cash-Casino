@@ -81,13 +81,18 @@ namespace CardsCashCasino
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            // Load the textures
             //MainMenuTextures.LoadContent(Content);
             DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
             BettingTextures.LoadContent(Content);
-            _blackjackManager.LoadContent(Content);
+            BlackjackTextures.LoadContent(Content);
             //TexasHoldEmTextures.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
+
+            // Load the manager's base content.
+            _bettingManager.LoadContent();
+            _blackjackManager.LoadContent();
         }
 
         /// <summary>
@@ -99,6 +104,7 @@ namespace CardsCashCasino
                 Exit();
 
             // same for the main menu
+            _bettingManager.Update();
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
             // same for texas hold em
@@ -116,6 +122,7 @@ namespace CardsCashCasino
 
             _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
             // same for the main menu
+            _bettingManager.Draw(_spriteBatch);
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
             // same for texas hold em

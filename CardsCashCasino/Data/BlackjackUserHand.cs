@@ -55,13 +55,5 @@ namespace CardsCashCasino.Data
             _cards.Remove(_cards.Last());
             return toReturn;
         }
-
-        /// <summary>
-        /// Returns the poker value of the hand.
-        /// </summary>
-        public int GetPokerValue()
-        {
-            return 0; // TODO
-        }
     }
 }
