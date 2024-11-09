@@ -64,6 +64,38 @@ namespace CardsCashCasino.Data
         public const int BLACKJACK_BUTTON_COUNT = 5;
 
         /// <summary>
+        /// Position of the check button.
+        /// </summary>
+        public const int CHECK_BUTTON_POS = 0;
+
+        /// <summary>
+        /// Position of the call button.
+        /// </summary>
+        public const int CALL_BUTTON_POS = 1;
+
+        /// <summary>
+        /// Position of the raise button.
+        /// </summary>
+        public const int RAISE_BUTTON_POS = 2;
+
+        /// <summary>
+        /// Position of the all in button.
+        /// </summary>
+        public const int ALL_IN_BUTTON_POS = 3;
+
+        /// <summary>
+        /// Position of the fold button.
+        /// </summary>
+        public const int FOLD_BUTTON_POS = 4;
+        #endregion Blackjack
+        
+        #region Poker
+        /// <summary>
+        /// Used to determine the number of AI players in Texas Hold 'Em and 5 Card Draw.
+        /// </summary>
+        public const int AI_PLAYER_COUNT = 4;
+        
+        /// <summary>
         /// Position of the hit button.
         /// </summary>
         public const int HIT_BUTTON_POS = 0;
@@ -87,13 +119,12 @@ namespace CardsCashCasino.Data
         /// Position of the forfeit button.
         /// </summary>
         public const int FORFEIT_BUTTON_POS = 4;
-        #endregion Blackjack
-        
-        #region Poker
+
         /// <summary>
-        /// Used to determine the number of AI players in Texas Hold 'Em and 5 Card Draw.
+        /// The number of card decks used to play poker.
         /// </summary>
-        public const int AI_PLAYER_COUNT = 4;
-        #endregion
+        public const int POKER_DECK_COUNT = 1;
+
+        #endregion Poker
     }
 }
