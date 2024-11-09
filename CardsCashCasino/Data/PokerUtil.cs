@@ -242,7 +242,7 @@ namespace CardsCashCasino.Data
 
             int min = cards[0].GetPokerValue();
             
-            return (cards.Sum(card => card.GetPokerValue()) == min + min + 1 + min + 2 + min + 3 + min + 4);
+            return (cards.Sum(card => card.GetPokerValue()) == (min*5) + 10);
         }
 
         /// <summary>
