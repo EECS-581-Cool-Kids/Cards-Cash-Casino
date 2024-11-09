@@ -61,7 +61,9 @@ namespace CardsCashCasino.Data
         /// </summary>
         public override int GetBlackjackValue()
         {
-            if (_isSecondCardHidden)
+            if (base.GetBlackjackValue() == Constants.MAX_BLACKJACK_VALUE)
+                return Constants.MAX_BLACKJACK_VALUE;
+            else if (_isSecondCardHidden)
                 return base.GetBlackjackValue() - _cards[1].GetBlackjackValue();
             else
                 return base.GetBlackjackValue();

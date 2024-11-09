@@ -16,7 +16,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The amount of cash the user has on hand.
         /// </summary>
-        public int UserCashValue { get; private set; } = 0;
+        public int UserCashValue { get; private set; } = 500;
 
         /// <summary>
         /// The display for the user's cash value.
@@ -30,14 +30,6 @@ namespace CardsCashCasino.Manager
         {
             _userCashValueIndicator = new();
             _userCashValueIndicator.SetCorner(5, 5);
-        }
-
-        /// <summary>
-        /// Update method for the ChipManager.
-        /// </summary>
-        public void Update()
-        {
-            _userCashValueIndicator!.Update(500);
         }
 
         /// <summary>
@@ -55,6 +47,7 @@ namespace CardsCashCasino.Manager
         public void Bet(int value)
         {
             UserCashValue -= value;
+            _userCashValueIndicator!.Update(UserCashValue);
         }
 
         /// <summary>
@@ -63,6 +56,7 @@ namespace CardsCashCasino.Manager
         public void Payout(int value)
         {
             UserCashValue += value;
+            _userCashValueIndicator!.Update(UserCashValue);
         }
     }
 

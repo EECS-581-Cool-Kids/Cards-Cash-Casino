@@ -38,6 +38,11 @@ namespace CardsCashCasino.Manager
         private int _currentCursorPos = 0;
 
         /// <summary>
+        /// The current bet.
+        /// </summary>
+        private int _currentBet = 0;
+
+        /// <summary>
         /// Checks if the game is actively running. Used to call the update and draw loops.
         /// </summary>
         public bool IsPlaying { get; private set; } = false;
@@ -56,6 +61,11 @@ namespace CardsCashCasino.Manager
         /// Checks if the user has bust.
         /// </summary>
         private bool _userBust = false;
+
+        /// <summary>
+        /// If the game should end immediately because either the dealer or user has a blackjack.
+        /// </summary>
+        private bool _blackjack = false;
 
         /// <summary>
         /// The hit button.
@@ -136,6 +146,22 @@ namespace CardsCashCasino.Manager
         /// Call to request an individual card be added.
         /// </summary>
         public Func<Card>? RequestCard { get; set; }
+
+        /// <summary>
+        /// Call to request a bet of a certain amount.
+        /// </summary>
+        public Action<int>? RequestBet { get; set; }
+
+        /// <summary>
+        /// Call to request a payout of a certain amount.
+        /// </summary>
+        public Action<int>? RequestPayout { get; set; }
+
+        /// <summary>
+        /// Requests the betting menu.
+        /// Returns the amount bet by the user.
+        /// </summary>
+        public Func<int>? RequestOpenBettingMenu { get; set; }
         #endregion Properties
 
         /// <summary>
@@ -198,7 +224,7 @@ namespace CardsCashCasino.Manager
             {
                 if (dealerHandValue > Constants.MAX_BLACKJACK_VALUE)
                 {
-                    // TODO win logic with poker chips
+                    RequestPayout!.Invoke(_currentBet * 2);
 
                     _resultLabel!.SetTexture(BlackjackResult.WIN);
 
@@ -215,19 +241,17 @@ namespace CardsCashCasino.Manager
 
                     if (dealerHandValue > currentHand.GetBlackjackValue())
                     {
-                        // TODO lose logic with poker chips
-
                         _resultLabel!.SetTexture(BlackjackResult.LOSS);
                     }
                     else if (dealerHandValue == currentHand.GetBlackjackValue())
                     {
-                        // TODO push logic with poker chips
+                        RequestPayout!.Invoke(_currentBet);
 
                         _resultLabel!.SetTexture(BlackjackResult.PUSH);
                     }
                     else
                     {
-                        // TODO win logic with poker chips
+                        RequestPayout!.Invoke(_currentBet * 2);
 
                         _resultLabel!.SetTexture(BlackjackResult.WIN);
                     }
@@ -255,6 +279,58 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+            if (_blackjack && _roundFinishTimeout is not null && _roundFinishTimeout.Enabled)
+                return;
+            else if (_blackjack)
+                EndGame();
+            if (_dealerHand.HasBlackjack() && _userHands.First().HasBlackjack())
+            {
+                _resultLabel!.SetTexture(BlackjackResult.PUSH);
+
+                _dealerHand.UnhideCard();
+
+                _resultLabel!.CanDraw = true;
+                _roundFinishTimeout = new Timer(500);
+                _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
+                _roundFinishTimeout.Start();
+
+                RequestPayout!.Invoke(_currentBet);
+
+                _blackjack = true;
+
+                return;
+            }
+            else if (_dealerHand.HasBlackjack())
+            {
+                _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
+
+                _dealerHand.UnhideCard();
+
+                _resultLabel!.CanDraw = true;
+                _roundFinishTimeout = new Timer(500);
+                _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
+                _roundFinishTimeout.Start();
+
+                _blackjack = true;
+
+                return;
+            }
+            else if (_userHands.First().HasBlackjack())
+            {
+                _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
+
+                _resultLabel!.CanDraw = true;
+                _roundFinishTimeout = new Timer(500);
+                _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
+                _roundFinishTimeout.Start();
+
+                RequestPayout!.Invoke(Convert.ToInt32(_currentBet * 2.5));
+
+                _blackjack = true;
+
+                return;
+            }
+
             _doubleDownButton!.IsEnabled = _userHands[_selectedUserHand].CanDoubleDown();
             _splitButton!.IsEnabled = _userHands[_selectedUserHand].CanSplit();
 
@@ -323,7 +399,8 @@ namespace CardsCashCasino.Manager
                 _userMoveTimeout.Start();
             }
 
-            if (_userBust && (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled))
+            if ((_userBust && (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled)) || 
+                _userHands[_selectedUserHand].GetBlackjackValue() == Constants.MAX_BLACKJACK_VALUE)
             {
                 _userBust = false;
 
@@ -384,6 +461,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
+            // TODO betting logic
+            _currentBet = 50;
+            RequestBet!.Invoke(_currentBet);
+
             // Reset the cards.
             RequestCardManagerCleared!.Invoke();
             RequestDecksOfCards!.Invoke(4);
@@ -431,6 +512,8 @@ namespace CardsCashCasino.Manager
             _dealerHand.Clear();
             _userHands.Clear();
             _selectedUserHand = 0;
+            _currentBet = 0;
+            _blackjack = false;
 
             System.Threading.Thread.Sleep(500);
 
@@ -463,8 +546,6 @@ namespace CardsCashCasino.Manager
             }
             else
             {
-                // TODO bust logic with poker chips
-
                 _resultLabel!.SetTexture(BlackjackResult.BUST);
 
                 _resultLabel!.CanDraw = true;
@@ -482,6 +563,9 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void DoubleDown()
         {
+            RequestBet!.Invoke(_currentBet);
+            _currentBet *= 2;
+
             BlackjackUserHand currentHand = _userHands[_selectedUserHand];
 
             currentHand.AddCard(RequestCard!.Invoke());
@@ -513,7 +597,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void Forfeit()
         {
-            // TODO forfeit logic with poker chips.
+            RequestPayout!.Invoke(_currentBet / 2);
 
             EndGame();
         }
@@ -657,6 +741,11 @@ namespace CardsCashCasino.Manager
         public static Texture2D? PushTexture { get; private set; }
 
         /// <summary>
+        /// Texture for "blackjack" at the end of the game.
+        /// </summary>
+        public static Texture2D? BlackjackTexture { get; private set; }
+
+        /// <summary>
         /// Loads the assets for Blackjack.
         /// </summary>
         public static void LoadContent(ContentManager content)
@@ -676,6 +765,7 @@ namespace CardsCashCasino.Manager
             LossTexture = content.Load<Texture2D>("lossIcon");
             WinTexture = content.Load<Texture2D>("winIcon");
             PushTexture = content.Load<Texture2D>("pushIcon");
+            BlackjackTexture = content.Load<Texture2D>("blackjackIcon");
         }
     }
 
@@ -871,6 +961,9 @@ namespace CardsCashCasino.Manager
                 case BlackjackResult.BUST:
                     _resultTexture = BlackjackTextures.BustTexture;
                     break;
+                case BlackjackResult.BLACKJACK:
+                    _resultTexture = BlackjackTextures.BlackjackTexture;
+                    break;
             }
         }
 
@@ -889,6 +982,7 @@ namespace CardsCashCasino.Manager
         WIN,
         LOSS,
         PUSH,
-        BUST
+        BUST,
+        BLACKJACK
     }
 }

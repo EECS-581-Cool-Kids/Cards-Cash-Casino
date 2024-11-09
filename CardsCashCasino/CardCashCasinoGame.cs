@@ -70,6 +70,8 @@ namespace CardsCashCasino
             _blackjackManager.RequestCardManagerCleared = _cardManager.ClearDecks;
             _blackjackManager.RequestDecksOfCards = _cardManager.GenerateDecks;
             _blackjackManager.RequestCard = _cardManager.DrawCard;
+            _blackjackManager.RequestBet = _bettingManager.Bet;
+            _blackjackManager.RequestPayout = _bettingManager.Payout;
 
             base.Initialize();
         }
@@ -104,7 +106,6 @@ namespace CardsCashCasino
                 Exit();
 
             // same for the main menu
-            _bettingManager.Update();
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
             // same for texas hold em
