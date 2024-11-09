@@ -15,10 +15,12 @@
  *  Known Faults: None encountered
  */
 
+using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -44,12 +46,17 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The card's rectangle object.
         /// </summary>
-        private Rectangle _cardRectangle;
+        private Rectangle? _cardRectangle;
 
         /// <summary>
         /// The card's texture.
         /// </summary>
         private Texture2D? _cardTexture;
+
+        /// <summary>
+        /// The static size of each card.
+        /// </summary>
+        private static Point _cardSize = new Point(99, 141);
 
         /// <summary>
         /// Whether or not the card can be drawn.
@@ -59,16 +66,26 @@ namespace CardsCashCasino.Data
             get { return _cardTexture is not null; }
         }
 
+        /// <summary>
+        /// Whether or not it is an ace in blackjack.
+        /// </summary>
+        public bool IsBlackjackAce
+        {
+            get { return _value.GetAttribute<BlackjackValueAttribute>()!.HasTwoValues; }
+        }
+
         public Card(Suit suit, Value value)
         {
             _suit = suit;
             _value = value;
+            GetTexture();
         }
 
         public Card(Card other)
         {
             _suit = other._suit;
             _value = other._value;
+            GetTexture();
         }
 
         /// <summary>
@@ -76,16 +93,37 @@ namespace CardsCashCasino.Data
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_cardTexture, _cardRectangle, Color.White);
+            if (_cardRectangle is null)
+                return;
+
+            if (_cardTexture is null)
+                GetTexture();
+
+            spriteBatch.Draw(_cardTexture, (Rectangle)_cardRectangle, Color.White);
         }
 
         /// <summary>
-        /// Adds the attributes to draw the card to the screen.
+        /// Creates the rectangle so it can be drawn to the screen.
         /// </summary>
-        public void SetDrawableObject(Rectangle rectangle, Texture2D cardTexture)
+        public void SetRectangle(int xPos, int yPos)
         {
-            _cardRectangle = rectangle;
-            _cardTexture = cardTexture;
+            _cardRectangle = new Rectangle(xPos, yPos, _cardSize.X, _cardSize.Y);
+        }
+
+        /// <summary>
+        /// Changes the card texture to hide the value.
+        /// </summary>
+        public void HideTexture()
+        {
+            _cardTexture = CardTextures.CardBackTexture;
+        }
+
+        /// <summary>
+        /// Changes the card texture to show the value.
+        /// </summary>
+        public void GetTexture()
+        {
+            _cardTexture = CardTextures.GetCardTexture(_value, _suit);
         }
 
         /// <summary>
@@ -102,20 +140,12 @@ namespace CardsCashCasino.Data
         public int GetSecondaryBlackjackValue()
         {
             BlackjackValueAttribute blackjackValue = _value.GetAttribute<BlackjackValueAttribute>()!;
-            if (blackjackValue.HasTwoValues)
+            if (!blackjackValue.HasTwoValues)
                 return -1;
             else
                 return (int)blackjackValue.SecondaryValue!;
         }
-        /// <summary>
-        /// Returns if the card is an ace.
-        /// Used for Blackjack.
-        /// </summary>
-        /// <returns> value == Ace </returns>
-        public bool IsAce()
-        {
-            return _value == Value.ACE;
-        }
+
         /// <summary>
         /// Returns the poker value.
         /// </summary>
@@ -127,12 +157,12 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The equals operator between two card objects.
         /// </summary>
-        public static bool operator ==(Card card1, Card card2) { return card1._value == card2._value && card1._suit == card2._suit; }
+        public static bool operator ==(Card card1, Card card2) { return card1._value == card2._value; }
 
         /// <summary>
         /// The not equals operator between two card objects.
         /// </summary>
-        public static bool operator !=(Card card1, Card card2) { return card1._value != card2._value || card1._suit != card2._suit; }
+        public static bool operator !=(Card card1, Card card2) { return card1._value != card2._value; }
 
         /// <summary>
         /// <inheritdoc/>
@@ -143,9 +173,6 @@ namespace CardsCashCasino.Data
         /// <inheritdoc/>
         /// </summary>
         public override int GetHashCode() { return base.GetHashCode(); }
-
-        public bool SameVal(Card card) { return _value == card._value;  }
-        public bool SameVal(Value val) { return _value == val;  }
     }
 
     /// <summary>
@@ -165,7 +192,7 @@ namespace CardsCashCasino.Data
     /// </summary>
     public enum Value
     {
-        [BlackjackValue(11, 1)]
+        [BlackjackValue(1, 11)]
         [PokerValue(1)]
         ACE,
         

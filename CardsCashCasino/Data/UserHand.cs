@@ -4,7 +4,7 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus, Ethan Berkley, Mo Morgan
+ *  Developers: Jacob Wilkus
  *  Date: 10/26/2024
  *  Last Modified: 11/7/2024
  *  Preconditions: None
@@ -27,91 +27,41 @@ namespace CardsCashCasino.Data
     {
         public UserHand() { }
 
-        // Can actions still be performed on this?
-        private bool _active = true;
-
-        // Is this a hand that we will evaluate as possibly winning?
-        public bool _valid = true;
-
-        public bool IsActive() { return _active; }
-        public bool IsValid() { return _valid; }
-
         /// <summary>
-        /// If this hand is able to be split, return the index of a card that can be split.
-        /// Else, return -1.
+        /// Whether or not you can double down the hand in a game of blackjack.
         /// </summary>
-        /// <returns>Index of card to be removed.</returns>
-        private int splittable()
+        public bool CanDoubleDown()
         {
-            for (int i = 1; i < _cards.Count; i++)
-            {
-                for (int j = 0; j < i; j++)
-                {
-                    if (_cards[i].SameVal(_cards[j]))
-                    {
-                        return i;
-                    }
-                }
-            }
-
-            return -1;
+            return _cards.Count == 2;
         }
 
+        /// <summary>
+        /// Whether or not you can split the hand in a game of blackjack
+        /// </summary>
         public bool CanSplit()
         {
-            return splittable() != -1;
+            if (_cards.Count != 2)
+                return false;
+
+            return _cards[0] == _cards[1];
         }
 
         /// <summary>
-        /// Create new UserHand instance.
-        /// Removes first repeat, puts it into new hand.
-        /// If hand was not splittable, throws ApplicationException
+        /// Removes the last card and returns it.
         /// </summary>
-        /// <returns>The hand that was created.</returns>
-        public UserHand Split()
+        public Card RemoveLastCard()
         {
-            int i = splittable();
-            if (i == -1)
-            {
-                throw new ApplicationException("Called UserHand.Split() without a splittable hand");
-            }
-           
-            Card card = _cards[i];
-            _cards.RemoveAt(i);
-            UserHand newHand = new();
-            newHand.AddCard(card);
-            return newHand;
-            
-        }
-    
-        public void Stand()
-        {
-            _active = false;
+            Card toReturn = _cards.Last();
+            _cards.Remove(_cards.Last());
+            return toReturn;
         }
 
-        public void Forfeit()
+        /// <summary>
+        /// Returns the poker value of the hand.
+        /// </summary>
+        public int GetPokerValue()
         {
-            _active = false;
-            _valid = false;
-        }
-
-        public void Hit(Card card) { 
-            _cards.Add(card); 
-            if (GetBlackjackValue() > 21)
-            {
-                _active = false;
-                _valid = false;
-            }
-        }
-
-        public void DoubleDown(Card card)
-        {
-            _cards.Add(card);
-            if (GetBlackjackValue()>21)
-            {
-                _valid = false;
-            }
-            _active = false;
+            return 0; // TODO
         }
     }
 }
