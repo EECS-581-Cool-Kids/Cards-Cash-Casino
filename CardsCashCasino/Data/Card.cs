@@ -39,10 +39,11 @@ namespace CardsCashCasino.Data
         /// </summary>
         public Suit Suit { get { return _suit; } }
 
+        private Value _value;
         /// <summary>
         /// The card's value.
         /// </summary>
-        private Value _value;
+        public Value Value { get { return _value; } }
 
         /// <summary>
         /// The card's rectangle object.

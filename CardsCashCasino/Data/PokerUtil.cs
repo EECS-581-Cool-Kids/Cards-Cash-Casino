@@ -1,5 +1,5 @@
 ﻿/*
- *  Module Name:HoldEmUtil.cs
+ *  Module Name: PokerUtil.cs
  *  Purpose: Contains static utility methods used to determine the winner of a game of Texas Hold 'Em.
  *  Inputs: The set of community cards and a player's hole cards.
  *  Outputs: The ranking, optimal 5-card hand, and the value used to break ties.
@@ -31,7 +31,7 @@ namespace CardsCashCasino.Data
     /// The second function, KickerValue, takes in a 5-card hand returned by GetScore, 
     ///     and returns the value used to break ties between hands of the same rank.
     /// </summary>
-    public class HoldEmUtil
+    public class PokerUtil
     {
         /// <summary>
         /// Enum representing the rank of a 5-card poker hand.
@@ -50,9 +50,6 @@ namespace CardsCashCasino.Data
             HIGH_CARD
         }
 
-        
-        
-
         /// <summary>
         /// Given the current 5-card community card pool, and that the current hand has exactly 2 cards, 
         /// create and return the best possible hand and ranking.
@@ -65,10 +62,13 @@ namespace CardsCashCasino.Data
         /// <returns>A 5-card list representing the optimal hand, and the ranking it would give.</returns>
         public static Tuple<List<Card>, Ranking> GetScore(List<Card> community, List<Card> cards)
         {
+            Debug.Assert(cards.Count == 2);
+            Debug.Assert(community.Count >= 3);
+
             Ranking best = Ranking.HIGH_CARD;
             List<List<Card>> bestHands = new();
 
-            foreach (IEnumerable<Card> iCards in Get3CardPermutations(community))
+            foreach (List<Card> iCards in Get3CardPermutations(community))
             {
                 List<Card> hand = SortedHand(iCards.Concat(cards).ToList());
                 Ranking current = GetRanking(hand);
@@ -113,9 +113,9 @@ namespace CardsCashCasino.Data
         public static long KickerValue(List<Card> hand)
         {
             Debug.Assert(hand.Count == 5);
-
+            
             // Special case: 2345A
-            if (hand[0].GetPokerValue() == 2 && hand[1].GetPokerValue() == 3 && hand[2].GetPokerValue() == 4 && hand[3].GetPokerValue() == 5 && hand[4].IsAce())
+            if (hand[0].Value == Value.TWO && hand[1].Value == Value.THREE && hand[2].Value == Value.FOUR && hand[3].Value == Value.FIVE && hand[4].Value == Value.ACE)
             {
                 return (long)(Math.Pow(5, 5) + Math.Pow(4, 4) + Math.Pow(3, 3) + Math.Pow(2, 2) + Math.Pow(1, 1));
             }
@@ -141,6 +141,41 @@ namespace CardsCashCasino.Data
             return handVal;
         }
 
+        /// <summary>
+        /// Orders cards in ascending order by value and suit.
+        /// Suits are ordered as SPADES < HEARTS < DIAMONDS < CLUBS.
+        /// the hand [4C, 3S, 4H, AS, 7D]  would be ordered as [3S, 4H, 4C, 7D, AS]
+        /// </summary>
+        /// <param name="cards">Represents a hand of cards. There should be exactly 5 elements in the list.</param>
+        /// <returns>The sorted list of cards. There will be exactly 5 elements in the list.</returns>
+        private static List<Card> SortedHand(List<Card> cards)
+        {
+            return cards.OrderBy(card => (card.GetPokerValue() * 4) - card.Suit).ToList();
+        }
+
+        /// <summary>
+        /// Call each of the functions used to determine if our hand is of a certain rank back to back. 
+        /// Requires that cards is of length 5, and has had SortedHand called on it.
+        /// </summary>
+        /// <param name="cards">The hand we are trying to determine the rank of.</param>
+        /// <returns>the cards rank.</returns>
+        private static Ranking GetRanking(List<Card> cards)
+        {
+            if (IsRoyalFlush(cards)) return Ranking.ROYAL_FLUSH;
+            else if (IsStraightFlush(cards)) return Ranking.STRAIGHT_FLUSH;
+            else if (IsFourOfAKind(cards)) return Ranking.FOUR_OF_A_KIND;
+            else if (IsFullHouse(cards)) return Ranking.FULL_HOUSE;
+            else if (IsFlush(cards)) return Ranking.FLUSH;
+            else if (IsStraight(cards)) return Ranking.STRAIGHT;
+            else if (IsThreeOfAKind(cards)) return Ranking.THREE_OF_A_KIND;
+
+            else return GetNumPairs(cards) switch
+            {
+                2 => Ranking.TWO_PAIR,
+                1 => Ranking.PAIR,
+                _ => Ranking.HIGH_CARD,
+            };
+        }
 
         /// <summary>
         /// Function to determine if a poker hand is a royal flush.
@@ -149,7 +184,7 @@ namespace CardsCashCasino.Data
         /// <returns>True if cards is a royal flush, false otherwise.</returns>
         private static bool IsRoyalFlush(List<Card> cards)
         {
-            return IsStraightFlush(cards) && cards[0].GetPokerValue() == 10;
+            return IsStraightFlush(cards) && cards[0].Value == Value.TEN;
         }
 
         /// <summary>
@@ -159,15 +194,7 @@ namespace CardsCashCasino.Data
         /// <returns>True if cards is a flush, false otherwise.</returns>
         private static bool IsFlush(List<Card> cards)
         {
-            Suit suit = cards[0].Suit;
-            foreach (Card card in cards)
-            {
-                if (card.Suit != suit)
-                {
-                    return false;
-                }
-            }
-            return true;
+            return cards.All(card => card.Suit == cards[0].Suit);
         }
 
         /// <summary>
@@ -187,7 +214,7 @@ namespace CardsCashCasino.Data
         /// <returns>True if cards is a four of a kind, false otherwise.</returns>
         private static bool IsFourOfAKind(List<Card> cards)
         {
-            return cards[0].SameVal(cards[3]);
+            return cards[0] == cards[3];
         }
 
         /// <summary>
@@ -197,16 +224,7 @@ namespace CardsCashCasino.Data
         /// <returns>True if cards is a full house, false otherwise.</returns>
         private static bool IsFullHouse(List<Card> cards)
         {
-            if (!cards[0].SameVal(cards[1]) || !cards[3].SameVal(cards[4]))
-            {
-                return false;
-            }
-
-            if (cards[2].SameVal(cards[1]) || cards[2].SameVal(cards[3]))
-            {
-                return true;
-            }
-            return false;
+            return cards[0] == cards[1] && cards[3] == cards[4] && (cards[2] == cards[1] || cards[2] == cards[3]);
         }
 
         /// <summary>
@@ -217,19 +235,14 @@ namespace CardsCashCasino.Data
         private static bool IsStraight(List<Card> cards)
         {
             // Special case: 2345A
-            if (cards[0].GetPokerValue() == 2 && cards[1].GetPokerValue() == 3 && cards[2].GetPokerValue() == 4 && cards[3].GetPokerValue() == 5 && cards[4].IsAce())
+            if (cards[0].Value == Value.TWO && cards[1].Value == Value.THREE && cards[2].Value == Value.FOUR && cards[3].Value == Value.FIVE && cards[4].Value == Value.ACE)
             {
                 return true;
             }
 
-            for (int i = 1; i < cards.Count; i++)
-            {
-                if (cards[i].GetPokerValue() != cards[i - 1].GetPokerValue() + 1)
-                {
-                    return false;
-                }
-            }
-            return true;
+            int min = cards[0].GetPokerValue();
+            
+            return (cards.Sum(card => card.GetPokerValue()) == min + min + 1 + min + 2 + min + 3 + min + 4);
         }
 
         /// <summary>
@@ -239,76 +252,26 @@ namespace CardsCashCasino.Data
         /// <returns>True if cards is a three of a kind, false otherwise.</returns>
         private static bool IsThreeOfAKind(List<Card> cards)
         {
-            return cards[2].SameVal(cards[0]) || cards[2].SameVal(cards[4]);
+            return cards[2] == cards[0] || cards[2] == cards[4];
         }
 
         /// <summary>
-        /// Function to determine if a poker hand is a two pair.
+        /// Function used to determine if a poker hand is of rank Two Pair, Pair, or High Card.
+        /// Avoids the need to call an IsTwoPair and IsPair function that would do virtually the same exact thing.
         /// </summary>
         /// <param name="cards">a 5-card hand.</param>
-        /// <returns>True if cards is a two pair, false otherwise.</returns>
-        private static bool IsTwoPair(List<Card> cards)
+        /// <returns>2 if cards is a two pair, 1 if cards is a pair, 0 if cards is a high card.</returns>
+        private static int GetNumPairs(List<Card> cards)
         {
             int pairs = 0;
             for (int i = 1; i < cards.Count; i++)
             {
-                if (cards[i].SameVal(cards[i - 1]))
+                if (cards[i] == cards[i - 1])
                 {
                     pairs++;
                 }
             }
-            return pairs == 2;
-        }
-
-        /// <summary>
-        /// Function to determine if a poker hand is a pair.
-        /// </summary>
-        /// <param name="cards">a 5-card hand.</param>
-        /// <returns>True if cards is a pair, false otherwise.</returns>
-        private static bool IsPair(List<Card> cards)
-        {
-            for (int i = 1; i < cards.Count; i++)
-            {
-                if (cards[i].SameVal(cards[i - 1]))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Call each of the functions used to determine if our hand is of a certain rank back to back. 
-        /// Requires that cards is of length 5, and has had SortedHand called on it.
-        /// </summary>
-        /// <param name="cards">The hand we are trying to determine the rank of.</param>
-        /// <returns>the cards rank.</returns>
-        private static Ranking GetRanking(List<Card> cards)
-        {
-            Debug.Assert(cards.Count == 5);
-
-            if (IsRoyalFlush(cards)) return Ranking.ROYAL_FLUSH;
-            else if (IsStraightFlush(cards)) return Ranking.STRAIGHT_FLUSH;
-            else if (IsFourOfAKind(cards)) return Ranking.FOUR_OF_A_KIND;
-            else if (IsFullHouse(cards)) return Ranking.FULL_HOUSE;
-            else if (IsFlush(cards)) return Ranking.FLUSH;
-            else if (IsStraight(cards)) return Ranking.STRAIGHT;
-            else if (IsThreeOfAKind(cards)) return Ranking.THREE_OF_A_KIND;
-            else if (IsTwoPair(cards)) return Ranking.TWO_PAIR;
-            else if (IsPair(cards)) return Ranking.PAIR;
-            else return Ranking.HIGH_CARD;
-        }
-
-        /// <summary>
-        /// Orders cards in ascending order by value and suit.
-        /// Suits are ordered as SPADES < HEARTS < DIAMONDS < CLUBS.
-        /// the hand [4C, 3S, 4H, AS, 7D]  would be ordered as [3S, 4H, 4C, 7D, AS]
-        /// </summary>
-        /// <param name="cards">Represents a hand of cards. There should be exactly 5 elements in the list.</param>
-        /// <returns>The sorted list of cards. There will be exactly 5 elements in the list.</returns>
-        private static List<Card> SortedHand(List<Card> cards)
-        {
-            return cards.OrderBy(card => (card.GetPokerValue() * 4) - card.Suit).ToList();
+            return pairs;
         }
 
         /// <summary>
@@ -317,19 +280,17 @@ namespace CardsCashCasino.Data
         /// </summary>
         /// <param name="list">List of cards with length > 3</param>
         /// <returns>All 3-card permutations of the input list</returns>
-        private static IEnumerable<IEnumerable<Card>> Get3CardPermutations(List<Card> list)
+        private static List<List<Card>> Get3CardPermutations(List<Card> list)
         {
-            Debug.Assert(list.Count >= 3);
-
             IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
                                                         select
                                                             from i in Enumerable.Range(0, list.Count)
                                                             where (m & (1 << i)) != 0
                                                             select list[i];
 
-            return from m in full_perms.ToList<IEnumerable<Card>>()
+            return (from m in full_perms.ToList<IEnumerable<Card>>()
                    select
-                        from i in Enumerable.Range(0, 3) select m.ToList<Card>()[i];
+                        (from i in Enumerable.Range(0, 3) select m.ToList<Card>()[i]).ToList()).ToList();
         }
     }
 }
