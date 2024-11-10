@@ -352,6 +352,7 @@ namespace CardsCashCasino.Manager
             _currentSmallBlind = _currentBigBlind;
             _currentBigBlind = (_currentBigBlind + 1) % _playerHands.Count;
         }
+        
         /// <summary>
         /// Creates the list of player hands. The first player is the user.
         /// </summary>
@@ -364,7 +365,23 @@ namespace CardsCashCasino.Manager
             }
         }
 
+        /// <summary>
+        /// 1. top card of the deck is added to the discard pile
+        /// The next card of the deck is dealt to the board face up
+        /// A round of betting begins with the first player to the left of the dealer who has not folded
+        /// </summary>
+        public void River()
+        {
+            
+            RequestCardDiscard!(RequestCard!());
+
+
+
+        }
+
         #endregion Methods
+
+
     }
 
     public static class TexasHoldEmTextures
@@ -469,32 +486,6 @@ namespace CardsCashCasino.Manager
             return new Point(_buttonRectangle.X - 8, _buttonRectangle.Y - 8);
         }
         #endregion Methods
-
-        /// <summary>
-        /// The top card of the deck is added to the discard pile
-        /// The next card of the deck is dealt to the board face up
-        /// A round of betting begins with the first player to the left of the dealer who has not folded
-        /// </summary>
-        public void River()
-        {
-            _cardManager.Discard(_cardManager.DrawCard());
-
-
-
-        }
-
-        /// <summary>
-        /// The top card of the deck is added to the discard pile
-        /// The next card of the deck is dealt to the board face up
-        /// A round of betting begins with the first player to the left of the dealer who has not folded
-        /// </summary>
-        public void River()
-        {
-            _cardManager.Discard(_cardManager.DrawCard());
-
-
-
-        }
         
     }
 }
