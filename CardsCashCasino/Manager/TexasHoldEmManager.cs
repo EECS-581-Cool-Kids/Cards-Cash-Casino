@@ -172,6 +172,11 @@ namespace CardsCashCasino.Manager
         /// The all in button.
         /// </summary>
         private PokerActionButton? _allInButton;
+        
+        /// <summary>
+        /// The community cards shared by all players.
+        /// </summary>
+        private List<Card> _communityCards = new();
 
         /// <summary>
         /// The timeout for the cursor to move.
@@ -187,6 +192,11 @@ namespace CardsCashCasino.Manager
         /// The timeout for the user to take an action.
         /// </summary>
         private Timer? _userActionTimer;
+        
+        /// <summary>
+        /// The timeout for a card to be dealt.
+        /// </summary>
+        private Timer? _cardDealtTimer;
         
         /// <summary>
         /// Call to request the card manager to clear the deck.
@@ -359,6 +369,22 @@ namespace CardsCashCasino.Manager
             for (int i = 0; i < Constants.AI_PLAYER_COUNT; i++)
             {
                 _playerHands.Add(new PokerAIHand());
+            }
+        }
+        
+        public void DealFlop()
+        {
+            //Discard the first card in the deck.
+            RequestCardDiscard!(RequestCard!());
+            
+            // Deal the flop.
+            for (int i = 0; i < 3; i++)
+            {
+                _communityCards.Add(RequestCard!());
+                
+                // Add a timeout for the card to be drawn to the screen.
+                // This will allow the user to see the cards being drawn.
+                _cardDealtTimer = new Timer(500);
             }
         }
 
