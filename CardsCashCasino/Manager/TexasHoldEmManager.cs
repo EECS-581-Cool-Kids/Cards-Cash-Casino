@@ -322,7 +322,6 @@ namespace CardsCashCasino.Manager
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
             int aiHandXPos = 100;
             
-            
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
             _playerHands![0].SetCenter( userHandXPos, Constants.WINDOW_HEIGHT - 200);
