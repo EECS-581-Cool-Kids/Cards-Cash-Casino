@@ -482,6 +482,19 @@ namespace CardsCashCasino.Manager
 
 
         }
+
+        /// <summary>
+        /// The top card of the deck is added to the discard pile
+        /// The next card of the deck is dealt to the board face up
+        /// A round of betting begins with the first player to the left of the dealer who has not folded
+        /// </summary>
+        public void River()
+        {
+            _cardManager.Discard(_cardManager.DrawCard());
+
+
+
+        }
         
     }
 }
