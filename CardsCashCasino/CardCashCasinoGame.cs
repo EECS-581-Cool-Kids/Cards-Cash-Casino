@@ -100,7 +100,7 @@ namespace CardsCashCasino
             CardTextures.LoadContent(Content);
             //ChipTextures.LoadContent(Content);
             _blackjackManager.LoadContent(Content);
-            //TexasHoldEmTextures.LoadContent(Content);
+            _texasHoldEmManager.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
         }
 
@@ -134,7 +134,7 @@ namespace CardsCashCasino
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
             if (_texasHoldEmManager.IsPlaying)
-                _texasHoldEmManager.Draw();
+                _texasHoldEmManager.Draw(_spriteBatch!);
             // same for five card draw
             _spriteBatch!.End();
 
