@@ -377,17 +377,33 @@ namespace CardsCashCasino.Manager
         public void DealFlop()
         {
             //Discard the first card in the deck.
-            RequestCardDiscard!(RequestCard!());
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
             
             // Deal the flop.
             for (int i = 0; i < 3; i++)
             {
-                _communityCards.Add(RequestCard!());
+                _communityCards.Add(RequestCard!.Invoke());
                 
                 // Add a timeout for the card to be drawn to the screen.
                 // This will allow the user to see the cards being drawn.
                 _cardDealtTimer = new Timer(500);
             }
+        }
+        
+        /// <summary>
+        /// Deals the turn. 1 card is discarded from the deck, and 1 card is added to the community cards.
+        /// </summary>
+        public void DealTurn()
+        {
+            // Discard the first card in the deck.
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+            
+            // Deal the turn.
+            _communityCards.Add(RequestCard!.Invoke());
+            
+            // Add a timeout for the card to be drawn to the screen.
+            // This will allow the user to see the card being drawn.
+            _cardDealtTimer = new Timer(500);
         }
 
         #endregion Methods
