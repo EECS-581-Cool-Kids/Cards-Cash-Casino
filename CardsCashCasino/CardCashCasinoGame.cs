@@ -17,6 +17,7 @@
 
 using CardsCashCasino.Data;
 using CardsCashCasino.Manager;
+using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -48,7 +49,7 @@ namespace CardsCashCasino
         /// <summary>
         /// The chip manager for the game.
         /// </summary>
-        private ChipManager _chipManager = new();
+        private BettingManager _bettingManager = new();
 
         /// <summary>
         /// The blackjack manager for the game.
@@ -96,12 +97,18 @@ namespace CardsCashCasino
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            // Load the textures
             //MainMenuTextures.LoadContent(Content);
+            DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
-            //ChipTextures.LoadContent(Content);
-            _blackjackManager.LoadContent(Content);
+            BettingTextures.LoadContent(Content);
+            BlackjackTextures.LoadContent(Content);
             //TexasHoldEmTextures.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
+
+            // Load the manager's base content.
+            _bettingManager.LoadContent();
+            _blackjackManager.LoadContent();
         }
 
         /// <summary>
@@ -113,6 +120,7 @@ namespace CardsCashCasino
                 Exit();
 
             // same for the main menu
+            _bettingManager.Update();
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
             if (_texasHoldEmManager.IsPlaying)
@@ -131,6 +139,7 @@ namespace CardsCashCasino
 
             _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
             // same for the main menu
+            _bettingManager.Draw(_spriteBatch);
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
             if (_texasHoldEmManager.IsPlaying)

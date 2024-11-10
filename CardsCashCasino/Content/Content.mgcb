@@ -361,6 +361,18 @@
 /processorParam:TextureFormat=Color
 /build:Diamonds_Q.png
 
+#begin dollarSign.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:dollarSign.png
+
 #begin DoubleDisabled.png
 /importer:TextureImporter
 /processor:TextureProcessor
