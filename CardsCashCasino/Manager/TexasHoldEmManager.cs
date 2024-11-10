@@ -276,11 +276,11 @@ namespace CardsCashCasino.Manager
         public void Draw(SpriteBatch spriteBatch)
         {
             // Draw the buttons
-            _callButton.Draw(spriteBatch);
-            _checkButton.Draw(spriteBatch);
-            _raiseButton.Draw(spriteBatch);
-            _allInButton.Draw(spriteBatch);
-            _foldButton.Draw(spriteBatch);
+            _callButton!.Draw(spriteBatch);
+            _checkButton!.Draw(spriteBatch);
+            _raiseButton!.Draw(spriteBatch);
+            _allInButton!.Draw(spriteBatch);
+            _foldButton!.Draw(spriteBatch);
             
             // Draw the cursor
             _cursor.Draw(spriteBatch);
@@ -372,6 +372,9 @@ namespace CardsCashCasino.Manager
             }
         }
         
+        /// <summary>
+        /// Deals the flop. 1 card is discarded from the deck, and 3 cards are added to the community cards.
+        /// </summary>
         public void DealFlop()
         {
             //Discard the first card in the deck.
