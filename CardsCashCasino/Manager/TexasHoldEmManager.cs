@@ -22,6 +22,7 @@ using CardsCashCasino.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace CardsCashCasino.Manager
 {
@@ -35,6 +36,14 @@ namespace CardsCashCasino.Manager
         CALL,
         RAISE,
         ALL_IN
+    }
+    
+    public enum BettingPhase
+    {
+        PREFLOP,
+        FLOP,
+        TURN,
+        RIVER
     }
 
     public class TexasHoldEmManager
@@ -66,6 +75,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private bool _userPlaying;
 
+        private bool _isuserBetting;
+
         /// <summary>
         /// Set when the round has been completed, and the game is ready to move to the next round.
         /// </summary>
@@ -75,6 +86,8 @@ namespace CardsCashCasino.Manager
         /// Set when the user has folded. The game will continue without the user.
         /// </summary>
         private bool _userFolded = false;
+        
+        private BettingPhase _bettingPhase = BettingPhase.PREFLOP;
 
         /// <summary>
         /// The main pot for the game.
@@ -93,6 +106,16 @@ namespace CardsCashCasino.Manager
         /// It's used to caluclate the minimum amount that a player must bet to stay in the game.
         /// </summary>
         private int _currentBet;
+
+        /// <summary>
+        /// The user's bet amount. This is the totol amount that the user has bet in the current round.
+        /// </summary>
+        private int _currentUserBet;
+        
+        /// <summary>
+        /// The AI players' bet amount. This is the total amount that the AI players have bet in the current round.
+        /// </summary>
+        private int _currentAIPlayerBet;
 
         /// <summary>
         /// The Small Blind for the game.
@@ -144,6 +167,11 @@ namespace CardsCashCasino.Manager
         private List<CardHand> _playerHands { get; set; }
         
         /// <summary>
+        /// The list of community cards. This is the cards that are shared by all players.
+        /// </summary>
+        private List<Card> _communityCards = new();
+        
+        /// <summary>
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
@@ -176,17 +204,17 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The timeout for the cursor to move.
         /// </summary>
-        private Timer? _cursorMoveTimer;
+        private Timer? _cursorMoveTimeout;
         
         /// <summary>
         /// The timeout for the AI to take an action.
         /// </summary>
-        private Timer? _AIActionTimer;
+        private Timer? _AIActionTimeout;
         
         /// <summary>
         /// The timeout for the user to take an action.
         /// </summary>
-        private Timer? _userActionTimer;
+        private Timer? _userActionTimeout;
         
         /// <summary>
         /// Call to request the card manager to clear the deck.
@@ -255,8 +283,68 @@ namespace CardsCashCasino.Manager
         private void UpdateWhileUserPlaying()
         {
             // Return if the AI is still taking an action.
-            if (_AIActionTimer is not null && _AIActionTimer.Enabled)
+            if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
+            
+            // Handle right key press to move the cursor.
+            if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || _cursorMoveTimeout.Enabled))
+            {
+                _currentCursorPos++;
+                
+                // Wrap the cursor around if it goes past the last button.
+                if (_currentCursorPos >= Constants.POKER_BUTTON_COUNT)
+                    _currentCursorPos = 0;
+                
+                _cursor!.UpdateLocation(GetNewCursorPos());
+                
+                // Reset the cursor move timer.
+                _cursorMoveTimeout = new Timer(100);
+                _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _cursorMoveTimeout.Start();
+            }
+            // Handle left key press to move the cursor.
+            else if (Keyboard.GetState().IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            {
+                _currentCursorPos--;
+
+                // Wrap the cursor around if it goes past the first button.
+                if (_currentCursorPos < 0)
+                    _currentCursorPos = Constants.POKER_BUTTON_COUNT - 1;
+
+                _cursor!.UpdateLocation(GetNewCursorPos());
+
+                _cursorMoveTimeout = new Timer(100);
+                _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _cursorMoveTimeout.Start();
+            }
+            else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+            {
+                if (_userActionTimeout is not null && _userActionTimeout.Enabled)
+                    return;
+
+                switch (_currentCursorPos)
+                {
+                    case Constants.CHECK_BUTTON_POS:
+                        Check();
+                        break;
+                    case Constants.CALL_BUTTON_POS:
+                        Call();
+                        break;
+                    case Constants.RAISE_BUTTON_POS:
+                        Raise();
+                        break;
+                    case Constants.ALL_IN_BUTTON_POS:
+                        AllIn();
+                        break;
+                    case Constants.FOLD_BUTTON_POS:
+                        Fold();
+                        break;
+                }
+
+                _userActionTimeout = new(200);
+                _userActionTimeout.Elapsed += OnTimeoutEvent!;
+                _userActionTimeout.Start();
+            }
         }
 
         private void UpdateWhileAIPlaying()
@@ -266,11 +354,11 @@ namespace CardsCashCasino.Manager
         public void Draw(SpriteBatch spriteBatch)
         {
             // Draw the buttons
-            _callButton.Draw(spriteBatch);
-            _checkButton.Draw(spriteBatch);
-            _raiseButton.Draw(spriteBatch);
-            _allInButton.Draw(spriteBatch);
-            _foldButton.Draw(spriteBatch);
+            _callButton!.Draw(spriteBatch);
+            _checkButton!.Draw(spriteBatch);
+            _raiseButton!.Draw(spriteBatch);
+            _allInButton!.Draw(spriteBatch);
+            _foldButton!.Draw(spriteBatch);
             
             // Draw the cursor
             _cursor.Draw(spriteBatch);
@@ -360,6 +448,99 @@ namespace CardsCashCasino.Manager
             {
                 _playerHands.Add(new PokerAIHand());
             }
+        }
+
+        private void HandleBettingPhase()
+        {
+            switch (_bettingPhase)
+            {
+                case BettingPhase.PREFLOP:
+                    HandlePreflop();
+                    break;
+                case BettingPhase.FLOP:
+                    HandleFlop();
+                    break;
+                case BettingPhase.TURN:
+                    HandleTurn();
+                    break;
+                case BettingPhase.RIVER:
+                    HandleRiver();
+                    break;
+            }
+        }
+
+        private void HandlePreflop()
+        {
+            // Set the current bet to the big blind.
+            _currentBet = _bigBlindBet;
+            
+            // Set the player index to the player with the small blind
+            int playerIndex = _currentSmallBlind;
+            
+            // iterate through the players starting with the small blind. and handle their actions.
+            for (int i = 0; i < _playerHands.Count; i++)
+            {
+                // If the player is the user, set the user playing flag to true.
+                if (playerIndex == 0)
+                    _userPlaying = true;
+                
+                // If the player is an AI player, set the AI playing flag to true.
+                else
+                    _userPlaying = false;
+                
+                // Handle the player's action.
+                HandlePlayerAction(playerIndex);
+                
+                // Increment the player index.
+                playerIndex = (playerIndex + 1) % _playerHands.Count;
+            }
+        }
+
+        private void HandlePlayerAction(int playerIndex)
+        {
+            // Check if the player is the user or AI.
+            bool isUser = playerIndex == 0;
+            
+            // Get the player's hand.
+            CardHand playerHand = _playerHands[playerIndex];
+            
+            PokerAction action = isUser ? GetUserAction() : GetAIAction(playerHand);
+            
+            switch (action)
+            {
+                case PokerAction.FOLD:
+                    HandleFold(playerIndex);
+                    break;
+                case PokerAction.CHECK:
+                    HandleCheck(playerIndex);
+                    break;
+                case PokerAction.CALL:
+                    HandleCall(playerIndex);
+                    break;
+                case PokerAction.RAISE:
+                    HandleRaise(playerIndex);
+                    break;
+                case PokerAction.ALL_IN:
+                    HandleAllIn(playerIndex);
+                    break;
+            }
+        }
+
+        private void Check()
+        {
+            // Set the user betting flag to false.
+            _isuserBetting = false;
+        }
+        
+        /// <summary>
+        /// Event called when a timer times out.
+        /// </summary>
+        private static void OnTimeoutEvent(object source, ElapsedEventArgs e)
+        {
+            // Stop and dispose of the timer
+            Timer timer = (Timer)source;
+            timer.Stop();
+            timer.Dispose();
         }
 
         #endregion Methods
@@ -468,4 +649,6 @@ namespace CardsCashCasino.Manager
         }
         #endregion Methods
     }
+    
+    
 }
