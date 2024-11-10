@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
+ *  Developers: Jacob Wilkus, Ethan Berkley
  *  Date: 10/26/2024
- *  Last Modified: 10/26/2024
+ *  Last Modified: 11/08/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -33,15 +33,17 @@ namespace CardsCashCasino.Data
     /// </summary>
     public class Card
     {
+        private Suit _suit;
         /// <summary>
         /// The card's suit.
         /// </summary>
-        private Suit _suit;
+        public Suit Suit { get { return _suit; } }
 
+        private Value _value;
         /// <summary>
         /// The card's value.
         /// </summary>
-        private Value _value;
+        public Value Value { get { return _value; } }
 
         /// <summary>
         /// The card's rectangle object.

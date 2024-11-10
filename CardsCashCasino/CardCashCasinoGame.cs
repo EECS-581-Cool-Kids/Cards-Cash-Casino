@@ -35,6 +35,11 @@ namespace CardsCashCasino
         /// The sprite batch for the project.
         /// </summary>
         private SpriteBatch? _spriteBatch;
+        
+        // /// <summary>
+        // /// The internal Main menu object.
+        // /// </summary>
+        // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
 
         /// <summary>
         /// The card manager for the game.
@@ -50,6 +55,11 @@ namespace CardsCashCasino
         /// The blackjack manager for the game.
         /// </summary>
         private BlackjackManager _blackjackManager = new();
+        
+        /// <summary>
+        /// The Texas Hold 'Em manager for the game.
+        /// </summary>
+        private TexasHoldEmManager _texasHoldEmManager = new();
 
         public CardCashCasinoGame()
         {
@@ -70,6 +80,12 @@ namespace CardsCashCasino
             _blackjackManager.RequestCardManagerCleared = _cardManager.ClearDecks;
             _blackjackManager.RequestDecksOfCards = _cardManager.GenerateDecks;
             _blackjackManager.RequestCard = _cardManager.DrawCard;
+            
+            _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
+            _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
+            _texasHoldEmManager.RequestCard = _cardManager.DrawCard;
+            _texasHoldEmManager.RequestShuffle = _cardManager.Shuffle;
+            _texasHoldEmManager.RequestRecycle = _cardManager.Recycle;
 
             base.Initialize();
         }
@@ -107,7 +123,8 @@ namespace CardsCashCasino
             _bettingManager.Update();
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
-            // same for texas hold em
+            if (_texasHoldEmManager.IsPlaying)
+                _texasHoldEmManager.Update();
             // same for five card draw
 
             base.Update(gameTime);
@@ -125,7 +142,8 @@ namespace CardsCashCasino
             _bettingManager.Draw(_spriteBatch);
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
-            // same for texas hold em
+            if (_texasHoldEmManager.IsPlaying)
+                _texasHoldEmManager.Draw();
             // same for five card draw
             _spriteBatch!.End();
 
