@@ -525,7 +525,7 @@ namespace CardsCashCasino.Manager
             // RaiseButtonTexture = content.Load<Texture2D>("RaiseButton");
             // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
             // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
-            CursorTexture = content.Load<Texture2D>("Cursor");
+            // CursorTexture = content.Load<Texture2D>("Cursor");
         }
     }
 

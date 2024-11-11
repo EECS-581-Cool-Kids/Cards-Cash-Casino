@@ -115,6 +115,8 @@ namespace CardsCashCasino
             //MainMenuTextures.LoadContent(Content);
             DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
+            BettingTextures.LoadContent(Content);
+            BlackjackTextures.LoadContent(Content);
 
             //ChipTextures.LoadContent(Content);
             _blackjackManager.LoadContent();
