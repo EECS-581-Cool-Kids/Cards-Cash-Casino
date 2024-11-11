@@ -54,6 +54,11 @@ namespace CardsCashCasino.Manager
         /// The user's hand of cards.
         /// </summary>
         private UserHand _userHand = new();
+        
+        /// <summary>
+        /// The internal poker utility object. Used to determine the winner of the game and for AI decision-making.
+        /// </summary>
+        private PokerUtil _pokerUtil = new();
 
         /// <summary>
         /// Flag that indicates if the user is still active in the game.
@@ -71,12 +76,10 @@ namespace CardsCashCasino.Manager
         public bool IsPlaying { get; private set; }
 
         /// <summary>
-        /// Checks if the the user is still playing
+        /// Checks if the user is still playing.
         /// </summary>
         private bool _userPlaying;
-
-        private bool _isuserBetting;
-
+        
         /// <summary>
         /// Set when the round has been completed, and the game is ready to move to the next round.
         /// </summary>
@@ -87,6 +90,9 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private bool _userFolded = false;
         
+        /// <summary>
+        /// The current betting phase of the game.
+        /// </summary>
         private BettingPhase _bettingPhase = BettingPhase.PREFLOP;
 
         /// <summary>
@@ -95,27 +101,12 @@ namespace CardsCashCasino.Manager
         private int _mainPot;
 
         /// <summary>
-        /// The side pot for the game.
-        /// </summary>
-        private int _sidePot;
-
-        /// <summary>
         /// The current bet for the game.
         /// This is the amount that all players must match to stay in the game. It's initially set to the Big Blind.
         /// This amount is updated as players raise the bet.
         /// It's used to caluclate the minimum amount that a player must bet to stay in the game.
         /// </summary>
         private int _currentBet;
-
-        /// <summary>
-        /// The user's bet amount. This is the totol amount that the user has bet in the current round.
-        /// </summary>
-        private int _currentUserBet;
-        
-        /// <summary>
-        /// The AI players' bet amount. This is the total amount that the AI players have bet in the current round.
-        /// </summary>
-        private int _currentAIPlayerBet;
 
         /// <summary>
         /// The Small Blind for the game.
@@ -328,16 +319,16 @@ namespace CardsCashCasino.Manager
                         Check();
                         break;
                     case Constants.CALL_BUTTON_POS:
-                        Call();
+                        // Call();
                         break;
                     case Constants.RAISE_BUTTON_POS:
-                        Raise();
+                        // Raise();
                         break;
                     case Constants.ALL_IN_BUTTON_POS:
-                        AllIn();
+                        // AllIn();
                         break;
                     case Constants.FOLD_BUTTON_POS:
-                        Fold();
+                        // Fold();
                         break;
                 }
 
@@ -389,8 +380,6 @@ namespace CardsCashCasino.Manager
             _roundFinished = false;
             _userFolded = false;
             _mainPot = 0;
-            _sidePot = 0;
-            // _currentBet = _bigBlindBet;
             // _blindIncreaseCountdown = 5;
             _playerHands = new List<CardHand>(); // Initialize the list of player hands.
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
@@ -455,7 +444,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void GeneratePlayerHands()
         {
-            _playerHands[0] = _userHand;
+            _playerHands.Add(_userHand);
             for (int i = 0; i < Constants.AI_PLAYER_COUNT; i++)
             {
                 _playerHands.Add(new PokerAIHand());
@@ -470,13 +459,13 @@ namespace CardsCashCasino.Manager
                     HandlePreflop();
                     break;
                 case BettingPhase.FLOP:
-                    HandleFlop();
+                    // HandleFlop();
                     break;
                 case BettingPhase.TURN:
-                    HandleTurn();
+                    // HandleTurn();
                     break;
                 case BettingPhase.RIVER:
-                    HandleRiver();
+                    // HandleRiver();
                     break;
             }
         }
@@ -516,32 +505,87 @@ namespace CardsCashCasino.Manager
             // Get the player's hand.
             CardHand playerHand = _playerHands[playerIndex];
             
-            PokerAction action = isUser ? GetUserAction() : GetAIAction(playerHand);
+            PokerAction action = isUser ? GetUserAction() : GetAIAction(playerIndex);
             
             switch (action)
             {
                 case PokerAction.FOLD:
-                    HandleFold(playerIndex);
+                    // HandleFold(playerIndex);
                     break;
                 case PokerAction.CHECK:
-                    HandleCheck(playerIndex);
+                    // HandleCheck(playerIndex);
                     break;
                 case PokerAction.CALL:
-                    HandleCall(playerIndex);
+                    // HandleCall(playerIndex);
                     break;
                 case PokerAction.RAISE:
-                    HandleRaise(playerIndex);
+                    // HandleRaise(playerIndex);
                     break;
                 case PokerAction.ALL_IN:
-                    HandleAllIn(playerIndex);
+                    // HandleAllIn(playerIndex);
                     break;
             }
         }
+        
+        private PokerAction GetUserAction()
+        {
+            return _currentCursorPos switch
+            {
+                Constants.CHECK_BUTTON_POS => PokerAction.CHECK,
+                Constants.CALL_BUTTON_POS => PokerAction.CALL,
+                Constants.RAISE_BUTTON_POS => PokerAction.RAISE,
+                Constants.FOLD_BUTTON_POS => PokerAction.FOLD,
+                Constants.ALL_IN_BUTTON_POS => PokerAction.ALL_IN,
+                _ => PokerAction.CHECK
+            };
+        }
+        
+        private PokerAction GetAIAction(int playerIndex)
+        {
+            // Get the list of cards in the player's hand.
+            
+            //If the hand is a pair or worse. There's a 50% chance the AI will either fold or call/check.
+            
+            //If the hand is between two pairs and a straight, there's a 50% chance the AI will either call/check or raise.
+            
+            //If the hand is a straight or better, there's a 35% chance the AI will call/check and 65% chance it raises.
+            return PokerAction.CHECK;
+        }
 
+        /// <summary>
+        /// The check action.
+        /// </summary>
+        /// <returns>The false boolean</returns>
         private void Check()
         {
-            // Set the user betting flag to false.
-            _isuserBetting = false;
+            
+        }
+
+        /// <summary>
+        /// The call action. Players will bet the difference between the total current bet and their current bet.
+        /// </summary>
+        /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
+        private void Call(int playerIndex)
+        {
+                // This method's logic will need to change to consider different pots
+
+        }
+
+        private void Raise(int playerIndex, int raiseAmount)
+        {
+
+        }
+
+        private void AllIn(int playerIndex)
+        {
+            // Add logic to add the entire of the player's cash to the pot. This needs Bett
+            
+            // Add logic to handle side pot if necessary.
+        }
+        
+        private void Fold(int playerIndex)
+        {
+            _playerHands[playerIndex].Clear();
         }
         
         /// <summary>
@@ -577,7 +621,7 @@ namespace CardsCashCasino.Manager
             // RaiseButtonTexture = content.Load<Texture2D>("RaiseButton");
             // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
             // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
-            CursorTexture = content.Load<Texture2D>("Cursor");
+            CursorTexture = content.Load<Texture2D>("BlackjackCursor");
         }
     }
 
