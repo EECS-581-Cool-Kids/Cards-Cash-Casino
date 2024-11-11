@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Mo Morgan
  *  Date: 11/3/2024
- *  Last Modified: 11/7/2024
+ *  Last Modified: 11/10/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -368,6 +368,18 @@ namespace CardsCashCasino.Manager
             {
                 hand.Draw(spriteBatch);
             }
+        }
+        
+        private Point GetNewCursorPos()
+        {
+            return _currentCursorPos switch
+            {
+                Constants.CHECK_BUTTON_POS => _checkButton!.GetAdjustedPos(),
+                Constants.CALL_BUTTON_POS => _callButton!.GetAdjustedPos(),
+                Constants.RAISE_BUTTON_POS => _raiseButton!.GetAdjustedPos(),
+                Constants.FOLD_BUTTON_POS => _foldButton!.GetAdjustedPos(),
+                _ => _callButton!.GetAdjustedPos()
+            };
         }
 
         private void Initialize()
