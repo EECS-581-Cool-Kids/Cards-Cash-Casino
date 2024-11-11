@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Threading;
 using System.Timers;
 using CardsCashCasino.Data;
 using Microsoft.Xna.Framework;
@@ -253,8 +252,6 @@ namespace CardsCashCasino.Manager
             _foldButton = new (TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
-
-            StartGame(); // TODO: Remove when main menu is implemented or comment out to test Blackjack.
         }
 
         public void Update()
@@ -309,7 +306,7 @@ namespace CardsCashCasino.Manager
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
         }
-        private void StartGame()
+        public void StartGame()
         {
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
             if (RequestDeckSize!.Invoke() < (_capacity / 2))
@@ -528,7 +525,7 @@ namespace CardsCashCasino.Manager
             // RaiseButtonTexture = content.Load<Texture2D>("RaiseButton");
             // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
             // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
-            CursorTexture = content.Load<Texture2D>("Cursor");
+            // CursorTexture = content.Load<Texture2D>("Cursor");
         }
     }
 

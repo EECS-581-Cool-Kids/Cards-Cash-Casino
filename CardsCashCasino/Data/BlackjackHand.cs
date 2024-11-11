@@ -58,5 +58,13 @@ namespace CardsCashCasino.Data
 
             return blackjackValue;
         }
+
+        /// <summary>
+        /// Whether or not the hand is a blackjack initially.
+        /// </summary>
+        public bool HasBlackjack()
+        {
+            return _cards.Count == 2 && GetBlackjackValue() == Constants.MAX_BLACKJACK_VALUE;
+        }
     }
 }
