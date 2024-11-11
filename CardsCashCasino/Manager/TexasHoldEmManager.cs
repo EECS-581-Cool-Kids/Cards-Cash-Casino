@@ -432,9 +432,7 @@ namespace CardsCashCasino.Manager
         /// Winner is declared for the round
         /// </summary>
         public void RoundConclusion()
-        {
-            // TODO: How do I reveal the cards of each player?
-            
+        {   
             PokerUtil.Ranking bestRanking = PokerUtil.Ranking.HIGH_CARD;
             // List of hands that (so far) are tied for the best rank.
             // Pair of player idx and their optimal 5-card hand. 
@@ -442,6 +440,10 @@ namespace CardsCashCasino.Manager
             // For each player
             for (int i = 0; i < _playerHands.Count; i++)
             {
+                // Reveal the player's cards
+                _playerHands[i].Cards[0].GetTexture();
+                _playerHands[i].Cards[1].GetTexture();
+
                 // Get ranking and optimal hand 
                 Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[i].Cards.ToList());
                 // If this ties the best ranking
