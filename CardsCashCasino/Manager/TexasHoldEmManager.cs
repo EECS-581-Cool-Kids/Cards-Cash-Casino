@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan
+ *  Developers: Mo Morgan, Ethan Berkley
  *  Date: 11/3/2024
- *  Last Modified: 11/7/2024
+ *  Last Modified: 11/10/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -401,6 +401,24 @@ namespace CardsCashCasino.Manager
             // Deal the turn.
             _communityCards.Add(RequestCard!.Invoke());
             
+            // Add a timeout for the card to be drawn to the screen.
+            // This will allow the user to see the card being drawn.
+            _cardDealtTimer = new Timer(500);
+        }
+
+        /// <summary>
+        /// The top card of the deck is added to the discard pile
+        /// The next card of the deck is dealt to the board face up
+        /// A round of betting begins with the first player to the left of the dealer who has not folded
+        /// </summary>
+        public void DealRiver()
+        {
+            // Discard first card in the deck
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+
+            // Deal the river.
+            _communityCards.Add(RequestCard!.Invoke());
+
             // Add a timeout for the card to be drawn to the screen.
             // This will allow the user to see the card being drawn.
             _cardDealtTimer = new Timer(500);
