@@ -168,7 +168,7 @@ namespace CardsCashCasino.Manager
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
-        
+        #region buttons
         /// <summary>
         /// The check button.
         /// </summary>
@@ -193,12 +193,14 @@ namespace CardsCashCasino.Manager
         /// The all in button.
         /// </summary>
         private PokerActionButton? _allInButton;
+        #endregion
         
         /// <summary>
         /// The community cards shared by all players.
         /// </summary>
         private List<Card> _communityCards = new();
 
+        #region timers
         /// <summary>
         /// The timeout for the cursor to move.
         /// </summary>
@@ -218,7 +220,9 @@ namespace CardsCashCasino.Manager
         /// The timeout for a card to be dealt.
         /// </summary>
         private Timer? _cardDealtTimer;
-        
+        #endregion
+
+        #region delegates
         /// <summary>
         /// Call to request the card manager to clear the deck.
         /// </summary>
@@ -253,8 +257,29 @@ namespace CardsCashCasino.Manager
         /// Call to request the card manager to put a card in the discard pile.
         /// </summary>
         public Action<Card>? RequestCardDiscard { get; set; }
+        #endregion delegates
+
+        enum Phase
+        {
+            INIT,
+            FLOP,
+            TURN,
+            RIVER,
+            CONCLUSION
+        }
+        /// <summary>
+        /// What phase are we currently in?
+        /// Set by update.
+        /// </summary>
+        private Phase _currentPhase;
+        /// <summary>
+        /// What user is currently active?
+        /// Set by update.
+        /// </summary>
+        private int _currentPlayer;
+
         #endregion Properties
-        
+
         #region Methods
         public void LoadContent(ContentManager content)
         {
@@ -275,7 +300,38 @@ namespace CardsCashCasino.Manager
 
         public void Update()
         {
-            if (_userPlaying)
+            // Does a new round start with the dealer making a bet? 
+            if (_currentPlayer == _currentDealer)
+            {   
+                switch (_currentPhase)
+                {
+                    case Phase.INIT:
+                        StartGame();
+                        _currentPhase = Phase.FLOP;
+                        break;
+                    case Phase.FLOP:
+                        DealFlop();
+                        _currentPhase = Phase.TURN;
+                        break;
+                    case Phase.TURN:
+                        DealTurn();
+                        _currentPhase = Phase.RIVER;
+                        break;
+                    case Phase.RIVER:
+                        DealRiver();
+                        _currentPhase = Phase.CONCLUSION;
+                        break;
+                    case Phase.CONCLUSION:
+                        RoundConclusion();
+                        EndGame();
+                        _currentPhase = Phase.INIT; // ?
+                        break;
+                }
+                
+            }
+            
+            // If it's currently player's turn
+            if (_currentPlayer == 0) 
                 UpdateWhileUserPlaying();
             else
                 UpdateWhileAIPlaying();
@@ -286,6 +342,11 @@ namespace CardsCashCasino.Manager
             // Return if the AI is still taking an action.
             if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
+
+            // Throw user's options or whatever here
+            // This should only get called if this function results in player's turn ending
+            _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
+
             
             // Handle right key press to move the cursor.
             if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || _cursorMoveTimeout.Enabled))
@@ -346,10 +407,14 @@ namespace CardsCashCasino.Manager
                 _userActionTimeout.Elapsed += OnTimeoutEvent!;
                 _userActionTimeout.Start();
             }
+
         }
 
         private void UpdateWhileAIPlaying()
         {
+            // Should have some AI related nonsense here.
+
+            _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
             return;
         }
         public void Draw(SpriteBatch spriteBatch)
