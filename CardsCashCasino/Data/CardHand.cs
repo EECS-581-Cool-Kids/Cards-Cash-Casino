@@ -51,11 +51,6 @@ namespace CardsCashCasino.Data
         private Point? _center;
 
         /// <summary>
-        /// Whether or not the hand is "soft".
-        /// </summary>
-        public bool IsSoftBlackjackValue { get; private set; } = false;
-
-        /// <summary>
         /// Adds a card to the hand.
         /// </summary>
         public virtual void AddCard(Card newCard)
@@ -102,35 +97,6 @@ namespace CardsCashCasino.Data
         public void SetCenter(int xPos, int yPos)
         {
             _center = new Point(xPos, yPos);
-        }
-
-        /// <summary>
-        /// Returns the blackjack value of the hand.
-        /// </summary>
-        public virtual int GetBlackjackValue()
-        {
-            int blackjackValue = 0;
-
-            foreach (Card card in _cards)
-            {
-                if (card.IsBlackjackAce && blackjackValue < 11)
-                {
-                    blackjackValue += card.GetSecondaryBlackjackValue();
-                    IsSoftBlackjackValue = true;
-                }
-                else
-                {
-                    blackjackValue += card.GetBlackjackValue();
-
-                    if (IsSoftBlackjackValue && blackjackValue > 21)
-                    {
-                        blackjackValue -= 10;
-                        IsSoftBlackjackValue = false;
-                    }
-                }
-            }
-
-            return blackjackValue;
         }
 
         /// <summary>

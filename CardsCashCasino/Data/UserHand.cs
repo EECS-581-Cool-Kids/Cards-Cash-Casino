@@ -5,8 +5,8 @@
  *  Outputs: None
  *  Additional code sources: None
  *  Developers: Jacob Wilkus
- *  Date: 10/26/2024
- *  Last Modified: 11/7/2024
+ *  Date: 11/10/2024
+ *  Last Modified: 11/10/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -25,43 +25,5 @@ namespace CardsCashCasino.Data
 {
     public class UserHand : CardHand
     {
-        public UserHand() { }
-
-        /// <summary>
-        /// Whether or not you can double down the hand in a game of blackjack.
-        /// </summary>
-        public bool CanDoubleDown()
-        {
-            return _cards.Count == 2;
-        }
-
-        /// <summary>
-        /// Whether or not you can split the hand in a game of blackjack
-        /// </summary>
-        public bool CanSplit()
-        {
-            if (_cards.Count != 2)
-                return false;
-
-            return _cards[0] == _cards[1];
-        }
-
-        /// <summary>
-        /// Removes the last card and returns it.
-        /// </summary>
-        public Card RemoveLastCard()
-        {
-            Card toReturn = _cards.Last();
-            _cards.Remove(_cards.Last());
-            return toReturn;
-        }
-
-        /// <summary>
-        /// Returns the poker value of the hand.
-        /// </summary>
-        public int GetPokerValue()
-        {
-            return 0; // TODO
-        }
     }
 }

@@ -4,7 +4,7 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan
+ *  Developers: Mo Morgan, Ethan Berkley
  *  Date: 11/3/2024
  *  Last Modified: 11/10/2024
  *  Preconditions: None
@@ -17,6 +17,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using System.Timers;
 using CardsCashCasino.Data;
 using Microsoft.Xna.Framework;
@@ -191,6 +193,11 @@ namespace CardsCashCasino.Manager
         /// The all in button.
         /// </summary>
         private PokerActionButton? _allInButton;
+        
+        /// <summary>
+        /// The community cards shared by all players.
+        /// </summary>
+        private List<Card> _communityCards = new();
 
         /// <summary>
         /// The timeout for the cursor to move.
@@ -206,6 +213,11 @@ namespace CardsCashCasino.Manager
         /// The timeout for the user to take an action.
         /// </summary>
         private Timer? _userActionTimeout;
+        
+        /// <summary>
+        /// The timeout for a card to be dealt.
+        /// </summary>
+        private Timer? _cardDealtTimer;
         
         /// <summary>
         /// Call to request the card manager to clear the deck.
@@ -259,8 +271,6 @@ namespace CardsCashCasino.Manager
             _foldButton = new (TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
-
-            StartGame(); // TODO: Remove when main menu is implemented or comment out to test Blackjack.
         }
 
         public void Update()
@@ -385,7 +395,7 @@ namespace CardsCashCasino.Manager
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
         }
-        private void StartGame()
+        public void StartGame()
         {
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
             if (RequestDeckSize!.Invoke() < (_capacity / 2))
@@ -400,7 +410,6 @@ namespace CardsCashCasino.Manager
             
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
             int aiHandXPos = 100;
-            
             
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
@@ -449,6 +458,138 @@ namespace CardsCashCasino.Manager
             {
                 _playerHands.Add(new PokerAIHand());
             }
+        }
+        
+        /// <summary>
+        /// Deals the flop. 1 card is discarded from the deck, and 3 cards are added to the community cards.
+        /// </summary>
+        public void DealFlop()
+        {
+            //Discard the first card in the deck.
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+            
+            // Deal the flop.
+            for (int i = 0; i < 3; i++)
+            {
+                _communityCards.Add(RequestCard!.Invoke());
+                
+                // Add a timeout for the card to be drawn to the screen.
+                // This will allow the user to see the cards being drawn.
+                _cardDealtTimer = new Timer(500);
+            }
+        }
+        
+        /// <summary>
+        /// Deals the turn. 1 card is discarded from the deck, and 1 card is added to the community cards.
+        /// </summary>
+        public void DealTurn()
+        {
+            // Discard the first card in the deck.
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+            
+            // Deal the turn.
+            _communityCards.Add(RequestCard!.Invoke());
+            
+            // Add a timeout for the card to be drawn to the screen.
+            // This will allow the user to see the card being drawn.
+            _cardDealtTimer = new Timer(500);
+        }
+
+        /// <summary>
+        /// The top card of the deck is added to the discard pile
+        /// The next card of the deck is dealt to the board face up
+        /// A round of betting begins with the first player to the left of the dealer who has not folded
+        /// </summary>
+        public void DealRiver()
+        {
+            // Discard first card in the deck
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+
+            // Deal the river.
+            _communityCards.Add(RequestCard!.Invoke());
+
+            // Add a timeout for the card to be drawn to the screen.
+            // This will allow the user to see the card being drawn.
+            _cardDealtTimer = new Timer(500);
+        }
+
+        /// <summary>
+        /// The cards of each player are revealed at the same time
+        /// Winner is declared for the round
+        /// </summary>
+        public void RoundConclusion()
+        {   
+            PokerUtil.Ranking bestRanking = PokerUtil.Ranking.HIGH_CARD;
+            // List of hands that (so far) are tied for the best rank.
+            // Pair of player idx and their optimal 5-card hand. 
+            List<Tuple<int, List<Card>>> bestHands = new();
+            // For each player
+            for (int i = 0; i < _playerHands.Count; i++)
+            {
+                // Reveal the player's cards
+                _playerHands[i].Cards[0].GetTexture();
+                _playerHands[i].Cards[1].GetTexture();
+
+                // Get ranking and optimal hand 
+                Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[i].Cards.ToList());
+                // If this ties the best ranking
+                if (pair.Item2 == bestRanking)
+                {
+                    // Mark this hand as needing to be tie broken
+                    bestHands.Add(new Tuple<int, List<Card>>(i, pair.Item1));
+                }
+                // If this hand beats the old best ranking
+                else if (pair.Item2 < bestRanking)
+                {
+                    // Update the value
+                    bestRanking = pair.Item2;
+                    // Don't worry about losing hands
+                    bestHands.Clear();
+                    // Keep track of this hand
+                    bestHands.Add(new Tuple<int, List<Card>>(i, pair.Item1));
+                }
+            }
+            // Players that will receive a payout.
+            List<int> winners = new();
+
+            // If we don't have a tie to break
+            if (bestHands.Count == 1)
+            {
+                // Just add the player to the list and move on
+                winners.Add(bestHands[0].Item1);
+            }
+            // If there is a tie to break
+            else
+            {
+                // What is the best value we have seen out of KickerValue?
+                long bestKicker = 0;
+                // For each (player,hand) in the tiebreaker
+                foreach (Tuple<int, List<Card>> tuple in bestHands) 
+                {
+                    // Get number corresponding to how large the values in their hand are
+                    long kickerVal = PokerUtil.KickerValue(tuple.Item2);
+                    // If there's another tie
+                    if (kickerVal == bestKicker)
+                    {
+                        // Add the player to the list of winners
+                        winners.Add(tuple.Item1);
+                    }
+                    // If the current player had a better value than the old "winner"s
+                    else if (kickerVal > bestKicker)
+                    {
+                        // Update the best value
+                        bestKicker = kickerVal;
+                        // Forget about those losers
+                        winners.Clear();
+                        // Add the player to the list of winners
+                        winners.Add(tuple.Item1);
+                    }
+                }
+            }
+            
+            // winners is populated correctly at this point.
+            // TODO: Pay out bets?
+
         }
 
         private void HandleBettingPhase()
@@ -621,7 +762,9 @@ namespace CardsCashCasino.Manager
             // RaiseButtonTexture = content.Load<Texture2D>("RaiseButton");
             // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
             // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
+
             CursorTexture = content.Load<Texture2D>("BlackjackCursor");
+
         }
     }
 

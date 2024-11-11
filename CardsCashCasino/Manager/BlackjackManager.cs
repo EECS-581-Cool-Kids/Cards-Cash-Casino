@@ -1,10 +1,23 @@
+/*
+ *  Module Name: BlackjackManager.cs
+ *  Purpose: Manages the game of blackjack
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus
+ *  Date: 11/6/2024
+ *  Last Modified: 11/10/2024
+ */
+
 using CardsCashCasino.Data;
+using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 
 namespace CardsCashCasino.Manager
@@ -15,12 +28,12 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The dealer's hand.
         /// </summary>
-        private DealerHand _dealerHand = new();
+        private BlackjackDealerHand _dealerHand = new();
 
         /// <summary>
         /// The user hands. Needs to be a list to handle splitting.
         /// </summary>
-        private List<UserHand> _userHands = new();
+        private List<BlackjackUserHand> _userHands = new();
 
         /// <summary>
         /// The selected user hand.
@@ -31,6 +44,11 @@ namespace CardsCashCasino.Manager
         /// The current position of the cursor.
         /// </summary>
         private int _currentCursorPos = 0;
+
+        /// <summary>
+        /// The current bet.
+        /// </summary>
+        private int _currentBet = 0;
 
         /// <summary>
         /// Checks if the game is actively running. Used to call the update and draw loops.
@@ -51,6 +69,11 @@ namespace CardsCashCasino.Manager
         /// Checks if the user has bust.
         /// </summary>
         private bool _userBust = false;
+
+        /// <summary>
+        /// If the game should end immediately because either the dealer or user has a blackjack.
+        /// </summary>
+        private bool _blackjack = false;
 
         /// <summary>
         /// The hit button.
@@ -131,15 +154,28 @@ namespace CardsCashCasino.Manager
         /// Call to request an individual card be added.
         /// </summary>
         public Func<Card>? RequestCard { get; set; }
+
+        /// <summary>
+        /// Call to request a bet of a certain amount.
+        /// </summary>
+        public Action<int>? RequestBet { get; set; }
+
+        /// <summary>
+        /// Call to request a payout of a certain amount.
+        /// </summary>
+        public Action<int>? RequestPayout { get; set; }
+
+        /// <summary>
+        /// Requests a return to the main menu.
+        /// </summary>
+        public Action? RequestMainMenuReturn { get; set; }
         #endregion Properties
 
         /// <summary>
         /// The LoadContent method for blackjack.
         /// </summary>
-        public void LoadContent(ContentManager content)
+        public void LoadContent()
         {
-            BlackjackTextures.LoadContent(content);
-
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.BLACKJACK_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
 
@@ -151,12 +187,10 @@ namespace CardsCashCasino.Manager
 
             _cursor = new(BlackjackTextures.CursorTexture!, _hitButton.GetAdjustedPos());
 
-            _dealerHandValueIndicator = new(BlackjackTextures.ZeroTexture!, BlackjackTextures.ZeroTexture!);
-            _userHandValueIndicator = new(BlackjackTextures.ZeroTexture!, BlackjackTextures.ZeroTexture!);
+            _dealerHandValueIndicator = new();
+            _userHandValueIndicator = new();
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
-
-            // StartGame(); // temporary call. TODO remove when main menu is implemented or comment out to test Poker implementation.
         }
 
         /// <summary>
@@ -195,7 +229,7 @@ namespace CardsCashCasino.Manager
             {
                 if (dealerHandValue > Constants.MAX_BLACKJACK_VALUE)
                 {
-                    // TODO win logic with poker chips
+                    RequestPayout!.Invoke(_currentBet * 2);
 
                     _resultLabel!.SetTexture(BlackjackResult.WIN);
 
@@ -208,23 +242,21 @@ namespace CardsCashCasino.Manager
                 }
                 else if (_selectedUserHand < _userHands.Count && (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled))
                 {
-                    UserHand currentHand = _userHands[_selectedUserHand];
+                    BlackjackUserHand currentHand = _userHands[_selectedUserHand];
 
                     if (dealerHandValue > currentHand.GetBlackjackValue())
                     {
-                        // TODO lose logic with poker chips
-
                         _resultLabel!.SetTexture(BlackjackResult.LOSS);
                     }
                     else if (dealerHandValue == currentHand.GetBlackjackValue())
                     {
-                        // TODO push logic with poker chips
+                        RequestPayout!.Invoke(_currentBet);
 
                         _resultLabel!.SetTexture(BlackjackResult.PUSH);
                     }
                     else
                     {
-                        // TODO win logic with poker chips
+                        RequestPayout!.Invoke(_currentBet * 2);
 
                         _resultLabel!.SetTexture(BlackjackResult.WIN);
                     }
@@ -252,6 +284,67 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+            // return if the game start timeout is running.
+            if (CardCashCasinoGame.GameStartTimeout is not null && CardCashCasinoGame.GameStartTimeout.Enabled)
+                return;
+
+            // handle end of game logic
+            if (_blackjack)
+            {
+                if (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled)
+                    EndGame();
+                return;
+            }
+
+            // handle blackjack initial behavior
+            if (_dealerHand.HasBlackjack() && _userHands.First().HasBlackjack())
+            {
+                _resultLabel!.SetTexture(BlackjackResult.PUSH);
+
+                _dealerHand.UnhideCard();
+
+                _resultLabel!.CanDraw = true;
+                _roundFinishTimeout = new Timer(500);
+                _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
+                _roundFinishTimeout.Start();
+
+                RequestPayout!.Invoke(_currentBet);
+
+                _blackjack = true;
+
+                return;
+            }
+            else if (_dealerHand.HasBlackjack())
+            {
+                _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
+
+                _dealerHand.UnhideCard();
+
+                _resultLabel!.CanDraw = true;
+                _roundFinishTimeout = new Timer(500);
+                _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
+                _roundFinishTimeout.Start();
+
+                _blackjack = true;
+
+                return;
+            }
+            else if (_userHands.Any() && _userHands.First().HasBlackjack())
+            {
+                _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
+
+                _resultLabel!.CanDraw = true;
+                _roundFinishTimeout = new Timer(500);
+                _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
+                _roundFinishTimeout.Start();
+
+                RequestPayout!.Invoke(Convert.ToInt32(_currentBet * 2.5));
+
+                _blackjack = true;
+
+                return;
+            }
+
             _doubleDownButton!.IsEnabled = _userHands[_selectedUserHand].CanDoubleDown();
             _splitButton!.IsEnabled = _userHands[_selectedUserHand].CanSplit();
 
@@ -320,7 +413,8 @@ namespace CardsCashCasino.Manager
                 _userMoveTimeout.Start();
             }
 
-            if (_userBust && (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled))
+            if ((_userBust && (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled)) || 
+                _userHands[_selectedUserHand].GetBlackjackValue() == Constants.MAX_BLACKJACK_VALUE)
             {
                 _userBust = false;
 
@@ -381,11 +475,14 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
+            _currentBet = BettingManager.UserBet;
+            RequestBet!.Invoke(_currentBet);
+
             // Reset the cards.
             RequestCardManagerCleared!.Invoke();
             RequestDecksOfCards!.Invoke(4);
 
-            UserHand initialHand = new();
+            BlackjackUserHand initialHand = new();
 
             // Calculate the basic position locations.
             int handXPos = Constants.WINDOW_WIDTH / 2;
@@ -417,7 +514,9 @@ namespace CardsCashCasino.Manager
             _standButton!.IsEnabled = true;
             _forfeitButton!.IsEnabled = true;
 
-            // TODO Check if either user or dealer has blackjack to begin. Do this with the payout ticket.
+            CardCashCasinoGame.GameStartTimeout = new(300);
+            CardCashCasinoGame.GameStartTimeout.Elapsed += Constants.OnTimeoutEvent!;
+            CardCashCasinoGame.GameStartTimeout.Start();
         }
 
         /// <summary>
@@ -428,10 +527,13 @@ namespace CardsCashCasino.Manager
             _dealerHand.Clear();
             _userHands.Clear();
             _selectedUserHand = 0;
+            _currentBet = 0;
+            _blackjack = false;
+            IsPlaying = false;
 
             System.Threading.Thread.Sleep(500);
 
-            StartGame(); // TODO add option to select a new game
+            RequestMainMenuReturn!.Invoke();
         }
 
         /// <summary>
@@ -439,7 +541,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void Hit()
         {
-            UserHand currentHand = _userHands[_selectedUserHand];
+            BlackjackUserHand currentHand = _userHands[_selectedUserHand];
             currentHand.AddCard(RequestCard!.Invoke());
 
             if (currentHand.GetBlackjackValue() <= Constants.MAX_BLACKJACK_VALUE)
@@ -460,8 +562,6 @@ namespace CardsCashCasino.Manager
             }
             else
             {
-                // TODO bust logic with poker chips
-
                 _resultLabel!.SetTexture(BlackjackResult.BUST);
 
                 _resultLabel!.CanDraw = true;
@@ -479,7 +579,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void DoubleDown()
         {
-            UserHand currentHand = _userHands[_selectedUserHand];
+            RequestBet!.Invoke(_currentBet);
+            _currentBet *= 2;
+
+            BlackjackUserHand currentHand = _userHands[_selectedUserHand];
 
             currentHand.AddCard(RequestCard!.Invoke());
             _userHandValueIndicator!.Update(currentHand.GetBlackjackValue());
@@ -492,9 +595,9 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void Split()
         {
-            UserHand currentHand = _userHands[_selectedUserHand];
+            BlackjackUserHand currentHand = _userHands[_selectedUserHand];
 
-            UserHand newHand = new();
+            BlackjackUserHand newHand = new();
             newHand.AddCard(currentHand.RemoveLastCard());
             newHand.SetCenter(Constants.WINDOW_WIDTH / 2, Constants.WINDOW_HEIGHT - 200);
 
@@ -510,7 +613,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void Forfeit()
         {
-            // TODO forfeit logic with poker chips.
+            RequestPayout!.Invoke(_currentBet / 2);
 
             EndGame();
         }
@@ -523,7 +626,7 @@ namespace CardsCashCasino.Manager
             if (_selectedUserHand < _userHands.Count - 1)
             {
                 _selectedUserHand++;
-                UserHand nextHand = _userHands[_selectedUserHand];
+                BlackjackUserHand nextHand = _userHands[_selectedUserHand];
 
                 _userHandValueIndicator!.Update(nextHand.GetBlackjackValue());
                 nextHand.RecalculateCardPositions();
@@ -634,56 +737,6 @@ namespace CardsCashCasino.Manager
         public static Texture2D? CursorTexture { get; private set; }
 
         /// <summary>
-        /// Texture for zero.
-        /// </summary>
-        public static Texture2D? ZeroTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for one.
-        /// </summary>
-        public static Texture2D? OneTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for two.
-        /// </summary>
-        public static Texture2D? TwoTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for three.
-        /// </summary>
-        public static Texture2D? ThreeTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for four.
-        /// </summary>
-        public static Texture2D? FourTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for five.
-        /// </summary>
-        public static Texture2D? FiveTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for six.
-        /// </summary>
-        public static Texture2D? SixTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for seven.
-        /// </summary>
-        public static Texture2D? SevenTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for eight.
-        /// </summary>
-        public static Texture2D? EightTexture { get; private set; }
-
-        /// <summary>
-        /// Texture for nine.
-        /// </summary>
-        public static Texture2D? NineTexture { get; private set; }
-
-        /// <summary>
         /// Texture for "bust" at the end of the game.
         /// </summary>
         public static Texture2D? BustTexture { get; private set; }
@@ -704,6 +757,11 @@ namespace CardsCashCasino.Manager
         public static Texture2D? PushTexture { get; private set; }
 
         /// <summary>
+        /// Texture for "blackjack" at the end of the game.
+        /// </summary>
+        public static Texture2D? BlackjackTexture { get; private set; }
+
+        /// <summary>
         /// Loads the assets for Blackjack.
         /// </summary>
         public static void LoadContent(ContentManager content)
@@ -719,20 +777,11 @@ namespace CardsCashCasino.Manager
             ForfeitEnabledTexture = content.Load<Texture2D>("ForfeitEnabled");
             ForfeitDisabledTexture = content.Load<Texture2D>("ForfeitDisabled");
             CursorTexture = content.Load<Texture2D>("BlackjackCursor");
-            ZeroTexture = content.Load<Texture2D>("zero");
-            OneTexture = content.Load<Texture2D>("one");
-            TwoTexture = content.Load<Texture2D>("two");
-            ThreeTexture = content.Load<Texture2D>("three");
-            FourTexture = content.Load<Texture2D>("four");
-            FiveTexture = content.Load<Texture2D>("five");
-            SixTexture = content.Load<Texture2D>("six");
-            SevenTexture = content.Load<Texture2D>("seven");
-            EightTexture = content.Load<Texture2D>("eight");
-            NineTexture = content.Load<Texture2D>("nine");
             BustTexture = content.Load<Texture2D>("bustIcon");
             LossTexture = content.Load<Texture2D>("lossIcon");
             WinTexture = content.Load<Texture2D>("winIcon");
             PushTexture = content.Load<Texture2D>("pushIcon");
+            BlackjackTexture = content.Load<Texture2D>("blackjackIcon");
         }
     }
 
@@ -834,30 +883,19 @@ namespace CardsCashCasino.Manager
     public class BlackjackHandValueIndicator
     {
         /// <summary>
-        /// Texture for the first digit.
+        /// The first digit.
         /// </summary>
-        private Texture2D _firstDigitTexture;
+        private IndicatorDigit _firstDigit = new();
 
         /// <summary>
-        /// Texture for the second digit.
+        /// The second digit.
         /// </summary>
-        private Texture2D _secondDigitTexture;
+        private IndicatorDigit _secondDigit = new();
 
         /// <summary>
-        /// Rectnagle for the first digit.
+        /// The previous value.
         /// </summary>
-        private Rectangle? _firstDigitRectangle;
-
-        /// <summary>
-        /// Rectangle for the second digit.
-        /// </summary>
-        private Rectangle? _secondDigitRectangle;
-
-        public BlackjackHandValueIndicator(Texture2D firstDigitTexture, Texture2D secondDigitTexture)
-        {
-            _firstDigitTexture = firstDigitTexture;
-            _secondDigitTexture = secondDigitTexture;
-        }
+        private int _previousValue = 0;
 
         /// <summary>
         /// Sets the position of the indicator.
@@ -866,8 +904,8 @@ namespace CardsCashCasino.Manager
         /// <param name="yPos">The y coordinate</param>
         public void SetPosition(int xPos, int yPos)
         {
-            _firstDigitRectangle = new Rectangle(xPos, yPos, 21, 24);
-            _secondDigitRectangle = new Rectangle(xPos + 21, yPos, 21, 24);
+            _firstDigit.SetPosition(xPos, yPos);
+            _secondDigit.SetPosition(xPos+21, yPos);
         }
 
         /// <summary>
@@ -875,55 +913,16 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update(int handValue)
         {
+            if (handValue == _previousValue)
+                return;
+
             int firstDigit = handValue / 10;
             int secondDigit = handValue % 10;
 
-            switch (firstDigit)
-            {
-                case 0:
-                    _firstDigitTexture = BlackjackTextures.ZeroTexture!;
-                    break;
-                case 1:
-                    _firstDigitTexture = BlackjackTextures.OneTexture!;
-                    break;
-                case 2:
-                    _firstDigitTexture = BlackjackTextures.TwoTexture!;
-                    break;
-            }
+            _firstDigit.Update(firstDigit);
+            _secondDigit.Update(secondDigit);
 
-            switch (secondDigit)
-            {
-                case 0:
-                    _secondDigitTexture = BlackjackTextures.ZeroTexture!;
-                    break;
-                case 1:
-                    _secondDigitTexture = BlackjackTextures.OneTexture!;
-                    break;
-                case 2:
-                    _secondDigitTexture = BlackjackTextures.TwoTexture!;
-                    break;
-                case 3:
-                    _secondDigitTexture = BlackjackTextures.ThreeTexture!;
-                    break;
-                case 4:
-                    _secondDigitTexture = BlackjackTextures.FourTexture!;
-                    break;
-                case 5:
-                    _secondDigitTexture = BlackjackTextures.FiveTexture!;
-                    break;
-                case 6:
-                    _secondDigitTexture = BlackjackTextures.SixTexture!;
-                    break;
-                case 7:
-                    _secondDigitTexture = BlackjackTextures.SevenTexture!;
-                    break;
-                case 8:
-                    _secondDigitTexture = BlackjackTextures.EightTexture!;
-                    break;
-                case 9:
-                    _secondDigitTexture = BlackjackTextures.NineTexture!;
-                    break;
-            }
+            _previousValue = handValue;
         }
 
         /// <summary>
@@ -931,10 +930,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (_firstDigitRectangle is not null)
-                spriteBatch.Draw(_firstDigitTexture, (Rectangle)_firstDigitRectangle, Color.White);
-            if (_secondDigitRectangle is not null)
-                spriteBatch.Draw(_secondDigitTexture, (Rectangle)_secondDigitRectangle, Color.White);
+            _firstDigit.Draw(spriteBatch);
+            _secondDigit.Draw(spriteBatch);
         }
     }
 
@@ -980,6 +977,9 @@ namespace CardsCashCasino.Manager
                 case BlackjackResult.BUST:
                     _resultTexture = BlackjackTextures.BustTexture;
                     break;
+                case BlackjackResult.BLACKJACK:
+                    _resultTexture = BlackjackTextures.BlackjackTexture;
+                    break;
             }
         }
 
@@ -998,6 +998,7 @@ namespace CardsCashCasino.Manager
         WIN,
         LOSS,
         PUSH,
-        BUST
+        BUST,
+        BLACKJACK
     }
 }

@@ -4,7 +4,7 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan
+ *  Developers: Mo Morgan, Jacob Wilkus
  *  Date: 11/3/2024
  *  Last Modified: 11/7/2024
  *  Preconditions: None
@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace CardsCashCasino.Data
 {
@@ -92,14 +93,7 @@ namespace CardsCashCasino.Data
         /// Position of the fold button.
         /// </summary>
         public const int FOLD_BUTTON_POS = 4;
-        #endregion Blackjack
-        
-        #region Poker
-        /// <summary>
-        /// Used to determine the number of AI players in Texas Hold 'Em and 5 Card Draw.
-        /// </summary>
-        public const int AI_PLAYER_COUNT = 4;
-        
+
         /// <summary>
         /// Position of the hit button.
         /// </summary>
@@ -124,16 +118,34 @@ namespace CardsCashCasino.Data
         /// Position of the forfeit button.
         /// </summary>
         public const int FORFEIT_BUTTON_POS = 4;
+        #endregion Blackjack
+
+        #region Poker
+        /// <summary>
+        /// Used to determine the number of AI players in Texas Hold 'Em and 5 Card Draw.
+        /// </summary>
+        public const int AI_PLAYER_COUNT = 4;
 
         /// <summary>
         /// The number of card decks used to play poker.
         /// </summary>
         public const int POKER_DECK_COUNT = 1;
-        
+
         /// <summary>
         /// The number of buttons in poker.
         /// </summary>
         public const int POKER_BUTTON_COUNT = 5;
         #endregion Poker
+          
+          /// <summary>
+        /// Event called when a timer times out.
+        /// </summary>
+        public static void OnTimeoutEvent(object source, ElapsedEventArgs e)
+        {
+            // Stop and dispose of the timer
+            Timer timer = (Timer)source;
+            timer.Stop();
+            timer.Dispose();
+        }
     }
 }

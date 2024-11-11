@@ -1,5 +1,5 @@
 ﻿/*
- *  Module Name: DealerHand.cs
+ *  Module Name: BlackjackDealerHand.cs
  *  Purpose: Models the dealer's hand of cards. Used in blackjack.
  *  Inputs: None
  *  Outputs: None
@@ -24,14 +24,14 @@ using System.Threading.Tasks;
 
 namespace CardsCashCasino.Data
 {
-    public class DealerHand : CardHand
+    public class BlackjackDealerHand : BlackjackHand
     {
         /// <summary>
         /// Whether or not the second card is hidden.
         /// </summary>
         private bool _isSecondCardHidden = false;
 
-        public DealerHand() { }
+        public BlackjackDealerHand() { }
 
         /// <summary>
         /// Overrides "AddCard" to set the texture of the second card to be hidden.
@@ -61,7 +61,9 @@ namespace CardsCashCasino.Data
         /// </summary>
         public override int GetBlackjackValue()
         {
-            if (_isSecondCardHidden)
+            if (base.GetBlackjackValue() == Constants.MAX_BLACKJACK_VALUE)
+                return Constants.MAX_BLACKJACK_VALUE;
+            else if (_isSecondCardHidden)
                 return base.GetBlackjackValue() - _cards[1].GetBlackjackValue();
             else
                 return base.GetBlackjackValue();
