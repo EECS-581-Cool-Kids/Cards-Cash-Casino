@@ -17,6 +17,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Threading;
 using System.Timers;
 using CardsCashCasino.Data;
 using Microsoft.Xna.Framework;
@@ -422,6 +425,83 @@ namespace CardsCashCasino.Manager
             // Add a timeout for the card to be drawn to the screen.
             // This will allow the user to see the card being drawn.
             _cardDealtTimer = new Timer(500);
+        }
+
+        /// <summary>
+        /// The cards of each player are revealed at the same time
+        /// Winner is declared for the round
+        /// </summary>
+        public void RoundConclusion()
+        {
+            // TODO: How do I reveal the cards of each player?
+            
+            PokerUtil.Ranking bestRanking = PokerUtil.Ranking.HIGH_CARD;
+            // List of hands that (so far) are tied for the best rank.
+            // Pair of player idx and their optimal 5-card hand. 
+            List<Tuple<int, List<Card>>> bestHands = new();
+            // For each player
+            for (int i = 0; i < _playerHands.Count; i++)
+            {
+                // Get ranking and optimal hand 
+                Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[i].Cards.ToList());
+                // If this ties the best ranking
+                if (pair.Item2 == bestRanking)
+                {
+                    // Mark this hand as needing to be tie broken
+                    bestHands.Add(new Tuple<int, List<Card>>(i, pair.Item1));
+                }
+                // If this hand beats the old best ranking
+                else if (pair.Item2 < bestRanking)
+                {
+                    // Update the value
+                    bestRanking = pair.Item2;
+                    // Don't worry about losing hands
+                    bestHands.Clear();
+                    // Keep track of this hand
+                    bestHands.Add(new Tuple<int, List<Card>>(i, pair.Item1));
+                }
+            }
+            // Players that will receive a payout.
+            List<int> winners = new();
+
+            // If we don't have a tie to break
+            if (bestHands.Count == 1)
+            {
+                // Just add the player to the list and move on
+                winners.Add(bestHands[0].Item1);
+            }
+            // If there is a tie to break
+            else
+            {
+                // What is the best value we have seen out of KickerValue?
+                long bestKicker = 0;
+                // For each (player,hand) in the tiebreaker
+                foreach (Tuple<int, List<Card>> tuple in bestHands) 
+                {
+                    // Get number corresponding to how large the values in their hand are
+                    long kickerVal = PokerUtil.KickerValue(tuple.Item2);
+                    // If there's another tie
+                    if (kickerVal == bestKicker)
+                    {
+                        // Add the player to the list of winners
+                        winners.Add(tuple.Item1);
+                    }
+                    // If the current player had a better value than the old "winner"s
+                    else if (kickerVal > bestKicker)
+                    {
+                        // Update the best value
+                        bestKicker = kickerVal;
+                        // Forget about those losers
+                        winners.Clear();
+                        // Add the player to the list of winners
+                        winners.Add(tuple.Item1);
+                    }
+                }
+            }
+            
+            // winners is populated correctly at this point.
+            // TODO: Pay out bets?
+
         }
 
         #endregion Methods
