@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Derek Norton
+ *  Developers: Derek Norton, Mo Morgan
  *  Date: 10/21/2024
- *  Last Modified: 10/27/2024
+ *  Last Modified: 11/10/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -101,9 +101,10 @@ namespace CardsCashCasino
             //MainMenuTextures.LoadContent(Content);
             DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
-            BettingTextures.LoadContent(Content);
-            BlackjackTextures.LoadContent(Content);
-            //TexasHoldEmTextures.LoadContent(Content);
+
+            //ChipTextures.LoadContent(Content);
+            _blackjackManager.LoadContent(Content);
+            _texasHoldEmManager.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
 
             // Load the manager's base content.
@@ -143,7 +144,7 @@ namespace CardsCashCasino
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
             if (_texasHoldEmManager.IsPlaying)
-                _texasHoldEmManager.Draw();
+                _texasHoldEmManager.Draw(_spriteBatch);
             // same for five card draw
             _spriteBatch!.End();
 

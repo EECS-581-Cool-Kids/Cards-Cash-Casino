@@ -172,6 +172,11 @@ namespace CardsCashCasino.Manager
         /// The all in button.
         /// </summary>
         private PokerActionButton? _allInButton;
+        
+        /// <summary>
+        /// The community cards shared by all players.
+        /// </summary>
+        private List<Card> _communityCards = new();
 
         /// <summary>
         /// The timeout for the cursor to move.
@@ -187,6 +192,11 @@ namespace CardsCashCasino.Manager
         /// The timeout for the user to take an action.
         /// </summary>
         private Timer? _userActionTimer;
+        
+        /// <summary>
+        /// The timeout for a card to be dealt.
+        /// </summary>
+        private Timer? _cardDealtTimer;
         
         /// <summary>
         /// Call to request the card manager to clear the deck.
@@ -266,11 +276,11 @@ namespace CardsCashCasino.Manager
         public void Draw(SpriteBatch spriteBatch)
         {
             // Draw the buttons
-            _callButton.Draw(spriteBatch);
-            _checkButton.Draw(spriteBatch);
-            _raiseButton.Draw(spriteBatch);
-            _allInButton.Draw(spriteBatch);
-            _foldButton.Draw(spriteBatch);
+            _callButton!.Draw(spriteBatch);
+            _checkButton!.Draw(spriteBatch);
+            _raiseButton!.Draw(spriteBatch);
+            _allInButton!.Draw(spriteBatch);
+            _foldButton!.Draw(spriteBatch);
             
             // Draw the cursor
             _cursor.Draw(spriteBatch);
@@ -311,7 +321,6 @@ namespace CardsCashCasino.Manager
             
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
             int aiHandXPos = 100;
-            
             
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
@@ -360,6 +369,41 @@ namespace CardsCashCasino.Manager
             {
                 _playerHands.Add(new PokerAIHand());
             }
+        }
+        
+        /// <summary>
+        /// Deals the flop. 1 card is discarded from the deck, and 3 cards are added to the community cards.
+        /// </summary>
+        public void DealFlop()
+        {
+            //Discard the first card in the deck.
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+            
+            // Deal the flop.
+            for (int i = 0; i < 3; i++)
+            {
+                _communityCards.Add(RequestCard!.Invoke());
+                
+                // Add a timeout for the card to be drawn to the screen.
+                // This will allow the user to see the cards being drawn.
+                _cardDealtTimer = new Timer(500);
+            }
+        }
+        
+        /// <summary>
+        /// Deals the turn. 1 card is discarded from the deck, and 1 card is added to the community cards.
+        /// </summary>
+        public void DealTurn()
+        {
+            // Discard the first card in the deck.
+            RequestCardDiscard!.Invoke(RequestCard!.Invoke());
+            
+            // Deal the turn.
+            _communityCards.Add(RequestCard!.Invoke());
+            
+            // Add a timeout for the card to be drawn to the screen.
+            // This will allow the user to see the card being drawn.
+            _cardDealtTimer = new Timer(500);
         }
 
         #endregion Methods
