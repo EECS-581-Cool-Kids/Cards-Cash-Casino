@@ -93,14 +93,7 @@ namespace CardsCashCasino.Data
         /// Position of the fold button.
         /// </summary>
         public const int FOLD_BUTTON_POS = 4;
-        #endregion Blackjack
-        
-        #region Poker
-        /// <summary>
-        /// Used to determine the number of AI players in Texas Hold 'Em and 5 Card Draw.
-        /// </summary>
-        public const int AI_PLAYER_COUNT = 4;
-        
+
         /// <summary>
         /// Position of the hit button.
         /// </summary>
@@ -127,11 +120,17 @@ namespace CardsCashCasino.Data
         public const int FORFEIT_BUTTON_POS = 4;
         #endregion Blackjack
 
+        #region Poker
+        /// <summary>
+        /// Used to determine the number of AI players in Texas Hold 'Em and 5 Card Draw.
+        /// </summary>
+        public const int AI_PLAYER_COUNT = 4;
+
         /// <summary>
         /// The number of card decks used to play poker.
         /// </summary>
         public const int POKER_DECK_COUNT = 1;
-        
+
         /// <summary>
         /// The number of buttons in poker.
         /// </summary>

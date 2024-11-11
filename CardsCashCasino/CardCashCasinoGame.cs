@@ -117,7 +117,7 @@ namespace CardsCashCasino
             CardTextures.LoadContent(Content);
 
             //ChipTextures.LoadContent(Content);
-            _blackjackManager.LoadContent(Content);
+            _blackjackManager.LoadContent();
             _texasHoldEmManager.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
 
