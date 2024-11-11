@@ -158,10 +158,9 @@ namespace CardsCashCasino.Manager
         public Action<int>? RequestPayout { get; set; }
 
         /// <summary>
-        /// Requests the betting menu.
-        /// Returns the amount bet by the user.
+        /// Requests a return to the main menu.
         /// </summary>
-        public Action? RequestOpenBettingMenu { get; set; }
+        public Action? RequestMainMenuReturn { get; set; }
         #endregion Properties
 
         /// <summary>
@@ -277,10 +276,19 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
-            if (_blackjack && _roundFinishTimeout is not null && _roundFinishTimeout.Enabled)
+            // return if the game start timeout is running.
+            if (CardCashCasinoGame.GameStartTimeout is not null && CardCashCasinoGame.GameStartTimeout.Enabled)
                 return;
-            else if (_blackjack)
-                EndGame();
+
+            // handle end of game logic
+            if (_blackjack)
+            {
+                if (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled)
+                    EndGame();
+                return;
+            }
+
+            // handle blackjack initial behavior
             if (_dealerHand.HasBlackjack() && _userHands.First().HasBlackjack())
             {
                 _resultLabel!.SetTexture(BlackjackResult.PUSH);
@@ -313,7 +321,7 @@ namespace CardsCashCasino.Manager
 
                 return;
             }
-            else if (_userHands.First().HasBlackjack())
+            else if (_userHands.Any() && _userHands.First().HasBlackjack())
             {
                 _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
 
@@ -459,8 +467,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
-            // TODO betting logic
-            _currentBet = 50;
+            _currentBet = BettingManager.UserBet;
             RequestBet!.Invoke(_currentBet);
 
             // Reset the cards.
@@ -498,6 +505,10 @@ namespace CardsCashCasino.Manager
             _hitButton!.IsEnabled = true;
             _standButton!.IsEnabled = true;
             _forfeitButton!.IsEnabled = true;
+
+            CardCashCasinoGame.GameStartTimeout = new(300);
+            CardCashCasinoGame.GameStartTimeout.Elapsed += Constants.OnTimeoutEvent!;
+            CardCashCasinoGame.GameStartTimeout.Start();
         }
 
         /// <summary>
@@ -510,10 +521,11 @@ namespace CardsCashCasino.Manager
             _selectedUserHand = 0;
             _currentBet = 0;
             _blackjack = false;
+            IsPlaying = false;
 
             System.Threading.Thread.Sleep(500);
 
-            StartGame(); // TODO add option to select a new game
+            RequestMainMenuReturn!.Invoke();
         }
 
         /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace CardsCashCasino.Data
 {
@@ -71,5 +72,16 @@ namespace CardsCashCasino.Data
         /// </summary>
         public const int FORFEIT_BUTTON_POS = 4;
         #endregion Blackjack
+
+        /// <summary>
+        /// Event called when a timer times out.
+        /// </summary>
+        public static void OnTimeoutEvent(object source, ElapsedEventArgs e)
+        {
+            // Stop and dispose of the timer
+            Timer timer = (Timer)source;
+            timer.Stop();
+            timer.Dispose();
+        }
     }
 }

@@ -23,8 +23,9 @@ namespace CardsCashCasino.Manager
 
         /// <summary>
         /// How much the user bet last time.
+        /// Static with internal set so it can be modified in other parts of this file.
         /// </summary>
-        public int UserBet { get; private set; } = 0;
+        public static int UserBet { get; internal set; } = 0;
 
         /// <summary>
         /// The display for the user's cash value.
@@ -44,6 +45,17 @@ namespace CardsCashCasino.Manager
             get
             {
                 return _bettingMenu?.Open ?? false;
+            }
+        }
+
+        /// <summary>
+        /// Whether or not the user has bet.
+        /// </summary>
+        public bool HasBet
+        {
+            get
+            {
+                return UserBet != 0;
             }
         }
 
@@ -75,7 +87,8 @@ namespace CardsCashCasino.Manager
         public void Draw(SpriteBatch spriteBatch)
         {
             _userCashValueIndicator!.Draw(spriteBatch);
-            _bettingMenu!.Draw(spriteBatch);
+            if (IsBetting)
+                _bettingMenu!.Draw(spriteBatch);
         }
 
         /// <summary>
@@ -94,6 +107,14 @@ namespace CardsCashCasino.Manager
         {
             UserCashValue += value;
             _userCashValueIndicator!.Update(UserCashValue);
+        }
+
+        /// <summary>
+        /// Opens the betting menu.
+        /// </summary>
+        public void OpenBettingMenu()
+        {
+            _bettingMenu!.OpenMenu();
         }
     }
 
@@ -409,6 +430,14 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
+        /// Opens the menu.
+        /// </summary>
+        public void OpenMenu()
+        {
+            Open = true;
+        }
+
+        /// <summary>
         /// Update loop
         /// </summary>
         public void Update()
@@ -476,7 +505,7 @@ namespace CardsCashCasino.Manager
             }
 
             _cursorMoveTimeout = new(50);
-            _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+            _cursorMoveTimeout.Elapsed += Constants.OnTimeoutEvent!;
             _cursorMoveTimeout.Start();
         }
 
@@ -590,7 +619,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void ConfirmBet()
         {
-
+            BettingManager.UserBet = _currentBet;
+            Open = false;
         }
 
         /// <summary>
@@ -598,7 +628,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void CancelBet()
         {
-
+            _currentBet = 0;
+            Open = false;
         }
 
         /// <summary>
@@ -641,17 +672,6 @@ namespace CardsCashCasino.Manager
 
             // Draw the user bet
             _userBetValue.Draw(spriteBatch);
-        }
-
-        /// <summary>
-        /// Event called when a timer times out.
-        /// </summary>
-        private static void OnTimeoutEvent(object source, ElapsedEventArgs e)
-        {
-            // Stop and dispose of the timer
-            Timer timer = (Timer)source;
-            timer.Stop();
-            timer.Dispose();
         }
     }
 
