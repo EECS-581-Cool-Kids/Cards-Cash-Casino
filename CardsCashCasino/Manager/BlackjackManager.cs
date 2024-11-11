@@ -161,7 +161,7 @@ namespace CardsCashCasino.Manager
         /// Requests the betting menu.
         /// Returns the amount bet by the user.
         /// </summary>
-        public Func<int>? RequestOpenBettingMenu { get; set; }
+        public Action? RequestOpenBettingMenu { get; set; }
         #endregion Properties
 
         /// <summary>
@@ -184,8 +184,6 @@ namespace CardsCashCasino.Manager
             _userHandValueIndicator = new();
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
-
-            StartGame(); // temporary call. TODO remove when main menu is implemented or comment out to test Poker implementation.
         }
 
         /// <summary>

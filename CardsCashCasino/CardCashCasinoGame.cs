@@ -106,6 +106,7 @@ namespace CardsCashCasino
                 Exit();
 
             // same for the main menu
+            _bettingManager.Update();
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
             // same for texas hold em
