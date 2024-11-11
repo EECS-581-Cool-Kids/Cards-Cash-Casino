@@ -252,8 +252,6 @@ namespace CardsCashCasino.Manager
             _foldButton = new (TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
-
-            StartGame(); // TODO: Remove when main menu is implemented or comment out to test Blackjack.
         }
 
         public void Update()
@@ -308,7 +306,7 @@ namespace CardsCashCasino.Manager
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
         }
-        private void StartGame()
+        public void StartGame()
         {
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
             if (RequestDeckSize!.Invoke() < (_capacity / 2))

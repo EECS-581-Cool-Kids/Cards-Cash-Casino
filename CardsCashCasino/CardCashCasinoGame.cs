@@ -157,7 +157,10 @@ namespace CardsCashCasino
                     else if (!_blackjackManager.IsPlaying)
                         _blackjackManager.StartGame();
                     break;
-                // add other cases.
+                case SelectedGame.HOLDEM:
+                    if (!_texasHoldEmManager.IsPlaying)
+                        _texasHoldEmManager.StartGame();
+                    break;
             }
 
             if (_blackjackManager.IsPlaying)
