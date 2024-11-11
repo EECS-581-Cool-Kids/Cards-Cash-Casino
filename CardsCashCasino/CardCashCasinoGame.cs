@@ -123,11 +123,11 @@ namespace CardsCashCasino
 
             _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
             // same for the main menu
-            _bettingManager.Draw(_spriteBatch);
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
             // same for texas hold em
             // same for five card draw
+            _bettingManager.Draw(_spriteBatch);
             _spriteBatch!.End();
 
             base.Draw(gameTime);

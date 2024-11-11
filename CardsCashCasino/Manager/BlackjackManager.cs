@@ -500,8 +500,6 @@ namespace CardsCashCasino.Manager
             _hitButton!.IsEnabled = true;
             _standButton!.IsEnabled = true;
             _forfeitButton!.IsEnabled = true;
-
-            // TODO Check if either user or dealer has blackjack to begin. Do this with the payout ticket.
         }
 
         /// <summary>

@@ -43,5 +43,20 @@ namespace CardsCashCasino.Data
             if (_characterRectangle is not null && _characterTexture is not null)
                 spriteBatch.Draw(_characterTexture, (Rectangle)_characterRectangle, Color.White);
         }
+
+        /// <summary>
+        /// Scales the digit.
+        /// </summary>
+        /// <param name="scale"></param>
+        public void Scale(double scale)
+        {
+            if (_characterRectangle is null)
+                return;
+
+            int xPos = _characterRectangle!.Value.X;
+            int yPos = _characterRectangle!.Value.Y;
+
+            _characterRectangle = new(xPos, yPos, Convert.ToInt32(21 * scale), Convert.ToInt32(24 * scale));
+        }
     }
 }

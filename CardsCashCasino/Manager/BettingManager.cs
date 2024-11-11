@@ -15,6 +15,7 @@ namespace CardsCashCasino.Manager
     {
         /// <summary>
         /// The amount of cash the user has on hand.
+        /// Initializes to $500.
         /// </summary>
         public int UserCashValue { get; private set; } = 500;
 
@@ -70,7 +71,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static void LoadContent(ContentManager content)
         {
-            // intentionally blank
+            
         }
     }
 
@@ -89,7 +90,12 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The previous value.
         /// </summary>
-        private int _previousValue = 0;
+        private int _previousValue = -1;
+
+        /// <summary>
+        /// Width of a character.
+        /// </summary>
+        private int _characterWidth = 21;
 
         /// <summary>
         /// The top left corner of the display.
@@ -110,6 +116,21 @@ namespace CardsCashCasino.Manager
             if (value == _previousValue)
                 return;
 
+            if (value == 0)
+            {
+                _digits.Clear();
+                IndicatorDigit zeroDigit = new IndicatorDigit();
+                zeroDigit.Update(0);
+                _digits.Add(zeroDigit);
+
+                if (_topLeftCorner is not null)
+                    CalculateDigitPositions(((Point)_topLeftCorner).X + _characterWidth, ((Point)_topLeftCorner).Y);
+
+                _previousValue = value;
+
+                return;
+            }
+
             _digits.Clear(); // remove the old digits
 
             // get each digit
@@ -126,7 +147,7 @@ namespace CardsCashCasino.Manager
             _digits.Reverse(); // put them in the correct order
 
             if (_topLeftCorner is not null)
-                CalculateDigitPositions(((Point)_topLeftCorner).X + 21, ((Point)_topLeftCorner).Y);
+                CalculateDigitPositions(((Point)_topLeftCorner).X + _characterWidth, ((Point)_topLeftCorner).Y);
         }
 
         /// <summary>
@@ -153,7 +174,7 @@ namespace CardsCashCasino.Manager
             _topLeftCorner = new Point(xPos, yPos);
             _dollarSign.SetPosition(xPos, yPos);
 
-            xPos += 21;
+            xPos += _characterWidth;
             CalculateDigitPositions(xPos, yPos);
         }
 
@@ -167,7 +188,7 @@ namespace CardsCashCasino.Manager
             foreach (IndicatorDigit indicatorDigit in _digits)
             {
                 indicatorDigit.SetPosition(xPos, yPos);
-                xPos += 21;
+                xPos += _characterWidth;
             }
         }
     }
