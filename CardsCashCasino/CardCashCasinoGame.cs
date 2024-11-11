@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Derek Norton
+ *  Developers: Derek Norton, Mo Morgan
  *  Date: 10/21/2024
- *  Last Modified: 10/27/2024
+ *  Last Modified: 11/10/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -36,6 +36,11 @@ namespace CardsCashCasino
         /// The sprite batch for the project.
         /// </summary>
         private SpriteBatch? _spriteBatch;
+        
+        // /// <summary>
+        // /// The internal Main menu object.
+        // /// </summary>
+        // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
 
         /// <summary>
         /// The card manager for the game.
@@ -51,6 +56,11 @@ namespace CardsCashCasino
         /// The blackjack manager for the game.
         /// </summary>
         private BlackjackManager _blackjackManager = new();
+        
+        /// <summary>
+        /// The Texas Hold 'Em manager for the game.
+        /// </summary>
+        private TexasHoldEmManager _texasHoldEmManager = new();
 
         /// <summary>
         /// The currently selected game.
@@ -84,6 +94,12 @@ namespace CardsCashCasino
             _blackjackManager.RequestBet = _bettingManager.Bet;
             _blackjackManager.RequestPayout = _bettingManager.Payout;
             _blackjackManager.RequestMainMenuReturn = EndBlackjack;
+            
+            _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
+            _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
+            _texasHoldEmManager.RequestCard = _cardManager.DrawCard;
+            _texasHoldEmManager.RequestShuffle = _cardManager.Shuffle;
+            _texasHoldEmManager.RequestRecycle = _cardManager.Recycle;
 
             base.Initialize();
         }
@@ -99,9 +115,10 @@ namespace CardsCashCasino
             //MainMenuTextures.LoadContent(Content);
             DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
-            BettingTextures.LoadContent(Content);
-            BlackjackTextures.LoadContent(Content);
-            //TexasHoldEmTextures.LoadContent(Content);
+
+            //ChipTextures.LoadContent(Content);
+            _blackjackManager.LoadContent(Content);
+            _texasHoldEmManager.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
 
             // Load the manager's base content.
@@ -145,7 +162,8 @@ namespace CardsCashCasino
 
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Update();
-            // same for texas hold em
+            if (_texasHoldEmManager.IsPlaying)
+                _texasHoldEmManager.Update();
             // same for five card draw
 
             base.Update(gameTime);
@@ -162,7 +180,8 @@ namespace CardsCashCasino
             // same for the main menu
             if (_blackjackManager.IsPlaying)
                 _blackjackManager.Draw(_spriteBatch!);
-            // same for texas hold em
+            if (_texasHoldEmManager.IsPlaying)
+                _texasHoldEmManager.Draw(_spriteBatch);
             // same for five card draw
             _bettingManager.Draw(_spriteBatch);
             _spriteBatch!.End();
