@@ -1,4 +1,21 @@
-﻿using CardsCashCasino.Manager;
+﻿/*
+ *  Module Name: DisplayIndicatorUtil.cs
+ *  Purpose: Utility methods for displaying value indicators on the screen.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus
+ *  Date: 11/7/2024
+ *  Last Modified: 11/10/2024
+ *  Preconditions: None
+ *  Postconditions: None
+ *  Error/Exception conditions: None
+ *  Side effects: None
+ *  Invariants: None
+ *  Known Faults: None encountered
+ */
+
+using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;

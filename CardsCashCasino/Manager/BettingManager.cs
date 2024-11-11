@@ -1,4 +1,15 @@
-﻿using CardsCashCasino.Data;
+﻿/*
+ *  Module Name: BettingManager.cs
+ *  Purpose: Manages the betting and money in the game.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus
+ *  Date: 11/8/2024
+ *  Last Modified: 11/10/2024
+ */
+
+using CardsCashCasino.Data;
 using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;

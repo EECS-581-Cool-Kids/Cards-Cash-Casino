@@ -1,3 +1,14 @@
+/*
+ *  Module Name: BlackjackManager.cs
+ *  Purpose: Manages the game of blackjack
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus
+ *  Date: 11/6/2024
+ *  Last Modified: 11/10/2024
+ */
+
 using CardsCashCasino.Data;
 using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
