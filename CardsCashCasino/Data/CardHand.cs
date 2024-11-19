@@ -1,7 +1,25 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿/*
+ *  Module Name: CardHand.cs
+ *  Purpose: Models a hand of cards.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus
+ *  Date: 10/26/2024
+ *  Last Modified: 10/26/2024
+ *  Preconditions: None
+ *  Postconditions: None
+ *  Error/Exception conditions: None
+ *  Side effects: None
+ *  Invariants: None
+ *  Known Faults: None encountered
+ */
+
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,9 +29,9 @@ namespace CardsCashCasino.Data
     public abstract class CardHand
     {
         /// <summary>
-        /// Private collection of cards.
+        /// protected collection of cards.
         /// </summary>
-        private Collection<Card> _cards = new Collection<Card>();
+        protected Collection<Card> _cards = new Collection<Card>();
 
         /// <summary>
         /// ReadOnlyCollection of the cards in the hand.
@@ -28,11 +46,17 @@ namespace CardsCashCasino.Data
         }
 
         /// <summary>
+        /// The center of the card hand on the screen.
+        /// </summary>
+        private Point? _center;
+
+        /// <summary>
         /// Adds a card to the hand.
         /// </summary>
-        public void AddCard(Card card)
+        public virtual void AddCard(Card newCard)
         {
-            _cards.Add(card);
+            _cards.Add(newCard);
+            RecalculateCardPositions();
         }
 
         /// <summary>
@@ -43,15 +67,36 @@ namespace CardsCashCasino.Data
         {
             Card card = _cards[index];
             _cards.RemoveAt(index);
+            RecalculateCardPositions();
             return card;
         }
 
         /// <summary>
-        /// Update method for the CardHand
+        /// Recalculates the card positions.
         /// </summary>
-        public void Update()
+        public void RecalculateCardPositions()
         {
+            if (_center is null)
+                return;
 
+            int cardCount = _cards.Count;
+            int width = (cardCount * 99) + ((cardCount - 1) * 25);
+            int xPos = ((Point)_center).X - (width / 2);
+            int yPos = ((Point)_center).Y - 70;
+
+            foreach (Card card in _cards)
+            {
+                card.SetRectangle(xPos, yPos);
+                xPos += 124;
+            }
+        }
+
+        /// <summary>
+        /// Sets the center of the card hand.
+        /// </summary>
+        public void SetCenter(int xPos, int yPos)
+        {
+            _center = new Point(xPos, yPos);
         }
 
         /// <summary>
@@ -59,7 +104,18 @@ namespace CardsCashCasino.Data
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
+            foreach (Card card in _cards)
+            {
+                card.Draw(spriteBatch);
+            }
+        }
 
+        /// <summary>
+        /// Clears the hand.
+        /// </summary>
+        public void Clear()
+        {
+            _cards.Clear();
         }
     }
 }
