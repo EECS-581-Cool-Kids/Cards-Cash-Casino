@@ -47,6 +47,26 @@ namespace CardsCashCasino.Manager
         TURN,
         RIVER
     }
+    public enum PlayerType
+    {
+        USER,
+        AI
+    }
+
+    public enum PlayerStatus
+    {
+        IN,
+        FOLDED,
+        CALLED,
+        ALLIN
+    }
+    public enum PlayerPosition
+    {
+        DEALER,
+        SMALLBLIND,
+        BIGBLIND,
+        NONE
+    }
 
     public class TexasHoldEmManager
     {
@@ -163,7 +183,12 @@ namespace CardsCashCasino.Manager
         /// The list of community cards. This is the cards that are shared by all players.
         /// </summary>
         private List<Card> _communityCards = new();
-        
+
+        /// <summary>
+        /// variable to hold the Player Manager class
+        /// </summary>
+        private PlayerManager _players;
+
         /// <summary>
         /// The cursor.
         /// </summary>
@@ -194,11 +219,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private PokerActionButton? _allInButton;
         #endregion
-        
-        /// <summary>
-        /// The community cards shared by all players.
-        /// </summary>
-        private List<Card> _communityCards = new();
+
 
         #region timers
         /// <summary>
@@ -804,9 +825,329 @@ namespace CardsCashCasino.Manager
             timer.Stop();
             timer.Dispose();
         }
+        public class PlayerManager
+        {
+            // List to hold the pots for the game
+            public List<Player> Players;
 
+            //how much money the player has
+            public int PlayerStack { get; set; }
+            //if the player is a user or an ai
+            public PlayerType PlayerType { get; set; }
+            //if the player is active, folded, has called the current bet, or all-in 
+            public PlayerStatus PlayerStatus { get; set; }
+            //if the player is the dealer, big blind, small blind, or none of the above
+            public PlayerPosition PlayerPosition { get; set; }
+            //holds the value the player has bet in the current round
+            public int PlayerBet { get; set; }
+
+            public PlayerManager()
+            {
+                Players = new List<Player>(); // Initialize the Players list
+            }
+
+            /// <summary>
+            /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
+            /// </summary>
+            public class Player
+            {
+                public int PlayerStack { get; set; }
+                public PlayerType PlayerType { get; set; }
+                public PlayerStatus PlayerStatus { get; set; }
+                public PlayerPosition PlayerPosition { get; set; }
+                public int PlayerBet { get; set; }
+
+                public Player(PlayerType type, PlayerStatus status, PlayerPosition position, int stack, int bet)
+                {
+                    PlayerType = type; //USER or AI
+                    PlayerStatus = status; //IN (waiting to bet), CALLED (ready for next round), FOLDED, ALLIN
+                    PlayerPosition = position; //NONE, DEALER, BIGBLIND, SMALLBLIND
+                    PlayerStack = stack; //amount of funds the player has
+                    PlayerBet = bet; //the current bet the user has for the round
+                }
+            }
+
+            /// <summary>
+            /// Creates user
+            /// </summary>
+            public void CreateUser()
+            {
+                Players.Add(new Player(PlayerType.USER, PlayerStatus.IN, PlayerPosition.NONE, 200, 0));
+            }
+
+            /// <summary>
+            /// Creates AI Player
+            /// </summary>
+            public void CreateAIPlayers(int numPlayers)
+            {
+                for (int players = 0; players < numPlayers; players++)
+                {
+                    Players.Add(new Player(PlayerType.AI, PlayerStatus.IN, PlayerPosition.NONE, 200, 0));
+                }
+            }
+
+            /// <summary>
+            /// Gets the position of the first bet to be placed in the preflop round
+            /// </summary>
+            public int GetPreflopIndex()
+            {
+                int index = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.BIGBLIND);
+                index = (index + 1) % Players.Count();
+                return index;
+            }
+
+            /// <summary>
+            /// Gets the position of the first bet to be placed in all rounds following the preflop
+            /// </summary>
+            public int GetStartingBettorIndex()
+            {
+                int index = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.SMALLBLIND);
+                bool activePlayer = false;
+                while (!activePlayer)
+                {
+                    if (!IsActivePlayer(index))
+                    {
+                        index = (index + 1) % Players.Count();
+                    }
+                    else
+                    {
+                        activePlayer = true;
+                    }
+                }
+                return index;
+            }
+
+            /// <summary>
+            /// If the player is eligible to place a bet returns true
+            /// </summary>
+            public bool IsActivePlayer(int playerIndex)
+            {
+                if (Players[playerIndex].PlayerStatus == PlayerStatus.FOLDED || Players[playerIndex].PlayerStatus == PlayerStatus.ALLIN)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            /// <summary>
+            /// Places a bet
+            /// </summary>
+            public void Call(int amount, int playerIndex)
+            {
+                Players[playerIndex].PlayerBet = amount;
+                Players[playerIndex].PlayerStack -= amount;
+                Players[playerIndex].PlayerStatus = PlayerStatus.CALLED;
+            }
+
+            /// <summary>
+            /// Sets the player's bet to the selected amount, resets all other players status's that called originally 
+            /// </summary>
+            public void Raise(int amount, int playerIndex)
+            {
+                Players[playerIndex].PlayerBet = amount;
+                Players[playerIndex].PlayerStack -= amount;
+                for (int player = 0; player < Players.Count(); player++)
+                {
+                    if (player == playerIndex)
+                    {
+                        Players[player].PlayerStatus = PlayerStatus.CALLED;
+                    }
+                    else if (Players[player].PlayerStatus == PlayerStatus.CALLED)
+                    {
+                        Players[player].PlayerStatus = PlayerStatus.IN;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Places an all in bet
+            /// </summary>
+            public int AllInBet(int playerIndex)
+            {
+                Players[playerIndex].PlayerBet = Players[playerIndex].PlayerStack;
+                Players[playerIndex].PlayerStack = 0;
+                Players[playerIndex].PlayerStatus = PlayerStatus.ALLIN;
+                return Players[playerIndex].PlayerBet;
+            }
+
+            /// <summary>
+            /// Folds the active player
+            /// </summary>
+            public void Fold(int playerIndex)
+            {
+                Players[playerIndex].PlayerStatus = PlayerStatus.FOLDED;
+            }
+            /// <summary>
+            /// Active player bets nothing
+            /// </summary>
+            public void Check(int playerIndex)
+            {
+                Players[playerIndex].PlayerStatus = PlayerStatus.CALLED;
+            }
+
+            /// <summary>
+            /// TODO implement conditions to be met to advance to the next round
+            /// </summary>
+            public bool AdvanceRound()
+            {
+                bool advance = false;
+                //TODO all the conditions for advancing to the next round
+                return advance;
+            }
+
+            /// <summary>
+            /// At the end of a round, resets all player bets to 0
+            /// </summary>
+            public void ResetBets()
+            {
+                for (int player = 0; player < Players.Count(); player++)
+                {
+                    Players[player].PlayerBet = 0;
+                }
+            }
+
+            /// <summary>
+            /// Packages bets placed by folded players to be added to the main pot
+            /// </summary>
+            public List<int> PackageFoldedBets()
+            {
+                List<int> foldedBets = new List<int>();
+
+                for (int player = 0; player < Players.Count; player++)
+                {
+                    if (Players[player].PlayerStatus == PlayerStatus.FOLDED && Players[player].PlayerBet < 0)
+                    {
+                        foldedBets.Add(Players[player].PlayerBet);
+                    }
+                }
+                return foldedBets;
+            }
+
+            /// <summary>
+            /// Packages bets made by active players to be added to main pot, creating side pots if needed
+            /// </summary>
+            public List<int> PackageBets()
+            {
+                List<int> bets = new List<int>();
+
+                for (int player = 0; player < Players.Count; player++)
+                {
+                    if (Players[player].PlayerStatus != PlayerStatus.FOLDED && Players[player].PlayerBet < 0)
+                        bets.Add(Players[player].PlayerBet);
+                }
+                return bets;
+            }
+
+            /// <summary>
+            //returns a list of players that are eligible to win the current pot
+            /// </summary>
+            public List<int> GetActivePlayersIndexes()
+            {
+                List<int> indexes = new List<int>();
+                for (int player = 0; player < Players.Count(); player++)
+                {
+                    if (Players[player].PlayerBet == 0 && Players[player].PlayerStatus != PlayerStatus.FOLDED)
+                    {
+                        indexes.Add(player);
+                    }
+                }
+                return indexes;
+            }
+
+            /// <summary>
+            //Eliminates players that are out of money before a new round begins
+            /// </summary>
+            public void EliminatePlayers()
+            {
+                for (int player = 0; player < Players.Count(); player++)
+                {
+                    if (Players[player].PlayerStack == 0)
+                    {
+                        if (Players[player].PlayerPosition == PlayerPosition.DEALER) //shift dealer chip 1 to left if dealer was eliminated
+                        {
+                            Players[player + 1 % Players.Count()].PlayerPosition = PlayerPosition.DEALER;
+                        }
+                        Players.RemoveAt(player);
+                    }
+                }
+            }
+
+            /// <summary>
+            //sets a random player as the dealer and the two players to their left as small and big blind respectively
+            /// </summary>
+            public void InitiateBlinds()
+            {
+                Random random = new Random();
+                int dealer = random.Next(0, 5);
+                Players[dealer].PlayerPosition = PlayerPosition.DEALER;
+                Players[dealer + 1 % Players.Count()].PlayerPosition = PlayerPosition.SMALLBLIND;
+                Players[dealer + 2 % Players.Count()].PlayerPosition = PlayerPosition.BIGBLIND;
+            }
+
+            /// <summary>
+            //shifts the blind to the next positions
+            /// </summary>
+            public void SetNextRoundBlinds()
+            {
+                //blind shift if there are only 2 players remaining 
+                if (Players.Count() < 3)
+                {
+                    if (Players[0].PlayerPosition == PlayerPosition.BIGBLIND)
+                    {
+                        Players[0].PlayerPosition = PlayerPosition.SMALLBLIND;
+                        Players[1].PlayerPosition = PlayerPosition.BIGBLIND;
+                    }
+                    else
+                    {
+                        Players[0].PlayerPosition = PlayerPosition.BIGBLIND;
+                        Players[1].PlayerPosition = PlayerPosition.SMALLBLIND;
+                    }
+                }
+                else
+                {
+                    int dealer = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.DEALER);
+                    Players[dealer].PlayerPosition = PlayerPosition.BIGBLIND;
+                    Players[(dealer + 1) % Players.Count()].PlayerPosition = PlayerPosition.DEALER;
+                    Players[(dealer + 2) % Players.Count()].PlayerPosition = PlayerPosition.SMALLBLIND;
+                }
+            }
+
+            /// <summary>
+            //collect blind bets from small and big blind players
+            /// </summary>
+            public void GetBlinds(int _smallBlind, int _bigBlind)
+            {
+                int smallBlindPosition = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.SMALLBLIND);
+                if (Players[smallBlindPosition].PlayerStack < _smallBlind) //if blind causes player to go all in
+                {
+                    Players[smallBlindPosition].PlayerBet = Players[smallBlindPosition].PlayerStack;
+                    Players[smallBlindPosition].PlayerStack = 0;
+                    Players[smallBlindPosition].PlayerStatus = PlayerStatus.ALLIN;
+                }
+                else
+                {
+                    Players[smallBlindPosition].PlayerBet = _smallBlind;
+                    Players[smallBlindPosition].PlayerStack -= _smallBlind;
+                }
+                int bigBlindPosition = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.BIGBLIND);
+                if (Players[bigBlindPosition].PlayerStack < _bigBlind) //if blind causes player to go all in
+                {
+                    Players[bigBlindPosition].PlayerBet = Players[bigBlindPosition].PlayerStack;
+                    Players[bigBlindPosition].PlayerStack = 0;
+                    Players[bigBlindPosition].PlayerStatus = PlayerStatus.ALLIN;
+                }
+                else
+                {
+                    Players[bigBlindPosition].PlayerBet = _bigBlind;
+                    Players[bigBlindPosition].PlayerStack -= _bigBlind;
+                }
+            }
+        }
         #endregion Methods
-    }
+        }
 
     public static class TexasHoldEmTextures
     {
