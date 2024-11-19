@@ -47,6 +47,11 @@ namespace CardsCashCasino.Manager
         TURN,
         RIVER
     }
+    public enum PotType
+    {
+        MAIN,
+        SIDE
+    }
 
     public class TexasHoldEmManager
     {
@@ -163,7 +168,12 @@ namespace CardsCashCasino.Manager
         /// The list of community cards. This is the cards that are shared by all players.
         /// </summary>
         private List<Card> _communityCards = new();
-        
+
+        /// <summary>
+        /// Variable to hold the Pots Manager class
+        /// </summary>
+        private PotManager _potManager;
+
         /// <summary>
         /// The cursor.
         /// </summary>
@@ -194,11 +204,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private PokerActionButton? _allInButton;
         #endregion
-        
-        /// <summary>
-        /// The community cards shared by all players.
-        /// </summary>
-        private List<Card> _communityCards = new();
+
 
         #region timers
         /// <summary>
@@ -804,9 +810,198 @@ namespace CardsCashCasino.Manager
             timer.Stop();
             timer.Dispose();
         }
+        public class PotManager
+        {
+            // List to hold the pots for the game
+            public List<Pot> Pots;
 
+            public int Total { get; set; }
+            public PotType PotType { get; set; }
+            public List<int> EligiblePlayers { get; set; }
+
+            public PotManager()
+            {
+                Pots = new List<Pot>(); // Initialize the Pots list
+            }
+            /// <summary>
+            /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
+            /// </summary>
+            public class Pot
+            {
+                public int Total { get; set; }
+                public PotType PotType { get; set; }
+                public List<int> EligiblePlayers { get; set; }
+
+                public Pot(PotType type, int total, List<int> eligiblePlayers)
+                {
+                    PotType = type;
+                    Total = total;
+                    EligiblePlayers = eligiblePlayers;
+                }
+            }
+            /// <summary>
+            /// Initialize the main pot, if any players are short side pots will be created.
+            /// </summary>
+            /// <param name="_ante">The ante needed to be added by each player to the pot.</param>
+            /// <param name="playerBets">List of antes values to be added to the pot.</param>
+            /// /// <param name="playersActive">Importing a list of all player indecies, all players eligible for main pot</param>
+            public void InitializePot(int _ante, List<int> playerBets, List<int> playersActive)
+            {
+                Pots.Add(new Pot(PotType.MAIN, 0, playersActive));
+
+                if (playerBets.All(n => n == playerBets[0])) //if all bets match the ante
+                {
+                    AddToPot(_ante, playerBets, playersActive);
+                }
+                else //create side pots if any bets do not match the ante
+                {
+                    CreateSidePots(_ante, playerBets, playersActive);
+                }
+            }
+            /// <summary>
+            /// Adds a bets to the pot.
+            /// </summary>
+            /// <param name="_currentBet">The amount each player is contributing to the pot.</param>
+            /// <param name="numPlayers">The number of players contributing to the pot.</param>
+            /// <param name="playersActive">The positions of the players that are currently eligible for the pot</param>
+            public void AddToPot(int _currentBet, List<int> playerBets, List<int> playersActive)
+            {
+                if (playerBets.All(n => n == playerBets[0]))
+                {
+                    Pots.First(pot => pot.PotType == PotType.MAIN).Total += _currentBet * playerBets.Count();
+                }
+                else
+                {
+                    CreateSidePots(_currentBet, playerBets, playersActive);
+                }
+            }
+            /// <summary>
+            //Adds bets of players that were folded to the pot
+            /// </summary>
+            /// <param name="playersBets"> list of bets that were placed but folded due to a raise in that round</param>
+            public void AddFoldedBetsToPot(List<int> playerBets)
+            {
+                if (playerBets.Count() == 0)
+                {
+                    return;
+                }
+                else
+                {
+                    for (int bet = 0; bet < playerBets.Count(); bet++)
+                    {
+                        Pots[0].Total += playerBets[bet];
+                    }
+                }
+            }
+            /// <summary>
+            /// Creates side pots as needed at the end of a round of betting.
+            /// </summary>
+            /// <param name="_currentBet">The amount to add to the pot.</param>
+            /// <param name="playerBets">The list of bets from players still active after the round of betting.</param>
+            /// <param name="playersActive">The list of players eligible to win the main pot, all in players will be subtracted for side pot</param>
+            public void CreateSidePots(int _currentBet, List<int> playerBets, List<int> playersActive)
+            {
+                int allInBet = 0; //initiating variable that will hold all in wager
+                int numBets = playerBets.Count();
+
+                for (int bets = 0; bets < numBets; bets++)
+                {
+                    //at least 1 side pot is needed if function is called, lowest bet will be an all-in bet.
+                    if (bets == 0)
+                    {
+                        //all-in bet added to the pot, other players matched bets added to pot as well
+                        allInBet = playerBets.Min();
+                        AddToPot(allInBet, Enumerable.Repeat(allInBet, playerBets.Count()).ToList(), playersActive);
+
+                        //subtracting all-in bet value from all other bets, the all-in bet value has already been added to a pot
+                        for (int player = 0; player < playerBets.Count(); player++)
+                        {
+                            playerBets[player] -= allInBet; // Subtract the amount put into pot from each bet
+                        }
+                        _currentBet -= allInBet;
+
+                        //modify list of players that are eligible for the new main pot by removing player(s) that are all-in
+                        List<int> allInPlayers = playerBets.Select((value, index) => new { value, index })
+                                   .Where(x => x.value == 0)
+                                   .Select(x => x.index)
+                                   .ToList();
+                        playersActive.RemoveAll(value => allInPlayers.Contains(value));
+                        playerBets.RemoveAll(value => value == 0);
+
+                        //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
+                        Pots.Add(new Pot(PotType.SIDE, Pots[0].Total, Pots[0].EligiblePlayers));
+                        Pots[0].EligiblePlayers = playersActive;
+                        Pots[0].Total = 0; //reseting active pot value to empty
+                    }
+                    else if (playerBets.Count() == 1)
+                    {
+                        //money that will be refunded if there is a standalone player not allin
+                        Pots[0].Total = _currentBet;
+                        break;
+                    }
+                    else if (playerBets.Min() != _currentBet) //condition if more than one player can not match the current bet
+                    {
+                        //all-in bet added to the pot, other players matched bets added to pot as well
+                        allInBet = playerBets.Min();
+                        AddToPot(allInBet, Enumerable.Repeat(allInBet, playerBets.Count() - bets).ToList(), playersActive);
+
+                        //subtracting all-in bet value from all other bets, the all-in bet value has already been added to a pot
+                        for (int i = 0; i < playerBets.Count(); i++)
+                        {
+                            playerBets[i] -= allInBet; // Subtract the amount put into pot from each bet
+                            if (playerBets[i] < 0) //prevents any players with lesser all-in bets from having negetive value bets for future calculations in this function
+                            {
+                                playerBets[i] = 0;
+                            }
+                        }
+                        //create a list of players that are ineligible for the new main pot
+                        List<int> allInPlayers = playerBets.Select((value, index) => new { value, index })
+                                   .Where(x => x.value == 0)
+                                   .Select(x => x.index)
+                                   .ToList();
+                        playersActive.RemoveAll(value => allInPlayers.Contains(value));
+                        playerBets.RemoveAll(value => value == 0);
+
+                        //subtract the amount added to the side pot from the current bet
+                        _currentBet -= allInBet;
+
+                        //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
+                        Pots.Add(new Pot(PotType.SIDE, Pots[0].Total, Pots[0].EligiblePlayers));
+                        Pots[0].EligiblePlayers = playersActive;
+                        Pots[0].Total = 0; //reseting active pot value to empty
+                    }
+                    else
+                    {
+                        //add remainder of bets from players not all-in into new main pot
+                        AddToPot(_currentBet, playerBets, playersActive);
+                    }
+                }
+            }
+            /// <summary>
+            /// Pays out the winnings to the player for the individual pot. 
+            /// </summary>
+            /// <param name="winners">Number of players that have won the pot.</param>
+            public int DistributePot(int winners)
+            {
+                int _payout = Pots.Last().Total / winners; //splits payout if more than 1 winner is present
+                Pots.RemoveAt(Pots.Count - 1);
+                return _payout;
+            }
+            public List<int> GetPotAmounts()
+            {
+                return Pots.Select(pot => pot.Total).ToList();
+            }
+
+            /// <summary>
+            /// Resets the pots list to an empty state.
+            /// </summary>
+            public void ResetPots()
+            {
+                Pots.Clear();
+            }
+        }
         #endregion Methods
-    }
+        }
 
     public static class TexasHoldEmTextures
     {
