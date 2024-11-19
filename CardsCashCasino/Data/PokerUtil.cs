@@ -68,7 +68,7 @@ namespace CardsCashCasino.Data
             Ranking best = Ranking.HIGH_CARD;
             List<List<Card>> bestHands = new();
 
-            foreach (List<Card> iCards in Get3CardPermutations(community))
+            foreach (List<Card> iCards in Get5CardPermutations(community.Concat(cards).ToList()))
             {
                 List<Card> hand = SortedHand(iCards.Concat(cards).ToList());
                 Ranking current = GetRanking(hand);
@@ -151,6 +151,25 @@ namespace CardsCashCasino.Data
         private static List<Card> SortedHand(List<Card> cards)
         {
             return cards.OrderBy(card => (card.GetPokerValue() * 4) - card.Suit).ToList();
+        }
+
+        /// <summary>
+        /// Takes in a list of cards of length > 5 and generates a list of every unique set of 5 cards.
+        /// i.e. for cards [2C,JH,5C,6S,KD,1S,4D], the 5-permutation [2C,JH,5C,1S,4D] will be returned, but never [JH,1S,4D,5C,2C].
+        /// </summary>
+        /// <param name="list">List of cards with length > 5</param>
+        /// <returns>All 5-card permutations of the input list</returns>
+        private static List<List<Card>> Get5CardPermutations(List<Card> list)
+        {
+            IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
+                                                        select
+                                                            from i in Enumerable.Range(0, list.Count)
+                                                            where (m & (1 << i)) != 0
+                                                            select list[i];
+
+            return (from m in full_perms.ToList<IEnumerable<Card>>()
+                    select
+                         (from i in Enumerable.Range(0, 5) select m.ToList<Card>()[i]).ToList()).ToList();
         }
 
         /// <summary>
@@ -272,25 +291,6 @@ namespace CardsCashCasino.Data
                 }
             }
             return pairs;
-        }
-
-        /// <summary>
-        /// Takes in a list of cards of length > 3 (probably 5 when called) and generates a list of every unique set of 3 cards.
-        /// i.e. for cards [2C,JH,5C,6S,KD], the 3-permutation [2C,JH,5C] will be returned, but never [JH,5C,2C].
-        /// </summary>
-        /// <param name="list">List of cards with length > 3</param>
-        /// <returns>All 3-card permutations of the input list</returns>
-        private static List<List<Card>> Get3CardPermutations(List<Card> list)
-        {
-            IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
-                                                        select
-                                                            from i in Enumerable.Range(0, list.Count)
-                                                            where (m & (1 << i)) != 0
-                                                            select list[i];
-
-            return (from m in full_perms.ToList<IEnumerable<Card>>()
-                   select
-                        (from i in Enumerable.Range(0, 3) select m.ToList<Card>()[i]).ToList()).ToList();
         }
     }
 }
