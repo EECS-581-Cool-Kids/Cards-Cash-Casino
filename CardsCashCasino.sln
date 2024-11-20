@@ -5,6 +5,8 @@ VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CardsCashCasino", "CardsCashCasino\CardsCashCasino.csproj", "{39F9EE8C-8D18-4F0A-99C2-14D1979D6B94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardsCashCasino.NUnit", "UnitTests\CardsCashCasino.NUnit.csproj", "{266F4FD3-BF7E-485F-9CA7-8D43BC34B010}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{39F9EE8C-8D18-4F0A-99C2-14D1979D6B94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39F9EE8C-8D18-4F0A-99C2-14D1979D6B94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39F9EE8C-8D18-4F0A-99C2-14D1979D6B94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{266F4FD3-BF7E-485F-9CA7-8D43BC34B010}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{266F4FD3-BF7E-485F-9CA7-8D43BC34B010}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{266F4FD3-BF7E-485F-9CA7-8D43BC34B010}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{266F4FD3-BF7E-485F-9CA7-8D43BC34B010}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

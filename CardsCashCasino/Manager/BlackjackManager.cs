@@ -121,6 +121,11 @@ namespace CardsCashCasino.Manager
         private BlackjackResultLabel? _resultLabel;
 
         /// <summary>
+        /// The status of the current hand.
+        /// </summary>
+        public BlackjackResult CurrentHandStatus { get; private set; }
+
+        /// <summary>
         /// The timeout for the cursor to move.
         /// </summary>
         private Timer? _cursorMoveTimeout;
@@ -191,6 +196,7 @@ namespace CardsCashCasino.Manager
             _userHandValueIndicator = new();
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
+            CurrentHandStatus = BlackjackResult.NONE;
         }
 
         /// <summary>
@@ -232,6 +238,7 @@ namespace CardsCashCasino.Manager
                     RequestPayout!.Invoke(_currentBet * 2);
 
                     _resultLabel!.SetTexture(BlackjackResult.WIN);
+                    CurrentHandStatus = BlackjackResult.WIN;
 
                     _resultLabel!.CanDraw = true;
                     _roundFinished = true;
@@ -247,18 +254,21 @@ namespace CardsCashCasino.Manager
                     if (dealerHandValue > currentHand.GetBlackjackValue())
                     {
                         _resultLabel!.SetTexture(BlackjackResult.LOSS);
+                        CurrentHandStatus = BlackjackResult.LOSS;
                     }
                     else if (dealerHandValue == currentHand.GetBlackjackValue())
                     {
                         RequestPayout!.Invoke(_currentBet);
 
                         _resultLabel!.SetTexture(BlackjackResult.PUSH);
+                        CurrentHandStatus = BlackjackResult.PUSH;
                     }
                     else
                     {
                         RequestPayout!.Invoke(_currentBet * 2);
 
                         _resultLabel!.SetTexture(BlackjackResult.WIN);
+                        CurrentHandStatus = BlackjackResult.WIN;
                     }
 
                     _resultLabel!.CanDraw = true;
@@ -300,6 +310,7 @@ namespace CardsCashCasino.Manager
             if (_dealerHand.HasBlackjack() && _userHands.First().HasBlackjack())
             {
                 _resultLabel!.SetTexture(BlackjackResult.PUSH);
+                CurrentHandStatus = BlackjackResult.PUSH;
 
                 _dealerHand.UnhideCard();
 
@@ -317,6 +328,7 @@ namespace CardsCashCasino.Manager
             else if (_dealerHand.HasBlackjack())
             {
                 _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
+                CurrentHandStatus = BlackjackResult.BLACKJACK;
 
                 _dealerHand.UnhideCard();
 
@@ -332,6 +344,7 @@ namespace CardsCashCasino.Manager
             else if (_userHands.Any() && _userHands.First().HasBlackjack())
             {
                 _resultLabel!.SetTexture(BlackjackResult.BLACKJACK);
+                CurrentHandStatus = BlackjackResult.BLACKJACK;
 
                 _resultLabel!.CanDraw = true;
                 _roundFinishTimeout = new Timer(500);
@@ -551,6 +564,7 @@ namespace CardsCashCasino.Manager
             else if (_selectedUserHand < _userHands.Count - 1)
             {
                 _resultLabel!.SetTexture(BlackjackResult.BUST);
+                CurrentHandStatus = BlackjackResult.BUST;
 
                 _resultLabel!.CanDraw = true;
                 
@@ -563,6 +577,7 @@ namespace CardsCashCasino.Manager
             else
             {
                 _resultLabel!.SetTexture(BlackjackResult.BUST);
+                CurrentHandStatus = BlackjackResult.BUST;
 
                 _resultLabel!.CanDraw = true;
                 
@@ -668,7 +683,9 @@ namespace CardsCashCasino.Manager
             timer.Dispose();
         }
 
-
+        /// <summary>
+        /// Timeout event finish.
+        /// </summary>
         private void OnRoundFinishTimeoutEvent(object source, ElapsedEventArgs e)
         {
             OnTimeoutEvent(source, e);
@@ -676,6 +693,55 @@ namespace CardsCashCasino.Manager
                 _selectedUserHand++;
             _resultLabel!.CanDraw = false;
             _roundFinished = false;
+        }
+
+        /// <summary>
+        /// Initializes the game without UI.
+        /// </summary>
+        /// <param name="bet"></param>
+        public void StartGameWithoutUI(int bet)
+        {
+            _currentBet = bet;
+
+            // Reset the cards.
+            RequestCardManagerCleared!.Invoke();
+            RequestDecksOfCards!.Invoke(4);
+
+            BlackjackUserHand initialHand = new();
+
+            // Add the two initial cards.
+            initialHand.AddCard(RequestCard!.Invoke());
+            _dealerHand.AddCard(RequestCard!.Invoke());
+            initialHand.AddCard(RequestCard!.Invoke());
+            _dealerHand.AddCard(RequestCard!.Invoke());
+
+            // Add the initial hand to the list of user hands.
+            _userHands.Add(initialHand);
+        }
+
+        /// <summary>
+        /// Allows you to call an action without the UI so the action methods can remain private.
+        /// </summary>
+        public void CallActionWithoutUI(int action)
+        {
+            switch (action)
+            {
+                case Constants.HIT_BUTTON_POS:
+                    Hit();
+                    break;
+                case Constants.STAND_BUTTON_POS:
+                    FinishHand();
+                    break;
+                case Constants.DOUBLE_BUTTON_POS:
+                    DoubleDown();
+                    break;
+                case Constants.SPLIT_BUTTON_POS:
+                    Split();
+                    break;
+                case Constants.FORFEIT_BUTTON_POS:
+                    Forfeit();
+                    break;
+            }
         }
     }
 
@@ -999,6 +1065,7 @@ namespace CardsCashCasino.Manager
         LOSS,
         PUSH,
         BUST,
-        BLACKJACK
+        BLACKJACK,
+        NONE
     }
 }

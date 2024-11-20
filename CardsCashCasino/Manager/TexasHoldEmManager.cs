@@ -194,11 +194,6 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private PokerActionButton? _allInButton;
         #endregion
-        
-        /// <summary>
-        /// The community cards shared by all players.
-        /// </summary>
-        private List<Card> _communityCards = new();
 
         #region timers
         /// <summary>
