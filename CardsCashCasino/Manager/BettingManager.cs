@@ -108,6 +108,7 @@ namespace CardsCashCasino.Manager
         public void Bet(int value)
         {
             UserCashValue -= value;
+            UserBet += value;
             _userCashValueIndicator!.Update(UserCashValue);
         }
 
@@ -126,6 +127,14 @@ namespace CardsCashCasino.Manager
         public void OpenBettingMenu()
         {
             _bettingMenu!.OpenMenu();
+        }
+
+        /// <summary>
+        /// Confirms a bet without the UI.
+        /// </summary>
+        public void ConfirmBetWithoutUI(int bet)
+        {
+            UserBet = bet;
         }
     }
 
