@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Ethan Berkley
  *  Date: 11/08/2024
- *  Last Modified: 11/08/2024
+ *  Last Modified: 11/21/2024
  *  Preconditions: Hole card lists are of length 2, Community card lists are of length >= 3, the input to the tiebreaker function was returned by the GetScore function
  *  Postconditions: None
  *  Error/Exception conditions: Only if Preconditions were violated.
@@ -51,7 +51,19 @@ namespace CardsCashCasino.Data
         }
 
         /// <summary>
-        /// Given the current 5-card community card pool, and that the current hand has exactly 2 cards, 
+        /// Given the current 5-card hand, return the ranking value.
+        /// </summary>
+        /// <param name="cards">A player's hand of 5 cards</param>
+        /// <returns>The ranking of the hand.</returns>
+        /// <remarks>Note: this overloaded function is meant to be used by 5-card draw.</remarks>
+        public static Ranking GetScore(List<Card> cards)
+        {
+            Debug.Assert(cards.Count == 5);
+            return GetRanking(SortedHand(cards));
+        }
+
+        /// <summary>
+        /// Given the current card community card pool (which must have at least 3 cards), and the current hand (which must have exactly 2 cards), 
         /// create and return the best possible hand and ranking.
         /// 
         /// In the event of a tie in rankings, the tie would be broken by calling KickerValue on each of the hands. 
@@ -60,6 +72,7 @@ namespace CardsCashCasino.Data
         /// <param name="community">The 5-card list of community cards</param>
         /// <param name="cards">The 2-card list representing player's hole cards.</param>
         /// <returns>A 5-card list representing the optimal hand, and the ranking it would give.</returns>
+        /// <remarks>Note: this overloaded function is meant to be used by Texas Hold 'Em.</remarks>
         public static Tuple<List<Card>, Ranking> GetScore(List<Card> community, List<Card> cards)
         {
             Debug.Assert(cards.Count == 2);
