@@ -159,12 +159,12 @@ namespace CardsCashCasino.NUnit
             Assert.AreEqual(PotType.MAIN, _potManager.Pots[0].PotType); // Check the pot type is MAIN
             Assert.AreEqual(PotType.SIDE, _potManager.Pots[1].PotType); // Verify the second pot is SIDE
             Assert.AreEqual(PotType.SIDE, _potManager.Pots[2].PotType); // Verify the third pot is SIDE      
-            Assert.AreEqual(2 + 2, _potManager.Pots[2].Total); // Verify the total of the side pot two players have contributed to
-            Assert.AreEqual(6, _potManager.Pots[1].Total); // Verify the total of the side pot three players have contributed to
-            Assert.AreEqual(8, _potManager.Pots[0].Total); // Verify the total of the side pot that all players have contrbuted to
-            CollectionAssert.AreEqual(new List<int> { 0, 1, 2, 3 }, _potManager.Pots[0].EligiblePlayers); // Verify everyone is eligible for the first side pot
-            CollectionAssert.AreEqual(new List<int> { 1, 2, 3 }, _potManager.Pots[1].EligiblePlayers); // Verify the list of players eligible for second side pot
-            CollectionAssert.AreEqual(new List<int> { 2, 3 }, _potManager.Pots[2].EligiblePlayers); // Verify the list of players eligible for the new main pot           
+            Assert.AreEqual(2 + 2, _potManager.Pots[0].Total); // Verify the total of the side pot two players have contributed to
+            Assert.AreEqual(6, _potManager.Pots[2].Total); // Verify the total of the side pot three players have contributed to
+            Assert.AreEqual(8, _potManager.Pots[1].Total); // Verify the total of the side pot that all players have contrbuted to
+            CollectionAssert.AreEqual(new List<int> { 0, 1, 2, 3 }, _potManager.Pots[1].EligiblePlayers); // Verify everyone is eligible for the first side pot
+            CollectionAssert.AreEqual(new List<int> { 1, 2, 3 }, _potManager.Pots[2].EligiblePlayers); // Verify the list of players eligible for second side pot
+            CollectionAssert.AreEqual(new List<int> { 2, 3 }, _potManager.Pots[0].EligiblePlayers); // Verify the list of players eligible for the new main pot           
         }
 
         /// <summary>

@@ -4,7 +4,7 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan, Ethan Berkley
+ *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
  *  Date: 11/3/2024
  *  Last Modified: 11/10/2024
  *  Preconditions: None
@@ -40,6 +40,9 @@ namespace CardsCashCasino.Manager
         ALL_IN
     }
 
+    /// <summary>
+    /// Identifies what stage of betting the game is currently in
+    /// </summary>
     public enum BettingPhase
     {
         PREFLOP,
@@ -268,6 +271,9 @@ namespace CardsCashCasino.Manager
         public Action<Card>? RequestCardDiscard { get; set; }
         #endregion delegates
 
+        /// <summary>
+        /// Identifies what phase of the gameflow is active regarding dealing cards
+        /// </summary>
         enum Phase
         {
             INIT,
@@ -290,6 +296,11 @@ namespace CardsCashCasino.Manager
         #endregion Properties
 
         #region Methods
+
+        /// <summary>
+        /// The LoadContent method for Texas HoldEm.
+        /// <param name="location"></param>
+        /// </summary>
         public void LoadContent(ContentManager content)
         {
             // Load the textures for the game.
@@ -298,15 +309,18 @@ namespace CardsCashCasino.Manager
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
 
-            _checkButton = new(TexasHoldEmTextures.CheckButtonTexture!, widthBuffer, buttonYPos);
+            _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, widthBuffer, buttonYPos, TexasHoldEmTextures.CheckButtonDisabledTexture!);
             _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos, TexasHoldEmTextures.CallButtonDisabledTexture!);
-            _raiseButton = new(TexasHoldEmTextures.RaiseButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos);
+            _raiseButton = new(TexasHoldEmTextures.RaiseButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, TexasHoldEmTextures.RaiseButtonDisabledTexture!);
             _allInButton = new(TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
             _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
         }
 
+        /// <summary>
+        /// The main update loop for blackjack.
+        /// </summary>
         public void Update()
         {
             // Does a new round start with the dealer making a bet? 
@@ -346,6 +360,9 @@ namespace CardsCashCasino.Manager
                 UpdateWhileAIPlaying();
         }
 
+        /// <summary>
+        /// Update loop while the user is playing.
+        /// </summary>
         private void UpdateWhileUserPlaying()
         {
             // Return if the AI is still taking an action.
@@ -419,6 +436,9 @@ namespace CardsCashCasino.Manager
 
         }
 
+        /// <summary>
+        /// Updates the AI player index
+        /// </summary>
         private void UpdateWhileAIPlaying()
         {
             // Should have some AI related nonsense here.
@@ -426,6 +446,11 @@ namespace CardsCashCasino.Manager
             _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
             return;
         }
+
+        /// <summary>
+        /// The main draw loop for Texas HoldEm.
+        /// <param name="spriteBatch"></param>
+        /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
             // Draw the buttons
@@ -444,7 +469,9 @@ namespace CardsCashCasino.Manager
                 hand.Draw(spriteBatch);
             }
         }
-
+        /// <summary>
+        /// Gets the new Cursor position.
+        /// </summary>
         private Point GetNewCursorPos()
         {
             return _currentCursorPos switch
@@ -457,6 +484,9 @@ namespace CardsCashCasino.Manager
             };
         }
 
+        /// <summary>
+        /// Enter the TexasHoldEm gameflow
+        /// </summary>
         private void Initialize()
         {
             _gameOver = false;
@@ -469,6 +499,10 @@ namespace CardsCashCasino.Manager
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
         }
+
+        /// <summary>
+        /// Enter the TexasHoldEm gameflow
+        /// </summary>
         public void StartGame()
         {
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
@@ -505,6 +539,9 @@ namespace CardsCashCasino.Manager
             }
         }
 
+        /// <summary>
+        /// Game has been ended by the user
+        /// </summary>
         private void EndGame()
         {
             // Discard cards from, and clear, each hand.
@@ -666,6 +703,9 @@ namespace CardsCashCasino.Manager
 
         }
 
+        /// <summary>
+        /// handles the current phase the game is in and calls the appropriate method for the phase
+        /// </summary>
         private void HandleBettingPhase()
         {
             switch (_bettingPhase)
@@ -685,6 +725,9 @@ namespace CardsCashCasino.Manager
             }
         }
 
+        /// <summary>
+        /// handles the initial stage of betting before any community cards appear
+        /// </summary>
         private void HandlePreflop()
         {
             // Set the current bet to the big blind.
@@ -712,6 +755,10 @@ namespace CardsCashCasino.Manager
             }
         }
 
+        /// <summary>
+        /// handles the poker action enacted by the user or by the AI opponent
+        /// /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
+        /// </summary>
         private void HandlePlayerAction(int playerIndex)
         {
             // Check if the player is the user or AI.
@@ -742,6 +789,10 @@ namespace CardsCashCasino.Manager
             }
         }
 
+        /// <summary>
+        /// Retrieves user selected action
+        /// <returns>USER selected PokerAction</returns>
+        /// </summary>
         private PokerAction GetUserAction()
         {
             return _currentCursorPos switch
@@ -755,16 +806,19 @@ namespace CardsCashCasino.Manager
             };
         }
 
+        /// <summary>
+        /// Houses the logic used by AI to decide poker action based on the AI's poker hand
+        /// Get the list of cards in the player's hand.
+        /// If the hand is a pair or worse. There's a 50% chance the AI will either fold or call/check.
+        /// If the hand is between two pairs and a straight, there's a 50% chance the AI will either call/check or raise.
+        /// If the hand is a straight or better, there's a 35% chance the AI will call/check and 65% chance it raises.
+        /// Currently returns call, AI currently defaults to mimicing user actions to advance game for demo purposes
+        /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
+        /// <returns>AI selected PokerAction</returns>
+        /// </summary>
         private PokerAction GetAIAction(int playerIndex)
         {
-            // Get the list of cards in the player's hand.
-
-            //If the hand is a pair or worse. There's a 50% chance the AI will either fold or call/check.
-
-            //If the hand is between two pairs and a straight, there's a 50% chance the AI will either call/check or raise.
-
-            //If the hand is a straight or better, there's a 35% chance the AI will call/check and 65% chance it raises.
-            return PokerAction.CHECK;
+            return PokerAction.CALL; //Matches user bet 
         }
 
         /// <summary>
@@ -786,11 +840,20 @@ namespace CardsCashCasino.Manager
 
         }
 
+        /// <summary>
+        /// The raise action. Players will increase the current bet to a specified size, all other players must match this bet
+        /// </summary>
+        /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
+        /// <param name="raiseAmount">The index of the player's hand in _playerHands</param>
         private void Raise(int playerIndex, int raiseAmount)
         {
 
         }
 
+        /// <summary>
+        /// The All in action. Player will wager all of their remaining funds, all other players must match this bet
+        /// </summary>
+        /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
         private void AllIn(int playerIndex)
         {
             // Add logic to add the entire of the player's cash to the pot. This needs Bett
@@ -798,6 +861,10 @@ namespace CardsCashCasino.Manager
             // Add logic to handle side pot if necessary.
         }
 
+        /// <summary>
+        /// The Fold action. The player is no longer participating in this round and is ineligible to recieve any split of the pot
+        /// </summary>
+        /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
         private void Fold(int playerIndex)
         {
             _playerHands[playerIndex].Clear();
@@ -813,85 +880,90 @@ namespace CardsCashCasino.Manager
             timer.Stop();
             timer.Dispose();
         }
+    }
+    /// <summary>
+    /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
+    /// </summary>
+    public class TexasHoldEmPot
+    {
+        /// <summary>
+        /// Contains the total amount of money contained in a pot, initiated as empty (0)
+        /// </summary>
+        public int Total { get; set; } = 0;
 
         /// <summary>
-        /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
+        /// Whether the pot is the MAIN pot (the active pot that bets are allocated to) or a SIDE pot (the pot that an all-in player is eligible to win)
         /// </summary>
-        public class TexasHoldEmPot
+        public PotType PotType { get; set; }
+
+        /// <summary>
+        /// The list of players eligible to win a given pot
+        /// </summary>
+        public List<int> EligiblePlayers { get; set; }
+
+        /// <summary>
+        /// Initiating the Pot and with the type of pot as its characteristic
+        /// </summary>
+        public TexasHoldEmPot(PotType type)
         {
-            /// <summary>
-            /// Contains the total amount of money contained in a pot, initiated as empty (0)
-            /// </summary>
-            public int Total { get; set; } = 0;
+            PotType = type; //importing the pot type to identify a pot as MAIN or SIDE
+        }
 
-            /// <summary>
-            /// Whether the pot is the MAIN pot (the active pot that bets are allocated to) or a SIDE pot (the pot that an all-in player is eligible to win)
-            /// </summary>
-            public PotType PotType { get; set; }
+        /// <summary>
+        /// Increment the total of the pot by a specified value.
+        /// </summary>
+        /// <param name="value">The amount to increment the pot's total by.</param>
+        public void IncrementPot(int value)
+        {
+            Total += value;
+        }
 
-            /// <summary>
-            /// The list of players eligible to win a given pot
-            /// </summary>
-            public List<int> EligiblePlayers { get; set; }
-
-            /// <summary>
-            /// Initiating the Pot and with the type of pot as its characteristic
-            /// </summary>
-            public TexasHoldEmPot(PotType type)
+        /// <summary>
+        /// Decrement the total of the pot by a specified value.
+        /// </summary>
+        /// <param name="value">The amount to decrement the pot's total by.</param>
+        public void DecrementPot(int value)
+        {
+            if (value <= 0)
             {
-                PotType = type; //importing the pot type to identify a pot as MAIN or SIDE
+                throw new ArgumentException("Decrement value must be positive.");
             }
 
-            /// <summary>
-            /// Increment the total of the pot by a specified value.
-            /// </summary>
-            /// <param name="value">The amount to increment the pot's total by.</param>
-            public void IncrementPot(int value)
+            if (Total - value < 0)
             {
-                Total += value;
+                throw new InvalidOperationException("Pot total cannot be negative.");
             }
 
-            /// <summary>
-            /// Decrement the total of the pot by a specified value.
-            /// </summary>
-            /// <param name="value">The amount to decrement the pot's total by.</param>
-            public void DecrementPot(int value)
+            Total -= value;
+        }
+
+        /// <summary>
+        /// Decrement the total of the pot by a specified value.
+        /// </summary>
+        /// <param name="playerIndex">The position of the player being removed from pot eligiblity .</param>
+        public void RemoveEligiblePlayer(int playerIndex)
+        {
+            if (EligiblePlayers.Contains(playerIndex))
             {
-                if (value <= 0)
-                {
-                    throw new ArgumentException("Decrement value must be positive.");
-                }
-
-                if (Total - value < 0)
-                {
-                    throw new InvalidOperationException("Pot total cannot be negative.");
-                }
-
-                Total -= value;
-            }
-
-            /// <summary>
-            /// Decrement the total of the pot by a specified value.
-            /// </summary>
-            /// <param name="playerIndex">The position of the player being removed from pot eligiblity .</param>
-            public void RemoveEligiblePlayer(int playerIndex)
-            {
-                if (EligiblePlayers.Contains(playerIndex))
-                {
-                    EligiblePlayers.Remove(playerIndex);
-                }
+                EligiblePlayers.Remove(playerIndex);
             }
         }
+
     }
 
     public class TexasHoldEmPotManager
     {
-        // List to hold the pots for the game
-        public List<TexasHoldEmManager.TexasHoldEmPot> Pots { get; set; }
+        /// <summary>
+        /// Importing list that will house each pot and its attributes
+        /// </summary>
+        public List<TexasHoldEmPot> Pots { get; set; }
 
+        /// <summary>
+        /// creating variable name that will house the list containing the TexasHoldEmPots
+        /// </summary>
         public TexasHoldEmPotManager()
         {
-            Pots = new List<TexasHoldEmManager.TexasHoldEmPot>(); // Initialize the Pots list
+            Pots = new List<TexasHoldEmPot>(); // Initialize the Pots list
         }
 
         /// <summary>
@@ -901,7 +973,7 @@ namespace CardsCashCasino.Manager
         /// <param name="playerBets">List of antes values to be added to the pot.</param>
         public void InitializePot(int ante, List<int> playerBets)
         {
-            Pots.Add(new TexasHoldEmManager.TexasHoldEmPot(PotType.MAIN)); //create a new pot
+            Pots.Add(new TexasHoldEmPot(PotType.MAIN)); //create a new pot
 
             Pots[0].EligiblePlayers = Enumerable.Range(0, playerBets.Count).ToList(); //add all players as eligible to win the pot
 
@@ -948,7 +1020,7 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        //Removes a player that has folded from eligiblility for all pots
+        ///Removes a player that has folded from eligiblility for all pots
         /// </summary>
         /// <param name="playersIndex"> position of the player that as folded</param>
         public void RemoveFoldedPlayers(int playerIndex)
@@ -987,35 +1059,32 @@ namespace CardsCashCasino.Manager
                 .Select(x => Pots[0].EligiblePlayers[x.index])  // Select the corresponding player from EligiblePlayers at the same index
                 .ToList();
 
+            //remove players that are all in from future side pot calculations that are necessary
             numBets -= allInPlayers.Count;
             playerBets.RemoveAll(value => value == 0);
 
-            //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
-            Pots.Add(new TexasHoldEmManager.TexasHoldEmPot(PotType.SIDE));
-            Pots[Pots.Count - 1].IncrementPot(Pots[0].Total); //shifting the pot that the all in player can win to the side, this pot will no longer be added to
-            Pots[0].DecrementPot(Pots[Pots.Count - 1].Total); //reseting active pot value to empty
-            Pots[Pots.Count - 1].EligiblePlayers = new List<int>(Pots[0].EligiblePlayers); //copys the list of players eligible to win the now side pot
-
-            //removing all players that are all in from eligibility from main pot and any pots created in the future
-            for (int player = 0; player < allInPlayers.Count; player++)
+            if (numBets > 1) //if 1 player or less remains, no more side pot manipulation is needed
             {
-                Pots[0].RemoveEligiblePlayer(allInPlayers[player]);
-            }
+                //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
+                Pots.Add(new TexasHoldEmPot(PotType.SIDE));
+                Pots[Pots.Count - 1].IncrementPot(Pots[0].Total); //shifting the pot that the all in player can win to the side, this pot will no longer be added to
+                Pots[0].DecrementPot(Pots[Pots.Count - 1].Total); //reseting active pot value to empty
+                Pots[Pots.Count - 1].EligiblePlayers = new List<int>(Pots[0].EligiblePlayers); //copys the list of players eligible to win the now side pot
 
+                //removing all players that are all in from eligibility from main pot and any pots created in the future
+                for (int player = 0; player < allInPlayers.Count; player++)
+                {
+                    Pots[0].RemoveEligiblePlayer(allInPlayers[player]);
+                }
+            }
             //if there is a second player that has gone all in this round, recursively add pots until player that has called max bet has been reached
             if (currentBet != playerBets.Min())
             {
                 CreateSidePots(currentBet, playerBets);
+                return;
             }
-
-            //if all players but one are all-in 
-            else if (numBets == 1)
-            {
-                Pots.RemoveAt(0); //remove redundant pot creation
-                Pots[0].PotType = PotType.MAIN;
-            }
-
-            else
+            //protects from scenerio where last remaining player from adding excessive amount to the pot
+            if (numBets > 1) 
             {
                 //add remainder of bets from players not all-in into new main pot
                 AddToPot(currentBet, playerBets);
@@ -1026,15 +1095,18 @@ namespace CardsCashCasino.Manager
         /// Pays out the winnings to the player for the individual pot. 
         /// </summary>
         /// <param name="winners">Number of players that have won the pot.</param>
+        /// /// <param name="potNum">Number of players that have won the pot.</param>
         public int DistributePot(int winners, int potNum)
         {
-            if (winners == 0)
+            if (winners != 0) //prevent division by 0
             {
-                throw new ArgumentException("Number of winners cannot be zero.");
+                int _payout = Pots[potNum].Total / winners; //splits payout if more than 1 winner is present
+                return _payout;
             }
-
-            int _payout = Pots[potNum].Total / winners; //splits payout if more than 1 winner is present
-            return _payout;
+            else
+            {
+                return 0;
+            }
         }
 
         /// <summary>
@@ -1058,14 +1130,54 @@ namespace CardsCashCasino.Manager
 
     public static class TexasHoldEmTextures
     {
+        /// <summary>
+        /// The enabled texture for the Call button.
+        /// </summary>
         public static Texture2D? CallButtonEnabledTexture { get; private set; }
+        
+        /// <summary>
+        /// The disabled texture for the Call button. For scenerio when no bet has been placed yet.
+        /// </summary>
         public static Texture2D? CallButtonDisabledTexture { get; private set; }
-        public static Texture2D? CheckButtonTexture { get; private set; }
-        public static Texture2D? RaiseButtonTexture { get; private set; }
+
+        /// <summary>
+        /// The enabled texture for the Check button.
+        /// </summary>
+        public static Texture2D? CheckButtonEnabledTexture { get; private set; }
+
+        /// <summary>
+        /// The disabled texture for the Check button. For the occasion that a bet has been placed in the round.
+        /// </summary>
+        public static Texture2D? CheckButtonDisabledTexture { get; private set; }
+
+        /// <summary>
+        /// The enabled texture for the Raise button.
+        /// </summary>    
+        public static Texture2D? RaiseButtonEnabledTexture { get; private set; }
+
+        /// <summary>
+        /// The disabled texture for the Raise button. For the occasion that opponent places a bet that would put the user all in.
+        /// </summary> 
+        public static Texture2D? RaiseButtonDisabledTexture { get; private set; }
+
+        /// <summary>
+        /// The texture for the Fold button.
+        /// </summary> 
         public static Texture2D? FoldButtonTexture { get; private set; }
+
+        /// <summary>
+        /// The enabled texture for the AllIn button.
+        /// </summary> 
         public static Texture2D? AllInButtonTexture { get; private set; }
+
+        /// <summary>
+        /// The cursor's texture.
+        /// </summary>
         public static Texture2D? CursorTexture { get; private set; }
 
+        /// <summary>
+        /// Loads the assets for Texas HoldEm.
+        /// </summary>
         public static void LoadContent(ContentManager content)
         {
             // TODO: Create textures for the buttons.
@@ -1131,10 +1243,30 @@ namespace CardsCashCasino.Manager
     public class PokerActionButton
     {
         #region Properties
+
+        /// <summary>
+        /// The disabled button texture.
+        /// </summary>
         private Texture2D _disabledTexture;
+
+        /// <summary>
+        /// The unselected button texture.
+        /// </summary>
         private Texture2D _enabledTexture;
+
+        /// <summary>
+        /// The rectangle for the button.
+        /// </summary>
         private Rectangle _buttonRectangle;
+
+        /// <summary>
+        /// Whether or not the button is enabled.
+        /// </summary>
         public bool IsEnabled { get; private set; } = false;
+
+        /// <summary>
+        /// Whether or not the button is selected.
+        /// </summary>
         public bool IsSelected { get; private set; } = false;
         #endregion Properties
         
@@ -1155,6 +1287,9 @@ namespace CardsCashCasino.Manager
             spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture, _buttonRectangle, Color.White);
         }
 
+        /// <summary>
+        /// Gets the location where the cursor will be.
+        /// </summary>
         public Point GetAdjustedPos()
         {
             return new Point(_buttonRectangle.X - 8, _buttonRectangle.Y - 8);
