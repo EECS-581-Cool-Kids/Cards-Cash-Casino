@@ -1180,15 +1180,17 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static void LoadContent(ContentManager content)
         {
-            // TODO: Create textures for the buttons.
-            // CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
-            // CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
-            // CheckButtonTexture = content.Load<Texture2D>("CheckButton");
-            // RaiseButtonTexture = content.Load<Texture2D>("RaiseButton");
-            // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
-            // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
+        // TODO: Create textures for the buttons.
+        // CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
+        // CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
+        // CheckButtonEnablesTexture = content.Load<Texture2D>("CheckButtonEnabled");
+        // CheckButtonEnablesTexture = content.Load<Texture2D>("CheckButtonDisabled");
+        // RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonEnabled");
+        // RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonDisabled");
+        // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
+        // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
 
-            CursorTexture = content.Load<Texture2D>("BlackjackCursor");
+        CursorTexture = content.Load<Texture2D>("BlackjackCursor");
 
         }
     }
