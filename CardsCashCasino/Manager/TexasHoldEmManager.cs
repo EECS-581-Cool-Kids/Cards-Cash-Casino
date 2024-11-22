@@ -924,14 +924,10 @@ namespace CardsCashCasino.Manager
         /// <param name="value">The amount to decrement the pot's total by.</param>
         public void DecrementPot(int value)
         {
-            if (value <= 0)
+            //prevents inadvertent Incrementation or the pot total from becoming a negative value
+            if (value <= 0 || Total - value < 0) 
             {
-                throw new ArgumentException("Decrement value must be positive.");
-            }
-
-            if (Total - value < 0)
-            {
-                throw new InvalidOperationException("Pot total cannot be negative.");
+                return;
             }
 
             Total -= value;
