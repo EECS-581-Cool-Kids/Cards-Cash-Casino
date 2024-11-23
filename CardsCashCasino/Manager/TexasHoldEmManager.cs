@@ -541,7 +541,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
-            //create pot collecting antes
+            //collect antes and create pot
+            _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
 
             //collects and places blind bets from small and big blind players
@@ -1088,6 +1089,7 @@ namespace CardsCashCasino.Manager
         private void Fold(int playerIndex)
         {
             _players.Fold(playerIndex);
+            _potManager.RemoveFoldedPlayers(playerIndex);
             _playerHands[playerIndex].Clear();
         }
 
@@ -1108,7 +1110,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// how much money the user has available in the game
         /// </summary>
-        public int PlayerStack { get; set; } // will be set to users account funds
+        public int PlayerStack { get; set; } = 500; // will be set to users account funds
 
         /// <summary>
         /// represents if the player is the USER or an AI
@@ -1209,8 +1211,32 @@ namespace CardsCashCasino.Manager
             {
                 Players.Add(new Player(PlayerType.AI));
             }
+            Random random = new Random();
+            int dealer = random.Next(0, Players.Count);
+            Players[dealer].PlayerPosition = PlayerPosition.DEALER;
+            Players[(dealer + 1) % Players.Count].PlayerPosition = PlayerPosition.SMALLBLIND;
+            Players[(dealer + 2) % Players.Count].PlayerPosition = PlayerPosition.BIGBLIND;
         }
 
+        /// <summary>
+        /// Collect each player's antes for the beginning of the round
+        /// </summary>
+        public void GenerateAntes(int ante)
+        {
+            for (int player = 0; player < Players.Count; player++)
+            {
+                if (ante > Players[player].PlayerStack)
+                {
+                    Players[player].IncrementBet(Players[player].PlayerStack);
+                    Players[player].DecrementStack(Players[player].PlayerStack);
+                    Players[player].PlayerStatus = PlayerStatus.ALLIN;
+                }
+                else
+                {
+                    Call(ante, player);
+                }
+            }
+        }
         /// <summary>
         /// Gets the position of the first bet to be placed in the preflop round
         /// </summary>
@@ -1260,13 +1286,20 @@ namespace CardsCashCasino.Manager
 
         /// <summary>
         /// Places a bet
-        /// <param name="playerIndex">The index of the current player</param>
+        /// <param name="amount">The amount of the highest bet placed in the round</param>
         /// <param name="playerIndex">The index of the current player</param>
         /// </summary>
         public void Call(int amount, int playerIndex)
         {
-            Players[playerIndex].IncrementBet(amount);
-            Players[playerIndex].DecrementStack(amount);
+            int bet = amount - Players[playerIndex].PlayerBet; //subtracts the player's existing bet from the amount needed
+            Players[playerIndex].IncrementBet(bet);
+            Players[playerIndex].DecrementStack(bet);
+            if (Players[playerIndex].PlayerStack == 0)
+            {
+                Players[playerIndex].PlayerStatus = PlayerStatus.ALLIN;
+                return;
+            }
+            Players[playerIndex].PlayerStatus = PlayerStatus.CALLED;
         }
 
         /// <summary>
@@ -1387,6 +1420,10 @@ namespace CardsCashCasino.Manager
                 {
                     Players[player].DecrementBet(Players[player].PlayerBet);
                 }
+                if (Players[player].PlayerStatus == PlayerStatus.CALLED)
+                {
+                    Players[player].PlayerStatus = PlayerStatus.IN;
+                }
             }
         }
 
@@ -1399,7 +1436,7 @@ namespace CardsCashCasino.Manager
 
             for (int player = 0; player < Players.Count; player++)
             {
-                if (Players[player].PlayerStatus == PlayerStatus.FOLDED && Players[player].PlayerBet < 0)
+                if (Players[player].PlayerStatus == PlayerStatus.FOLDED && Players[player].PlayerBet > 0)
                 {
                     foldedBets.Add(Players[player].PlayerBet);
                 }
@@ -1416,7 +1453,7 @@ namespace CardsCashCasino.Manager
 
             for (int player = 0; player < Players.Count; player++)
             {
-                if (Players[player].PlayerStatus != PlayerStatus.FOLDED && Players[player].PlayerBet < 0)
+                if (Players[player].PlayerStatus != PlayerStatus.FOLDED && Players[player].PlayerBet > 0)
                 {
                     bets.Add(Players[player].PlayerBet);
                 }
@@ -1443,24 +1480,12 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        ///sets a random player as the dealer and the two players to their left as small and big blind respectively
-        /// </summary>
-        public void InitiateBlinds()
-        {
-            Random random = new Random();
-            int dealer = random.Next(0, Players.Count);
-            Players[dealer].PlayerPosition = PlayerPosition.DEALER;
-            Players[dealer + 1 % Players.Count].PlayerPosition = PlayerPosition.SMALLBLIND;
-            Players[dealer + 2 % Players.Count].PlayerPosition = PlayerPosition.BIGBLIND;
-        }
-
-        /// <summary>
         ///shifts the blind to the next positions
         /// </summary>
         public void SetNextRoundBlinds()
         {
             //blind shift rules if there are only 2 players remaining 
-            if (Players.Count() < 3)
+            if (Players.Count < 3)
             {
                 if (Players[0].PlayerPosition == PlayerPosition.BIGBLIND)
                 {
@@ -1476,7 +1501,7 @@ namespace CardsCashCasino.Manager
             else
             {
                 int dealer = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.DEALER);
-                if (Players.Count() > 3) //if a only 3 players exist, no player is set to NONE
+                if (Players.Count > 3) //if a only 3 players exist, no player is set to NONE
                 {
                     Players[dealer].PlayerPosition = PlayerPosition.NONE;
                 }
@@ -1494,7 +1519,7 @@ namespace CardsCashCasino.Manager
         public void CollectBlinds(int _smallBlind, int _bigBlind)
         {
             int smallBlindPosition = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.SMALLBLIND);
-            if (Players[smallBlindPosition].PlayerStack < _smallBlind) //if blind causes player to go all in
+            if (Players[smallBlindPosition].PlayerStack <= _smallBlind) //if blind causes player to go all in
             {
                 Players[smallBlindPosition].IncrementBet(Players[smallBlindPosition].PlayerStack);
                 Players[smallBlindPosition].DecrementStack(Players[smallBlindPosition].PlayerStack);
@@ -1506,7 +1531,7 @@ namespace CardsCashCasino.Manager
                 Players[smallBlindPosition].DecrementStack(_smallBlind);
             }
             int bigBlindPosition = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.BIGBLIND);
-            if (Players[bigBlindPosition].PlayerStack < _bigBlind) //if blind causes player to go all in
+            if (Players[bigBlindPosition].PlayerStack <= _bigBlind) //if blind causes player to go all in
             {
                 Players[bigBlindPosition].IncrementBet(Players[bigBlindPosition].PlayerStack);
                 Players[bigBlindPosition].DecrementStack(Players[bigBlindPosition].PlayerStack);
@@ -1722,6 +1747,11 @@ namespace CardsCashCasino.Manager
                     {
                         Pots[0].RemoveEligiblePlayer(allInPlayers[player]);
                     }
+                }
+                //no more bets left to add to any pots
+                if (numBets == 0)
+                {
+                    return;
                 }
                 //if there is a second player that has gone all in this round, recursively add pots until player that has called max bet has been reached
                 if (currentBet != playerBets.Min())
