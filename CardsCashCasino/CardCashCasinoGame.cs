@@ -41,6 +41,7 @@ namespace CardsCashCasino
         // /// The internal Main menu object.
         // /// </summary>
         // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
+        private MainMenu? _mainMenu;
 
         /// <summary>
         /// The card manager for the game.
@@ -128,7 +129,7 @@ namespace CardsCashCasino
             _bettingManager.LoadContent();
             _blackjackManager.LoadContent();
 
-            _selectedGame = SelectedGame.BLACKJACK; // temp, remove when main menu is implemented OR change to other games.
+            _selectedGame = SelectedGame.NONE; // temp, remove when main menu is implemented OR change to other games.
         }
 
         /// <summary>
@@ -142,7 +143,18 @@ namespace CardsCashCasino
             // update for the main menu
 
             if (_selectedGame == SelectedGame.NONE)
-                return;
+            {
+                // print to console that the main menu is open
+                
+
+                // open main menu
+                if (_mainMenu == null)
+                {
+                    _mainMenu = new MainMenu();
+                    _mainMenu.LoadContent(Content);
+                }
+                _mainMenu.Update();
+            }
 
             switch (_selectedGame)
             {
@@ -211,6 +223,7 @@ namespace CardsCashCasino
         NONE,
         BLACKJACK,
         HOLDEM,
-        FIVECARD
+        FIVECARD,
+        MAINMENU //delete this once main menu is implemented
     }
 }
