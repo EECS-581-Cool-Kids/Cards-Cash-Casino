@@ -486,10 +486,10 @@ namespace CardsCashCasino.Manager
                 {
                     return;
                 }
+                _userRaising = false;
 
                 // TODO: Verify that the below code is correct.
                 _currentBet += raiseAmount;
-
                 Raise(0);
 
             } else
