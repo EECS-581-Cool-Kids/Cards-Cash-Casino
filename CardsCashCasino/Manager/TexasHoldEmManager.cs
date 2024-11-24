@@ -60,13 +60,19 @@ namespace CardsCashCasino.Manager
         MAIN,
         SIDE
     }
-
+    
+    /// <summary>
+    /// Identifier for the type of player. The player can be either a user or an AI
+    /// </summary>
     public enum PlayerType
     {
         USER,
         AI
     }
 
+    /// <summary>
+    /// Identifies the status of the player in the game.
+    /// </summary>
     public enum PlayerStatus
     {
         IN,
@@ -74,6 +80,10 @@ namespace CardsCashCasino.Manager
         CALLED,
         ALLIN
     }
+    
+    /// <summary>
+    /// Identifies if the player is the dealer, small blind, big blind or none of the above.
+    /// </summary>
     public enum PlayerPosition
     {
         DEALER,
@@ -82,6 +92,7 @@ namespace CardsCashCasino.Manager
         NONE
     }
 
+    
     public class TexasHoldEmManager
     {
         #region Properties
