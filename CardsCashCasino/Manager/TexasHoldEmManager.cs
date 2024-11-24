@@ -368,28 +368,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
-            switch (_currentPhase)
-            {
-                case Phase.INIT:
-                    StartGame();
-                    HandlePreflop();
-                    break;
-                case Phase.FLOP:
-                    HandleFlop();
-                    break;
-                case Phase.TURN:
-                    HandleTurn();
-                    break;
-                case Phase.RIVER:
-                    HandleRiver();
-                    break;
-                case Phase.CONCLUSION:
-                    RoundConclusion();
-                    break;
-            }
-
             // If it's currently player's turn
-            if (_currentPlayer == 0)
+            if (_userPlaying)
                 UpdateWhileUserPlaying();
             else
                 UpdateWhileAIPlaying();
@@ -478,6 +458,10 @@ namespace CardsCashCasino.Manager
             return -1;
         }
 
+        /// <summary>
+        /// Goes to the next phase of the game. Called when the current phase is over, which is when the betting round
+        /// is over for that phase concludes.
+        /// </summary>
         private void NextPhase()
         {
             switch (_currentPhase) {
@@ -560,10 +544,8 @@ namespace CardsCashCasino.Manager
                     _currentPhase = Phase.CONCLUSION;
                     return;
                 }
-
             }
-
-
+            
             if (_players.AdvanceRound() && !_players.OnePlayerLeft())
             {
                 //finalize bets for the round and add them to the pots
@@ -577,9 +559,6 @@ namespace CardsCashCasino.Manager
                 DealFlop();
                 return;
             }
-
-
-
         }
 
         /// <summary>
@@ -944,6 +923,7 @@ namespace CardsCashCasino.Manager
                 _blindIncreaseCountdown = 5;
                 _ante += 2;
             }
+            else
             //decrement blind countdown after each hand
             _blindIncreaseCountdown -= 1;
 
@@ -955,28 +935,7 @@ namespace CardsCashCasino.Manager
             _potManager.ResetPots();
             _currentPhase = Phase.INIT;
         }
-
-        /// <summary>
-        /// handles the current phase the game is in and calls the appropriate method for the phase
-        /// </summary>
-        private void HandleBettingPhase()
-        {
-            switch (_bettingPhase)
-            {
-                case BettingPhase.PREFLOP:
-                    HandlePreflop();
-                    break;
-                case BettingPhase.FLOP:
-                    HandleFlop();
-                    break;
-                case BettingPhase.TURN:
-                    HandleTurn();
-                    break;
-                case BettingPhase.RIVER:
-                    HandleRiver();
-                    break;
-            }
-        }
+        
 
         /// <summary>
         /// handles the initial stage of betting before any community cards appear
