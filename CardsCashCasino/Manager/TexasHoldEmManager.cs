@@ -25,6 +25,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using static System.Collections.Specialized.BitVector32;
 
 namespace CardsCashCasino.Manager
 {
@@ -213,6 +214,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private List<Card> _communityCards = new();
 
+        private bool _userRaising = false;
+
         /// <summary>
         /// Initializing TexasHoldEmPotManager class
         /// </summary>
@@ -392,20 +395,9 @@ namespace CardsCashCasino.Manager
                 UpdateWhileAIPlaying();
         }
 
-        /// <summary>
-        /// Update loop while the user is playing.
-        /// </summary>
-        private void UpdateWhileUserPlaying()
+
+        private PokerAction? GetPlayerAction()
         {
-            // Return if the AI is still taking an action.
-            if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
-                return;
-
-            // Throw user's options or whatever here
-            // This should only get called if this function results in player's turn ending
-            _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
-
-
             // Handle right key press to move the cursor.
             if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || _cursorMoveTimeout.Enabled))
             {
@@ -440,31 +432,108 @@ namespace CardsCashCasino.Manager
             else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
             {
                 if (_userActionTimeout is not null && _userActionTimeout.Enabled)
-                    return;
-
-                switch (_currentCursorPos)
-                {
-                    case Constants.CHECK_BUTTON_POS:
-                        //Check();
-                        break;
-                    case Constants.CALL_BUTTON_POS:
-                        // Call();
-                        break;
-                    case Constants.RAISE_BUTTON_POS:
-                        // Raise();
-                        break;
-                    case Constants.ALL_IN_BUTTON_POS:
-                        // AllIn();
-                        break;
-                    case Constants.FOLD_BUTTON_POS:
-                        // Fold();
-                        break;
-                }
+                    return null;
 
                 _userActionTimeout = new(200);
                 _userActionTimeout.Elapsed += OnTimeoutEvent!;
                 _userActionTimeout.Start();
+
+                switch (_currentCursorPos)
+                {
+                    case Constants.CHECK_BUTTON_POS:
+                        return PokerAction.CHECK;
+                        
+                    case Constants.CALL_BUTTON_POS:
+                        return PokerAction.CALL;
+                        
+                    case Constants.RAISE_BUTTON_POS:
+                        return PokerAction.RAISE;
+                        
+                    case Constants.ALL_IN_BUTTON_POS:
+                        return PokerAction.ALL_IN;
+                        
+                    case Constants.FOLD_BUTTON_POS:
+                        return PokerAction.FOLD;
+                }
             }
+
+            return null;
+        }
+
+        private int GetPlayerRaise()
+        {
+            // TODO: Read user's inputs w.r.t. the UI, and if a decision was made, return that value.
+            
+            // If no decision was made yet, return -1.
+            return -1;
+        }
+
+        /// <summary>
+        /// Update loop while the user is playing.
+        /// </summary>
+        private void UpdateWhileUserPlaying()
+        {
+            // Return if the AI is still taking an action.
+            if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
+                return;
+
+            if (_userRaising)
+            {
+                // At this point, the UI used to figure out what user wants to raise by should be rendered.
+                int raiseAmount = GetPlayerRaise();
+                
+                if (raiseAmount == -1)
+                {
+                    return;
+                }
+
+                // TODO: Verify that the below code is correct.
+                _currentBet += raiseAmount;
+
+                Raise(0);
+
+            } else
+            {
+                // Get the action the player selected, if any
+                PokerAction? playerAction = GetPlayerAction();
+
+                // if the player did not decide on an action yet
+                if (playerAction == null)
+                {
+                    return;
+                }
+
+                switch (playerAction)
+                {
+                    case PokerAction.FOLD:
+                        Fold(0);
+                        break;
+                    case PokerAction.CHECK:
+                        Check(0);
+                        break;
+                    case PokerAction.CALL:
+                        Call(0);
+                        break;
+                    case PokerAction.RAISE:
+                        // We have to run the code to get the amount the player raises by.
+                        // Since this requires more render calls, we set the flag to start rendering that code
+                        // and then we break out of the function early.
+                        _userRaising = true;
+                        return;
+                    case PokerAction.ALL_IN:
+                        AllIn(0);
+                        break;
+                }
+            }
+
+            // At this point, the user has made every decision they had to for their turn.
+            // We will now carry out logic needed to finish users turn. 
+            // At the start of the next call to Update(), it should be the next player's turn.
+
+
+            
+            // This should only get called if this function results in player's turn ending
+            _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
 
         }
 
