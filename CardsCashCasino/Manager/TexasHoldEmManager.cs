@@ -645,9 +645,8 @@ namespace CardsCashCasino.Manager
             // At the start of the next call to Update(), it should be the next player's turn.
 
 
-            
-            // This should only get called if this function results in player's turn ending
-            _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
+
+            RoundLogic();
 
         }
 
@@ -658,10 +657,12 @@ namespace CardsCashCasino.Manager
         {
             // Should have some AI related nonsense here.
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
-            // 
 
-            _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
-            return;
+            // ...
+
+            // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
+
+            RoundLogic();
         }
 
         /// <summary>
