@@ -91,6 +91,7 @@ namespace CardsCashCasino.Manager
         NONE
     }
 
+    
     public class TexasHoldEmManager
     {
         #region Properties
