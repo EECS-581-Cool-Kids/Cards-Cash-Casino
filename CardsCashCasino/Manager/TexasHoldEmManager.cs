@@ -92,7 +92,6 @@ namespace CardsCashCasino.Manager
         NONE
     }
 
-    
     public class TexasHoldEmManager
     {
         #region Properties
@@ -225,6 +224,11 @@ namespace CardsCashCasino.Manager
         /// Initializing PlayerManager class
         /// </summary>
         HoldEmPlayerManager _players = new HoldEmPlayerManager();
+
+        /// <summary>
+        /// Variable to hold the Pots Manager class
+        /// </summary>
+        private TexasHoldEmPotManager _potManager;
 
         /// <summary>
         /// The cursor.
@@ -368,26 +372,6 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
-            switch (_currentPhase)
-            {
-                case Phase.INIT:
-                    StartGame();
-                    HandlePreflop();
-                    break;
-                case Phase.FLOP:
-                    HandleFlop();
-                    break;
-                case Phase.TURN:
-                    HandleTurn();
-                    break;
-                case Phase.RIVER:
-                    HandleRiver();
-                    break;
-                case Phase.CONCLUSION:
-                    RoundConclusion();
-                    break;
-            }
-
             // If it's currently player's turn
             if (_currentPlayer == 0)
                 UpdateWhileUserPlaying();
@@ -789,6 +773,7 @@ namespace CardsCashCasino.Manager
                 hand.Clear();
             }
         }
+      
         /// <summary>
         /// Creates the list of player hands. The first player is the user.
         /// </summary>
@@ -1272,6 +1257,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// handles the poker action enacted by the user or by the AI opponent
         /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
+
         /// </summary>
         private void HandlePlayerAction(int playerIndex)
         {
@@ -1396,6 +1382,8 @@ namespace CardsCashCasino.Manager
             timer.Dispose();
         }
     }
+    #endregion Methods
+}
 
     public class Player
     {

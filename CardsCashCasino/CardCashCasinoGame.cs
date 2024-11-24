@@ -120,7 +120,7 @@ namespace CardsCashCasino
 
             //ChipTextures.LoadContent(Content);
 
-            _blackjackManager.LoadContent(Content);
+            _blackjackManager.LoadContent();
             _texasHoldEmManager.LoadContent(Content);
             //FiveCardDrawTextures.LoadContent(Content);
 
