@@ -213,12 +213,25 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private List<Card> _communityCards = new();
 
+        /// <summary>
+        /// If the update function is dealing with the raise functionality
+        /// </summary>
         private bool _userRaising = false;
+
+        /// <summary>
+        /// Call to tell betting manager to start trying to get a raise amount.
+        /// </summary>
+        public Action StartRaise{ get; set; }
+
+        /// <summary>
+        /// Call to ask betting manager if raise code has completed.
+        /// </summary>
+        //public Func<int> GetRaiseAmount { get; set; }
 
         /// <summary>
         /// Initializing TexasHoldEmPotManager class
         /// </summary>
-        TexasHoldEmPotManager _potManager = new TexasHoldEmPotManager();
+        //TexasHoldEmPotManager _potManager = new TexasHoldEmPotManager();
 
         /// <summary>
         /// Initializing PlayerManager class
@@ -228,7 +241,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Variable to hold the Pots Manager class
         /// </summary>
-        private TexasHoldEmPotManager _potManager;
+        private TexasHoldEmPotManager _potManager = new TexasHoldEmPotManager();
 
         /// <summary>
         /// The cursor.
@@ -430,16 +443,16 @@ namespace CardsCashCasino.Manager
                 {
                     case Constants.CHECK_BUTTON_POS:
                         return PokerAction.CHECK;
-                        
+
                     case Constants.CALL_BUTTON_POS:
                         return PokerAction.CALL;
-                        
+
                     case Constants.RAISE_BUTTON_POS:
                         return PokerAction.RAISE;
-                        
+
                     case Constants.ALL_IN_BUTTON_POS:
                         return PokerAction.ALL_IN;
-                        
+
                     case Constants.FOLD_BUTTON_POS:
                         return PokerAction.FOLD;
                 }
@@ -457,9 +470,9 @@ namespace CardsCashCasino.Manager
         private int GetPlayerRaise()
         {
             // TODO: Read user's inputs w.r.t. the UI, and if a decision was made, return that value.
-            
-            // If no decision was made yet, return -1.
-            return -1;
+            int amount = BettingManager.UserBet;
+            BettingManager.UserBet = 0;
+            return amount;
         }
 
         /// <summary>
@@ -468,7 +481,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void NextPhase()
         {
-            switch (_currentPhase) {
+            switch (_currentPhase)
+            {
                 case Phase.INIT:
                     _currentPhase = Phase.FLOP;
                     DealFlop();
@@ -549,7 +563,7 @@ namespace CardsCashCasino.Manager
                     return;
                 }
             }
-            
+
             if (_players.AdvanceRound() && !_players.OnePlayerLeft())
             {
                 //finalize bets for the round and add them to the pots
@@ -575,9 +589,10 @@ namespace CardsCashCasino.Manager
 
             if (_userRaising)
             {
+
                 // At this point, the UI used to figure out what user wants to raise by should be rendered.
                 int raiseAmount = GetPlayerRaise();
-                
+
                 if (raiseAmount == -1)
                 {
                     return;
@@ -588,7 +603,8 @@ namespace CardsCashCasino.Manager
                 _currentBet += raiseAmount;
                 Raise(0);
 
-            } else
+            }
+            else
             {
                 // Get the action the player selected, if any
                 PokerAction? playerAction = GetPlayerAction();
@@ -611,6 +627,7 @@ namespace CardsCashCasino.Manager
                         Call(0);
                         break;
                     case PokerAction.RAISE:
+                        StartRaise.Invoke();
                         // We have to run the code to get the amount the player raises by.
                         // Since this requires more render calls, we set the flag to start rendering that code
                         // and then we break out of the function early.
@@ -715,6 +732,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
+            Initialize();
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
@@ -772,7 +790,7 @@ namespace CardsCashCasino.Manager
                 hand.Clear();
             }
         }
-      
+
         /// <summary>
         /// Creates the list of player hands. The first player is the user.
         /// </summary>
@@ -926,8 +944,8 @@ namespace CardsCashCasino.Manager
                 _ante += 2;
             }
             else
-            //decrement blind countdown after each hand
-            _blindIncreaseCountdown -= 1;
+                //decrement blind countdown after each hand
+                _blindIncreaseCountdown -= 1;
 
             //check if any players are out of money and need to be eliminated
             _players.EliminatePlayers();
@@ -937,7 +955,7 @@ namespace CardsCashCasino.Manager
             _potManager.ResetPots();
             _currentPhase = Phase.INIT;
         }
-        
+
 
         /// <summary>
         /// handles the initial stage of betting before any community cards appear
@@ -1362,7 +1380,7 @@ namespace CardsCashCasino.Manager
         }
     }
     #endregion Methods
-}
+
 
     public class Player
     {
@@ -1816,262 +1834,261 @@ namespace CardsCashCasino.Manager
             }
         }
     }
-        /// <summary>
-        /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
-        /// </summary>
+    /// <summary>
+    /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
+    /// </summary>
     public class TexasHoldEmPot
+    {
+        /// <summary>
+        /// Contains the total amount of money contained in a pot, initiated as empty (0)
+        /// </summary>
+        public int Total { get; set; } = 0;
+
+        /// <summary>
+        /// Whether the pot is the MAIN pot (the active pot that bets are allocated to) or a SIDE pot (the pot that an all-in player is eligible to win)
+        /// </summary>
+        public PotType PotType { get; set; }
+
+        /// <summary>
+        /// The list of players eligible to win a given pot
+        /// </summary>
+        public List<int> EligiblePlayers { get; set; }
+
+        /// <summary>
+        /// Initiating the Pot and with the type of pot as its characteristic
+        /// </summary>
+        public TexasHoldEmPot(PotType type)
         {
-            /// <summary>
-            /// Contains the total amount of money contained in a pot, initiated as empty (0)
-            /// </summary>
-            public int Total { get; set; } = 0;
+            PotType = type; //importing the pot type to identify a pot as MAIN or SIDE
+        }
 
-            /// <summary>
-            /// Whether the pot is the MAIN pot (the active pot that bets are allocated to) or a SIDE pot (the pot that an all-in player is eligible to win)
-            /// </summary>
-            public PotType PotType { get; set; }
+        /// <summary>
+        /// Increment the total of the pot by a specified value.
+        /// </summary>
+        /// <param name="value">The amount to increment the pot's total by.</param>
+        public void IncrementPot(int value)
+        {
+            Total += value;
+        }
 
-            /// <summary>
-            /// The list of players eligible to win a given pot
-            /// </summary>
-            public List<int> EligiblePlayers { get; set; }
-
-            /// <summary>
-            /// Initiating the Pot and with the type of pot as its characteristic
-            /// </summary>
-            public TexasHoldEmPot(PotType type)
+        /// <summary>
+        /// Decrement the total of the pot by a specified value.
+        /// </summary>
+        /// <param name="value">The amount to decrement the pot's total by.</param>
+        public void DecrementPot(int value)
+        {
+            if (value <= 0 || Total - value < 0)
             {
-                PotType = type; //importing the pot type to identify a pot as MAIN or SIDE
+                return;
             }
 
-            /// <summary>
-            /// Increment the total of the pot by a specified value.
-            /// </summary>
-            /// <param name="value">The amount to increment the pot's total by.</param>
-            public void IncrementPot(int value)
-            {
-                Total += value;
-            }
+            Total -= value;
+        }
 
-            /// <summary>
-            /// Decrement the total of the pot by a specified value.
-            /// </summary>
-            /// <param name="value">The amount to decrement the pot's total by.</param>
-            public void DecrementPot(int value)
+        /// <summary>
+        /// Decrement the total of the pot by a specified value.
+        /// </summary>
+        /// <param name="playerIndex">The position of the player being removed from pot eligiblity .</param>
+        public void RemoveEligiblePlayer(int playerIndex)
+        {
+            if (EligiblePlayers.Contains(playerIndex))
             {
-                if (value <= 0 || Total - value < 0)
-                {
-                    return;
-                }
-
-                Total -= value;
-            }
-
-            /// <summary>
-            /// Decrement the total of the pot by a specified value.
-            /// </summary>
-            /// <param name="playerIndex">The position of the player being removed from pot eligiblity .</param>
-            public void RemoveEligiblePlayer(int playerIndex)
-            {
-                if (EligiblePlayers.Contains(playerIndex))
-                {
-                    EligiblePlayers.Remove(playerIndex);
-                }
+                EligiblePlayers.Remove(playerIndex);
             }
         }
-    public class TexasHoldEmPotManager
-        {
-            /// <summary>
-            /// Importing list that will house each pot and its attributes
-            /// </summary>
-            public List<TexasHoldEmPot> Pots { get; set; }
-
-            /// <summary>
-            /// creating variable name that will house the list containing the TexasHoldEmPots
-            /// </summary>
-            public TexasHoldEmPotManager()
-            {
-                Pots = new List<TexasHoldEmPot>(); // Initialize the Pots list
-            }
-
-            /// <summary>
-            /// Initialize the main pot, if any players are short side pots will be created.
-            /// </summary>
-            /// <param name="_ante">The ante needed to be added by each player to the pot.</param>
-            /// <param name="playerBets">List of antes values to be added to the pot.</param>
-            public void InitializePot(int ante, List<int> playerBets)
-            {
-                Pots.Add(new TexasHoldEmPot(PotType.MAIN)); //create a new pot
-
-                Pots[0].EligiblePlayers = Enumerable.Range(0, playerBets.Count).ToList(); //add all players as eligible to win the pot
-
-                if (playerBets.All(ante => ante == playerBets[0])) //if all bets match the ante add to main pot
-                {
-                    AddToPot(ante, playerBets);
-                }
-                else //create side pots if any bets do not match the ante
-                {
-                    CreateSidePots(ante, playerBets);
-                }
-            }
-
-            /// <summary>
-            /// Adds a bets to the pot.
-            /// </summary>
-            /// <param name="_currentBet">The amount each player is contributing to the pot.</param>
-            /// <param name="playerBets">List of bet values to be added to the pot.</param>
-            public void AddToPot(int currentBet, List<int> playerBets)
-            {
-                if (playerBets.All(bet => bet == playerBets[0]))
-                {
-                    Pots.First(pot => pot.PotType == PotType.MAIN).IncrementPot(currentBet * playerBets.Count);
-                }
-                else
-                {
-                    CreateSidePots(currentBet, playerBets);
-                }
-            }
-
-            /// <summary>
-            //Adds bets of players that were folded to the pot
-            /// </summary>
-            /// <param name="playersBets"> list of bets that were placed but folded due to a raise in that round</param>
-            public void AddFoldedBetsToPot(List<int> playerBets)
-            {
-                if (playerBets.Any())
-                {
-                    for (int bet = 0; bet < playerBets.Count(); bet++)
-                    {
-                        Pots[0].IncrementPot(playerBets[bet]);
-                    }
-                }
-            }
-
-            /// <summary>
-            ///Removes a player that has folded from eligiblility for all pots
-            /// </summary>
-            /// <param name="playersIndex"> position of the player that as folded</param>
-            public void RemoveFoldedPlayers(int playerIndex)
-            {
-                for (int pot = 0; pot < Pots.Count; pot++)
-                {
-                    Pots[pot].RemoveEligiblePlayer(playerIndex);
-                }
-            }
-
-            /// <summary>
-            /// Creates side pots as needed at the end of a round of betting.
-            /// </summary>
-            /// <param name="currentBet">The amount to add to the pot.</param>
-            /// <param name="playerBets">The list of bets from players still active after the round of betting.</param>
-            public void CreateSidePots(int currentBet, List<int> playerBets)
-            {
-                int allInBet = 0; //initiating variable that will hold all in wager
-                int numBets = playerBets.Count;
-
-                //all-in bet added to the pot, other players matched bets added to pot as well
-                allInBet = playerBets.Min();
-                AddToPot(allInBet, Enumerable.Repeat(allInBet, numBets).ToList());
-
-                //subtracting all-in bet value from all other bets, the all-in bet value has already been added to a pot
-                for (int player = 0; player < numBets; player++)
-                {
-                    playerBets[player] -= allInBet; // Subtract the amount put into pot from each bet
-                }
-                currentBet -= allInBet;
-
-                //modify list of players that are eligible for the new main pot by removing player(s) that are all-in
-                List<int> allInPlayers = playerBets
-                    .Select((value, index) => new { value, index })  // Keep both the value and the index
-                    .Where(x => x.value == 0)  // Filter where the bet is 0 (all-in)
-                    .Select(x => Pots[0].EligiblePlayers[x.index])  // Select the corresponding player from EligiblePlayers at the same index
-                    .ToList();
-
-                //remove players that are all in from future side pot calculations that are necessary
-                numBets -= allInPlayers.Count;
-                playerBets.RemoveAll(value => value == 0);
-
-                if (numBets > 1) //if 1 player or less remains, no more side pot manipulation is needed
-                {
-                    //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
-                    Pots.Add(new TexasHoldEmPot(PotType.SIDE));
-                    Pots[Pots.Count - 1].IncrementPot(Pots[0].Total); //shifting the pot that the all in player can win to the side, this pot will no longer be added to
-                    Pots[0].DecrementPot(Pots[Pots.Count - 1].Total); //reseting active pot value to empty
-                    Pots[Pots.Count - 1].EligiblePlayers = new List<int>(Pots[0].EligiblePlayers); //copys the list of players eligible to win the now side pot
-
-                    //removing all players that are all in from eligibility from main pot and any pots created in the future
-                    for (int player = 0; player < allInPlayers.Count; player++)
-                    {
-                        Pots[0].RemoveEligiblePlayer(allInPlayers[player]);
-                    }
-                }
-                //no more bets left to add to any pots
-                if (numBets == 0)
-                {
-                    return;
-                }
-                //if there is a second player that has gone all in this round, recursively add pots until player that has called max bet has been reached
-                if (currentBet != playerBets.Min())
-                {
-                    CreateSidePots(currentBet, playerBets);
-                    return;
-                }
-                //protects from scenerio where last remaining player from adding excessive amount to the pot
-                if (numBets > 1)
-                {
-                    //add remainder of bets from players not all-in into new main pot
-                    AddToPot(currentBet, playerBets);
-                }
-            }
-
-            /// <summary>
-            /// Pays out the winnings to the player for the individual pot. 
-            /// <param name="winners">Number of players that have won the pot.</param>
-            /// <param name="potNumber">The pot that is being referred to.</param>
-            /// <returns>The amount that each winner has won</returns>
-            /// </summary>
-            public int DistributePot(int winners, int potNumber)
-            {
-                if (winners != 0) //prevent division by 0
-                {
-                    int _payout = Pots[potNumber].Total / winners; //splits payout if more than 1 winner is present
-                    return _payout;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-
-            /// <summary>
-            /// Returns the amount contained in each pot
-            /// <returns>A list of the amounts contained within each pot</returns>
-            /// </summary>
-            public List<int> GetPotAmounts()
-            {
-                return Pots.Select(pot => pot.Total).ToList();
-            }
-
-            /// <summary>
-            /// Resets the pots list to an empty state.
-            /// </summary>
-            public void ResetPots()
-            {
-                Pots.Clear();
-            }
-
-            /// <summary>
-            /// Resets the pots list to an empty state.
-            /// <param name="potNumber">The pot that is being referred to.</param>
-            /// <returns>The list of players eligible to win the pot being referred to</returns>
-            /// </summary>
-            public List<int> PlayersEligible(int potNumber)
-            {
-                return Pots[potNumber].EligiblePlayers;
-            }
-        }
-        #endregion Methods
     }
+    public class TexasHoldEmPotManager
+    {
+        /// <summary>
+        /// Importing list that will house each pot and its attributes
+        /// </summary>
+        public List<TexasHoldEmPot> Pots { get; set; }
+
+        /// <summary>
+        /// creating variable name that will house the list containing the TexasHoldEmPots
+        /// </summary>
+        public TexasHoldEmPotManager()
+        {
+            Pots = new List<TexasHoldEmPot>(); // Initialize the Pots list
+        }
+
+        /// <summary>
+        /// Initialize the main pot, if any players are short side pots will be created.
+        /// </summary>
+        /// <param name="_ante">The ante needed to be added by each player to the pot.</param>
+        /// <param name="playerBets">List of antes values to be added to the pot.</param>
+        public void InitializePot(int ante, List<int> playerBets)
+        {
+            Pots.Add(new TexasHoldEmPot(PotType.MAIN)); //create a new pot
+
+            Pots[0].EligiblePlayers = Enumerable.Range(0, playerBets.Count).ToList(); //add all players as eligible to win the pot
+
+            if (playerBets.All(ante => ante == playerBets[0])) //if all bets match the ante add to main pot
+            {
+                AddToPot(ante, playerBets);
+            }
+            else //create side pots if any bets do not match the ante
+            {
+                CreateSidePots(ante, playerBets);
+            }
+        }
+
+        /// <summary>
+        /// Adds a bets to the pot.
+        /// </summary>
+        /// <param name="_currentBet">The amount each player is contributing to the pot.</param>
+        /// <param name="playerBets">List of bet values to be added to the pot.</param>
+        public void AddToPot(int currentBet, List<int> playerBets)
+        {
+            if (playerBets.All(bet => bet == playerBets[0]))
+            {
+                Pots.First(pot => pot.PotType == PotType.MAIN).IncrementPot(currentBet * playerBets.Count);
+            }
+            else
+            {
+                CreateSidePots(currentBet, playerBets);
+            }
+        }
+
+        /// <summary>
+        //Adds bets of players that were folded to the pot
+        /// </summary>
+        /// <param name="playersBets"> list of bets that were placed but folded due to a raise in that round</param>
+        public void AddFoldedBetsToPot(List<int> playerBets)
+        {
+            if (playerBets.Any())
+            {
+                for (int bet = 0; bet < playerBets.Count(); bet++)
+                {
+                    Pots[0].IncrementPot(playerBets[bet]);
+                }
+            }
+        }
+
+        /// <summary>
+        ///Removes a player that has folded from eligiblility for all pots
+        /// </summary>
+        /// <param name="playersIndex"> position of the player that as folded</param>
+        public void RemoveFoldedPlayers(int playerIndex)
+        {
+            for (int pot = 0; pot < Pots.Count; pot++)
+            {
+                Pots[pot].RemoveEligiblePlayer(playerIndex);
+            }
+        }
+
+        /// <summary>
+        /// Creates side pots as needed at the end of a round of betting.
+        /// </summary>
+        /// <param name="currentBet">The amount to add to the pot.</param>
+        /// <param name="playerBets">The list of bets from players still active after the round of betting.</param>
+        public void CreateSidePots(int currentBet, List<int> playerBets)
+        {
+            int allInBet = 0; //initiating variable that will hold all in wager
+            int numBets = playerBets.Count;
+
+            //all-in bet added to the pot, other players matched bets added to pot as well
+            allInBet = playerBets.Min();
+            AddToPot(allInBet, Enumerable.Repeat(allInBet, numBets).ToList());
+
+            //subtracting all-in bet value from all other bets, the all-in bet value has already been added to a pot
+            for (int player = 0; player < numBets; player++)
+            {
+                playerBets[player] -= allInBet; // Subtract the amount put into pot from each bet
+            }
+            currentBet -= allInBet;
+
+            //modify list of players that are eligible for the new main pot by removing player(s) that are all-in
+            List<int> allInPlayers = playerBets
+                .Select((value, index) => new { value, index })  // Keep both the value and the index
+                .Where(x => x.value == 0)  // Filter where the bet is 0 (all-in)
+                .Select(x => Pots[0].EligiblePlayers[x.index])  // Select the corresponding player from EligiblePlayers at the same index
+                .ToList();
+
+            //remove players that are all in from future side pot calculations that are necessary
+            numBets -= allInPlayers.Count;
+            playerBets.RemoveAll(value => value == 0);
+
+            if (numBets > 1) //if 1 player or less remains, no more side pot manipulation is needed
+            {
+                //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
+                Pots.Add(new TexasHoldEmPot(PotType.SIDE));
+                Pots[Pots.Count - 1].IncrementPot(Pots[0].Total); //shifting the pot that the all in player can win to the side, this pot will no longer be added to
+                Pots[0].DecrementPot(Pots[Pots.Count - 1].Total); //reseting active pot value to empty
+                Pots[Pots.Count - 1].EligiblePlayers = new List<int>(Pots[0].EligiblePlayers); //copys the list of players eligible to win the now side pot
+
+                //removing all players that are all in from eligibility from main pot and any pots created in the future
+                for (int player = 0; player < allInPlayers.Count; player++)
+                {
+                    Pots[0].RemoveEligiblePlayer(allInPlayers[player]);
+                }
+            }
+            //no more bets left to add to any pots
+            if (numBets == 0)
+            {
+                return;
+            }
+            //if there is a second player that has gone all in this round, recursively add pots until player that has called max bet has been reached
+            if (currentBet != playerBets.Min())
+            {
+                CreateSidePots(currentBet, playerBets);
+                return;
+            }
+            //protects from scenerio where last remaining player from adding excessive amount to the pot
+            if (numBets > 1)
+            {
+                //add remainder of bets from players not all-in into new main pot
+                AddToPot(currentBet, playerBets);
+            }
+        }
+
+        /// <summary>
+        /// Pays out the winnings to the player for the individual pot. 
+        /// <param name="winners">Number of players that have won the pot.</param>
+        /// <param name="potNumber">The pot that is being referred to.</param>
+        /// <returns>The amount that each winner has won</returns>
+        /// </summary>
+        public int DistributePot(int winners, int potNumber)
+        {
+            if (winners != 0) //prevent division by 0
+            {
+                int _payout = Pots[potNumber].Total / winners; //splits payout if more than 1 winner is present
+                return _payout;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Returns the amount contained in each pot
+        /// <returns>A list of the amounts contained within each pot</returns>
+        /// </summary>
+        public List<int> GetPotAmounts()
+        {
+            return Pots.Select(pot => pot.Total).ToList();
+        }
+
+        /// <summary>
+        /// Resets the pots list to an empty state.
+        /// </summary>
+        public void ResetPots()
+        {
+            Pots.Clear();
+        }
+
+        /// <summary>
+        /// Resets the pots list to an empty state.
+        /// <param name="potNumber">The pot that is being referred to.</param>
+        /// <returns>The list of players eligible to win the pot being referred to</returns>
+        /// </summary>
+        public List<int> PlayersEligible(int potNumber)
+        {
+            return Pots[potNumber].EligiblePlayers;
+        }
+    }
+
 
     public static class TexasHoldEmTextures
     {
@@ -2243,3 +2260,4 @@ namespace CardsCashCasino.Manager
         }
         #endregion Methods
     }
+}
