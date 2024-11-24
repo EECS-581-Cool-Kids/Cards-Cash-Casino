@@ -573,8 +573,7 @@ namespace CardsCashCasino.Manager
                 //reset the bets for the next round to 0
                 _players.ResetBets();
                 _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealFlop();
+                NextPhase();
                 return;
             }
 
