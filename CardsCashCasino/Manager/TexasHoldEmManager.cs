@@ -92,7 +92,6 @@ namespace CardsCashCasino.Manager
         NONE
     }
 
-    
     public class TexasHoldEmManager
     {
         #region Properties
@@ -225,6 +224,11 @@ namespace CardsCashCasino.Manager
         /// Initializing PlayerManager class
         /// </summary>
         HoldEmPlayerManager _players = new HoldEmPlayerManager();
+
+        /// <summary>
+        /// Variable to hold the Pots Manager class
+        /// </summary>
+        private TexasHoldEmPotManager _potManager;
 
         /// <summary>
         /// The cursor.
@@ -555,8 +559,7 @@ namespace CardsCashCasino.Manager
                 //reset the bets for the next round to 0
                 _players.ResetBets();
                 _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealFlop();
+                NextPhase();
                 return;
             }
         }
@@ -769,6 +772,7 @@ namespace CardsCashCasino.Manager
                 hand.Clear();
             }
         }
+      
         /// <summary>
         /// Creates the list of player hands. The first player is the user.
         /// </summary>
@@ -844,24 +848,22 @@ namespace CardsCashCasino.Manager
             // List of hands that (so far) are tied for the best rank.
             // Pair of player idx and their optimal 5-card hand. 
             List<Tuple<int, List<Card>>> bestHands = new();
-            List<int> eligiblePlayers = new();
             for (int potNumber = 0; potNumber < _potManager.Pots.Count; potNumber++)
             {
-                eligiblePlayers = _potManager.PlayersEligible(potNumber);
                 // For each player
-                for (int i = 0; i < eligiblePlayers.Count; i++)
+                for (int i = 0; i < _potManager.PlayersEligible(potNumber).Count; i++)
                 {
                     // Reveal the player's cards
-                    _playerHands[eligiblePlayers[i]].Cards[0].GetTexture();
-                    _playerHands[eligiblePlayers[i]].Cards[1].GetTexture();
+                    _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards[0].GetTexture();
+                    _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards[1].GetTexture();
 
                     // Get ranking and optimal hand 
-                    Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[eligiblePlayers[i]].Cards.ToList());
+                    Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList());
                     // If this ties the best ranking
                     if (pair.Item2 == bestRanking)
                     {
                         // Mark this hand as needing to be tie broken
-                        bestHands.Add(new Tuple<int, List<Card>>(eligiblePlayers[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
                     }
                     // If this hand beats the old best ranking
                     else if (pair.Item2 < bestRanking)
@@ -871,7 +873,7 @@ namespace CardsCashCasino.Manager
                         // Don't worry about losing hands
                         bestHands.Clear();
                         // Keep track of this hand
-                        bestHands.Add(new Tuple<int, List<Card>>(eligiblePlayers[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
                     }
                 }
                 // Players that will receive a payout.
@@ -1234,6 +1236,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// handles the poker action enacted by the user or by the AI opponent
         /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
+
         /// </summary>
         private void HandlePlayerAction(int playerIndex)
         {
@@ -1358,6 +1361,8 @@ namespace CardsCashCasino.Manager
             timer.Dispose();
         }
     }
+    #endregion Methods
+}
 
     public class Player
     {

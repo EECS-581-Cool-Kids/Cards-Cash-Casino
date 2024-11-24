@@ -311,7 +311,6 @@ namespace CardsCashCasino.NUnit
 
             Assert.AreEqual(0, _potManager.Pots.Count); //see if created pots were deleted successfully
         }
-
         /// <summary>
         /// Testing method to initiate players
         /// </summary>
