@@ -864,24 +864,22 @@ namespace CardsCashCasino.Manager
             // List of hands that (so far) are tied for the best rank.
             // Pair of player idx and their optimal 5-card hand. 
             List<Tuple<int, List<Card>>> bestHands = new();
-            List<int> eligiblePlayers = new();
             for (int potNumber = 0; potNumber < _potManager.Pots.Count; potNumber++)
             {
-                eligiblePlayers = _potManager.PlayersEligible(potNumber);
                 // For each player
-                for (int i = 0; i < eligiblePlayers.Count; i++)
+                for (int i = 0; i < _potManager.PlayersEligible(potNumber).Count; i++)
                 {
                     // Reveal the player's cards
-                    _playerHands[eligiblePlayers[i]].Cards[0].GetTexture();
-                    _playerHands[eligiblePlayers[i]].Cards[1].GetTexture();
+                    _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards[0].GetTexture();
+                    _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards[1].GetTexture();
 
                     // Get ranking and optimal hand 
-                    Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[eligiblePlayers[i]].Cards.ToList());
+                    Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList());
                     // If this ties the best ranking
                     if (pair.Item2 == bestRanking)
                     {
                         // Mark this hand as needing to be tie broken
-                        bestHands.Add(new Tuple<int, List<Card>>(eligiblePlayers[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
                     }
                     // If this hand beats the old best ranking
                     else if (pair.Item2 < bestRanking)
@@ -891,7 +889,7 @@ namespace CardsCashCasino.Manager
                         // Don't worry about losing hands
                         bestHands.Clear();
                         // Keep track of this hand
-                        bestHands.Add(new Tuple<int, List<Card>>(eligiblePlayers[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
                     }
                 }
                 // Players that will receive a payout.
