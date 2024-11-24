@@ -395,7 +395,11 @@ namespace CardsCashCasino.Manager
                 UpdateWhileAIPlaying();
         }
 
-
+        /// <summary>
+        /// Reads the players inputs to see if they have chosen an action.
+        /// Will not block the flow of execution.
+        /// </summary>
+        /// <returns>The action chosen, or null if no action has been chosen</returns>
         private PokerAction? GetPlayerAction()
         {
             // Handle right key press to move the cursor.
@@ -460,12 +464,122 @@ namespace CardsCashCasino.Manager
             return null;
         }
 
+        /// <summary>
+        /// See if the player made a decision on what to raise by.
+        /// Should contain just a few if statements, will not block.
+        /// Should contain all the code needed to change a player's selection before they make a decision.
+        /// </summary>
+        /// <returns>Amount the player decided to raise by, or -1 if the player did not decide yet.</returns>
         private int GetPlayerRaise()
         {
             // TODO: Read user's inputs w.r.t. the UI, and if a decision was made, return that value.
             
             // If no decision was made yet, return -1.
             return -1;
+        }
+
+        private void NextPhase()
+        {
+            switch (_currentPhase) {
+                case Phase.INIT:
+                    _currentPhase = Phase.FLOP;
+                    DealFlop();
+                    return;
+
+                case Phase.FLOP:
+                    _currentPhase = Phase.TURN;
+                    DealTurn();
+                    return;
+
+                case Phase.TURN:
+                    _currentPhase = Phase.RIVER;
+                    DealRiver();
+                    return;
+
+                case Phase.RIVER:
+                    _currentPhase = Phase.CONCLUSION;
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// Carrys out all the logic executed between each player's turn.
+        /// Assumes that the current player has completed their turn, and the next player's turn is about to begin.
+        /// Contains the logic to decide who's turn it is next.
+        /// </summary>
+        private void RoundLogic()
+        {
+            if (_players.AdvanceToRoundConclusion())
+            {
+                NextPhase();
+                return;
+            }
+
+            if (!_roundInit)
+            {
+                // Set the current bet to the big blind.
+                _currentBet = _bigBlindBet;
+
+                // Set the player index to the player to the left of the big blind
+                playerIndex = _players.GetStartingBettorIndex();
+                _roundInit = true;
+            }
+            //round init not needed, advance the player index to next player
+            else
+            {
+                playerIndex = (playerIndex + 1) % _playerHands.Count;
+            }
+
+            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
+            //loop will terminate and betting round will end once conditions are met
+            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
+            {
+                //if player is either folded or all in, skip the player's turn
+                if (_players.IsActivePlayer(playerIndex))
+                {
+                    return;
+                }
+                // If the player is the user, set the user playing flag to true.
+                if (playerIndex == 0)
+                {
+                    _userPlaying = true;
+                }
+                // If the player is an AI player, set the AI playing flag to true.
+                else
+                {
+                    _userPlaying = false;
+                }
+
+                //if only one player has not folded, prepare pot to award to player and advance to conclusion
+                if (_players.OnePlayerLeft())
+                {
+                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
+                    _potManager.AddToPot(_currentBet, _players.PackageBets());
+                    _players.ResetBets();
+                    _roundInit = false;
+                    _currentPhase = Phase.CONCLUSION;
+                    return;
+                }
+
+            }
+
+
+            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
+            {
+                //finalize bets for the round and add them to the pots
+                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
+                _potManager.AddToPot(_currentBet, _players.PackageBets());
+
+                //reset the bets for the next round to 0
+                _players.ResetBets();
+                _roundInit = false;
+                _currentPhase = Phase.FLOP;
+                DealFlop();
+                return;
+            }
+
+
+
         }
 
         /// <summary>
@@ -543,6 +657,8 @@ namespace CardsCashCasino.Manager
         private void UpdateWhileAIPlaying()
         {
             // Should have some AI related nonsense here.
+            // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
+            // 
 
             _currentPlayer = (_currentPlayer + 1) % (Constants.AI_PLAYER_COUNT + 1);
             return;
