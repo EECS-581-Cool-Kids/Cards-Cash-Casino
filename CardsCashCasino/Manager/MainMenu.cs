@@ -15,7 +15,6 @@
  *  Known Faults: None encountered
  */
 
-// using CardsCashCasino;
 using CardsCashCasino.Data;
 using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
@@ -47,6 +46,11 @@ namespace CardsCashCasino.Manager
         /// The timeout for the user "hitting" their deck.
         /// </summary>
         private Timer? _userMoveTimeout;
+
+        /// <summary>
+        /// The background texture for the main menu.
+        /// </summary>
+        private Texture2D? _backgroundTexture;
 
         /// <summary>
         /// The blackjack button for the main menu.
@@ -88,15 +92,44 @@ namespace CardsCashCasino.Manager
         ///</summary>
         public void LoadContent(ContentManager content)
         {
-            int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.MAIN_MENU_BUTTON_COUNT) / 2;
-            int buttonYPos = Constants.WINDOW_HEIGHT - 100;
+            int widthBuffer = (Constants.WINDOW_WIDTH - Constants.MAIN_MENU_BUTTON_WIDTH * Constants.MAIN_MENU_BUTTON_COUNT) / 2;
+            int buttonYPos = Constants.WINDOW_HEIGHT - 350;
+            int buffer = 30;
 
-            _blackjackButton = new MainMenuActionButton(MainMenuTextures.BlackjackButtonTexture, MainMenuTextures.BlackjackButtonTexture, widthBuffer, buttonYPos);
-            _fiveCardDrawButton = new MainMenuActionButton(MainMenuTextures.FiveCardDrawButtonTexture, MainMenuTextures.FiveCardDrawButtonTexture, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos);
-            _texasHoldEmButton = new MainMenuActionButton(MainMenuTextures.TexasHoldEmButtonTexture, MainMenuTextures.TexasHoldEmButtonTexture, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos);
-            _quitButton = new MainMenuActionButton(MainMenuTextures.QuitButtonTexture, MainMenuTextures.QuitButtonTexture, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
+            _backgroundTexture = content.Load<Texture2D>("MenuBackground");
 
-            _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture, new Point(widthBuffer, buttonYPos));
+            _blackjackButton = new MainMenuActionButton(
+                MainMenuTextures.BlackjackButtonTexture,
+                MainMenuTextures.BlackjackButtonTexture,
+                widthBuffer - buffer,
+                buttonYPos,
+                Constants.MAIN_MENU_BUTTON_WIDTH,
+                Constants.MAIN_MENU_BUTTON_HEIGHT
+                );
+            _fiveCardDrawButton = new MainMenuActionButton(MainMenuTextures.FiveCardDrawButtonTexture,
+                MainMenuTextures.FiveCardDrawButtonTexture,
+                widthBuffer + Constants.MAIN_MENU_BUTTON_WIDTH,
+                buttonYPos,
+                Constants.MAIN_MENU_BUTTON_WIDTH,
+                Constants.MAIN_MENU_BUTTON_HEIGHT
+                );
+            _texasHoldEmButton = new MainMenuActionButton(MainMenuTextures.TexasHoldEmButtonTexture,
+                MainMenuTextures.TexasHoldEmButtonTexture,
+                widthBuffer + Constants.MAIN_MENU_BUTTON_WIDTH * 2  + buffer,
+                buttonYPos,
+                Constants.MAIN_MENU_BUTTON_WIDTH,
+                Constants.MAIN_MENU_BUTTON_HEIGHT
+                );
+
+            _quitButton = new MainMenuActionButton(MainMenuTextures.QuitButtonTexture,
+                MainMenuTextures.QuitButtonTexture,
+                Constants.WINDOW_WIDTH / 2 - 150 / 2,
+                buttonYPos + 240,
+                150,
+                80
+                );
+            _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture, MainMenuTextures.CursorAltTexture,
+                new Point(widthBuffer - buffer - 12, buttonYPos - 12));
         }
 
         public void Update()
@@ -121,7 +154,7 @@ namespace CardsCashCasino.Manager
             }
 
             // Add logic to navigate the menu (e.g., using arrow keys)
-            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled) && _currentCursorPos < Constants.MAIN_MENU_BUTTON_COUNT - 1)
+            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled) && _currentCursorPos < Constants.MAIN_MENU_BUTTON_COUNT)
             {
                 _currentCursorPos++;
                 _cursor.UpdateLocation(GetNewCursorPos());
@@ -163,11 +196,16 @@ namespace CardsCashCasino.Manager
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (_backgroundTexture != null)
+            {
+                spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT), Color.White);
+            }
             _blackjackButton.Draw(spriteBatch);
             _fiveCardDrawButton.Draw(spriteBatch);
             _texasHoldEmButton.Draw(spriteBatch);
             _quitButton.Draw(spriteBatch);
-            _cursor.Draw(spriteBatch);
+            _cursor.Draw(spriteBatch, _currentCursorPos);
+
         }
 
 
@@ -214,6 +252,12 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static Texture2D? CursorTexture { get; private set; }
 
+        // <summary>
+        /// The alt texture for the cursor.
+        /// </summary>
+        public static Texture2D? CursorAltTexture { get; private set; }
+
+
         /// <summary>
         /// Loads the assets for MainMenu.
         /// </summary>
@@ -223,8 +267,8 @@ namespace CardsCashCasino.Manager
             FiveCardDrawButtonTexture = content.Load<Texture2D>("FiveCardDrawButton");
             TexasHoldEmButtonTexture = content.Load<Texture2D>("TexasHoldEmButton");
             QuitButtonTexture = content.Load<Texture2D>("QuitButton");
-            // CursorTexture = content.Load<Texture2D>("Cursor");
-            CursorTexture = content.Load<Texture2D>("BlackjackCursor");
+            CursorTexture = content.Load<Texture2D>("MenuCursor");
+            CursorAltTexture = content.Load<Texture2D>("MenuAltCursor");
         }
 
 
@@ -238,6 +282,11 @@ namespace CardsCashCasino.Manager
         private Texture2D _cursorTexture;
 
         /// <summary>
+        /// The alternate texture for the cursor.
+        /// </summary>
+        private Texture2D _cursorAltTexture;
+
+        /// <summary>
         /// The rectangle object for the cursor.
         /// </summary>
         private Rectangle _cursorRectangle;
@@ -245,11 +294,12 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The size of the cursor.
         /// </summary>
-        private Point _size = new(144, 80);
+        private Point _size = new(174, 246);
 
-        public MainMenuCursor(Texture2D cursorTexture, Point location)
+        public MainMenuCursor(Texture2D cursorTexture, Texture2D cursorAltTexture, Point location)
         {
             _cursorTexture = cursorTexture;
+            _cursorAltTexture = cursorAltTexture;
             _cursorRectangle = new Rectangle(location, _size);
         }
 
@@ -265,10 +315,18 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The draw method for the cursor.
         /// </summary>
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, int currentCursorPos)
         {
-            spriteBatch.Draw(_cursorTexture, _cursorRectangle, Color.White);
+            if (currentCursorPos == 3) // Use alt texture for the quit button
+            {
+                spriteBatch.Draw(_cursorAltTexture, _cursorRectangle, Color.White);
+            }
+            else
+            {
+                spriteBatch.Draw(_cursorTexture, _cursorRectangle, Color.White);
+            }
         }
+
     }
 
     public class MainMenuActionButton
@@ -298,11 +356,14 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool IsSelected { get; set; } = false;
 
-        public MainMenuActionButton(Texture2D enabledTexture, Texture2D disabledTexture, int xPos, int yPos)
+        /// <summary>
+        /// The constructor for the MainMenuActionButton.
+        /// </summary>
+        public MainMenuActionButton(Texture2D enabledTexture, Texture2D disabledTexture, int xPos, int yPos, int width, int height)
         {
             _enabledTexture = enabledTexture;
             _disabledTexture = disabledTexture;
-            _buttonRectangle = new Rectangle(xPos, yPos, 128, 64);
+            _buttonRectangle = new Rectangle(xPos, yPos, width, height);
         }
 
         /// <summary>
@@ -321,7 +382,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public Point GetAdjustedPos()
         {
-            return new Point(_buttonRectangle.X - 8, _buttonRectangle.Y - 8);
+            return new Point(_buttonRectangle.X - 12, _buttonRectangle.Y - 12);
         }
 
 

@@ -141,12 +141,22 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// Timer duration for the main menu.
         /// </summary>
-        public const int TIMER_DURATION = 150;
+        public const int TIMER_DURATION = 200;
 
         /// <summary>
         /// The number of buttons in the main menu.
         /// </summary>
-        public const int MAIN_MENU_BUTTON_COUNT = 4;
+        public const int MAIN_MENU_BUTTON_COUNT = 3;
+
+        /// <summary>
+        /// The width of a main menu button.
+        /// </summary>
+        public const int MAIN_MENU_BUTTON_WIDTH = 150;
+
+        /// <summary>
+        /// The height of a main menu button.
+        /// </summary>
+        public const int MAIN_MENU_BUTTON_HEIGHT = 222;
 
         /// <summary>
         /// The position of the blackjack button.
