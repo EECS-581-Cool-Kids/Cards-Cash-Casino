@@ -97,6 +97,11 @@ namespace CardsCashCasino.Manager
         #region Properties
 
         /// <summary>
+        /// The pot UI for displaying the pot value.
+        /// </summary>
+        private PotUI _potUI;
+
+        /// <summary>
         /// The user's hand of cards.
         /// </summary>
         private UserHand _userHand = new();
@@ -373,6 +378,9 @@ namespace CardsCashCasino.Manager
             _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
+
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
+            _potUI.LoadContent(content); // Load pot textures
         }
 
         /// <summary>
@@ -385,6 +393,9 @@ namespace CardsCashCasino.Manager
                 UpdateWhileUserPlaying();
             else
                 UpdateWhileAIPlaying();
+
+            int totalPotValue = _potManager.Pots.Sum(pot => pot.Total); // Calculate total pot value
+            _potUI.UpdatePot(totalPotValue);
         }
 
         /// <summary>
@@ -680,6 +691,9 @@ namespace CardsCashCasino.Manager
             {
                 hand.Draw(spriteBatch);
             }
+
+            // Draw the PotUI
+            _potUI.Draw(spriteBatch);
         }
         /// <summary>
         /// Gets the new Cursor position.

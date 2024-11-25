@@ -26,6 +26,11 @@ namespace CardsCashCasino.Manager
     {
         #region Properties
         /// <summary>
+        /// The pot UI for visualizing the bet value.
+        /// </summary>
+        private PotUI _potUI;
+
+        /// <summary>
         /// The dealer's hand.
         /// </summary>
         private BlackjackDealerHand _dealerHand = new();
@@ -179,16 +184,16 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The LoadContent method for blackjack.
         /// </summary>
-        public void LoadContent()
+        public void LoadContent(ContentManager content)
         {
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.BLACKJACK_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
 
             _hitButton = new(BlackjackTextures.HitEnabledTexture!, BlackjackTextures.HitDisabledTexture!, widthBuffer, buttonYPos);
-            _standButton = new(BlackjackTextures.StandEnabledTexture!, BlackjackTextures.StandDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos); 
-            _doubleDownButton = new(BlackjackTextures.DoubleDownEnabledTexture!, BlackjackTextures.DoubleDownDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH*2, buttonYPos); 
-            _splitButton = new(BlackjackTextures.SplitEnabledTexture!, BlackjackTextures.SplitDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH*3, buttonYPos); 
-            _forfeitButton = new(BlackjackTextures.ForfeitEnabledTexture!, BlackjackTextures.ForfeitDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH*4, buttonYPos); 
+            _standButton = new(BlackjackTextures.StandEnabledTexture!, BlackjackTextures.StandDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos);
+            _doubleDownButton = new(BlackjackTextures.DoubleDownEnabledTexture!, BlackjackTextures.DoubleDownDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos);
+            _splitButton = new(BlackjackTextures.SplitEnabledTexture!, BlackjackTextures.SplitDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
+            _forfeitButton = new(BlackjackTextures.ForfeitEnabledTexture!, BlackjackTextures.ForfeitDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
 
             _cursor = new(BlackjackTextures.CursorTexture!, _hitButton.GetAdjustedPos());
 
@@ -197,7 +202,12 @@ namespace CardsCashCasino.Manager
 
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
             CurrentHandStatus = BlackjackResult.NONE;
+
+            // Initialize PotUI and load its content
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
+            _potUI.LoadContent(content);
         }
+
 
         /// <summary>
         /// The main update loop for blackjack.
@@ -236,6 +246,7 @@ namespace CardsCashCasino.Manager
                 if (dealerHandValue > Constants.MAX_BLACKJACK_VALUE)
                 {
                     RequestPayout!.Invoke(_currentBet * 2);
+                    _potUI.UpdatePot(_currentBet);
 
                     _resultLabel!.SetTexture(BlackjackResult.WIN);
                     CurrentHandStatus = BlackjackResult.WIN;
@@ -479,6 +490,9 @@ namespace CardsCashCasino.Manager
             _dealerHandValueIndicator!.Draw(spriteBatch);
             _userHandValueIndicator!.Draw(spriteBatch);
 
+            // Draw the pot UI
+            _potUI.Draw(spriteBatch);
+
             // Draw the result label.
             _resultLabel!.Draw(spriteBatch);
         }
@@ -489,6 +503,7 @@ namespace CardsCashCasino.Manager
         public void StartGame()
         {
             _currentBet = BettingManager.UserBet;
+            _potUI.UpdatePot(_currentBet);
             RequestBet!.Invoke(_currentBet);
 
             // Reset the cards.
@@ -596,6 +611,8 @@ namespace CardsCashCasino.Manager
         {
             RequestBet!.Invoke(_currentBet);
             _currentBet *= 2;
+            _potUI.UpdatePot(_currentBet);
+
 
             BlackjackUserHand currentHand = _userHands[_selectedUserHand];
 
@@ -629,6 +646,7 @@ namespace CardsCashCasino.Manager
         private void Forfeit()
         {
             RequestPayout!.Invoke(_currentBet / 2);
+            _potUI.UpdatePot(_currentBet);
 
             EndGame();
         }
