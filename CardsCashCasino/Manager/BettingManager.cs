@@ -30,7 +30,7 @@ namespace CardsCashCasino.Manager
         /// The amount of cash the user has on hand.
         /// Initializes to $500.
         /// </summary>
-        public int UserCashValue { get; private set; } = 500;
+        public int UserCashValue { get; private set; } = 4900;
 
         /// <summary>
         /// How much the user bet last time.

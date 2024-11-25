@@ -379,9 +379,7 @@ namespace CardsCashCasino.Manager
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
 
-            // _potUI = new PotUI(new Vector2(50, 400)); // Position pot UI at bottom left
             _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
-
             _potUI.LoadContent(content); // Load pot textures
         }
 
