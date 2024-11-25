@@ -349,12 +349,7 @@ namespace CardsCashCasino.Manager
         /// Set by update.
         /// </summary>
         private Phase _currentPhase;
-        /// <summary>
-        /// What user is currently active?
-        /// Set by update.
-        /// </summary>
-        private int _currentPlayer;
-
+        
         #endregion Properties
 
         #region Methods
@@ -386,7 +381,7 @@ namespace CardsCashCasino.Manager
         public void Update()
         {
             // If it's currently player's turn
-            if (_userPlaying)
+            if (playerIndex == 0)
                 UpdateWhileUserPlaying();
             else
                 UpdateWhileAIPlaying();
@@ -660,7 +655,7 @@ namespace CardsCashCasino.Manager
             // ...
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
-
+            Call(playerIndex);
             RoundLogic();
         }
 
