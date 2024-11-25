@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Ethan Berkley
  *  Date: 11/08/2024
- *  Last Modified: 11/08/2024
+ *  Last Modified: 11/21/2024
  *  Preconditions: Hole card lists are of length 2, Community card lists are of length >= 3, the input to the tiebreaker function was returned by the GetScore function
  *  Postconditions: None
  *  Error/Exception conditions: Only if Preconditions were violated.
@@ -51,7 +51,19 @@ namespace CardsCashCasino.Data
         }
 
         /// <summary>
-        /// Given the current 5-card community card pool, and that the current hand has exactly 2 cards, 
+        /// Given the current 5-card hand, return the ranking value.
+        /// </summary>
+        /// <param name="cards">A player's hand of 5 cards</param>
+        /// <returns>The ranking of the hand.</returns>
+        /// <remarks>Note: this overloaded function is meant to be used by 5-card draw.</remarks>
+        public static Ranking GetScore(List<Card> cards)
+        {
+            Debug.Assert(cards.Count == 5);
+            return GetRanking(SortedHand(cards));
+        }
+
+        /// <summary>
+        /// Given the current card community card pool (which must have at least 3 cards), and the current hand (which must have exactly 2 cards), 
         /// create and return the best possible hand and ranking.
         /// 
         /// In the event of a tie in rankings, the tie would be broken by calling KickerValue on each of the hands. 
@@ -60,6 +72,7 @@ namespace CardsCashCasino.Data
         /// <param name="community">The 5-card list of community cards</param>
         /// <param name="cards">The 2-card list representing player's hole cards.</param>
         /// <returns>A 5-card list representing the optimal hand, and the ranking it would give.</returns>
+        /// <remarks>Note: this overloaded function is meant to be used by Texas Hold 'Em.</remarks>
         public static Tuple<List<Card>, Ranking> GetScore(List<Card> community, List<Card> cards)
         {
             Debug.Assert(cards.Count == 2);
@@ -68,7 +81,7 @@ namespace CardsCashCasino.Data
             Ranking best = Ranking.HIGH_CARD;
             List<List<Card>> bestHands = new();
 
-            foreach (List<Card> iCards in Get3CardPermutations(community))
+            foreach (List<Card> iCards in Get5CardPermutations(community.Concat(cards).ToList()))
             {
                 List<Card> hand = SortedHand(iCards.Concat(cards).ToList());
                 Ranking current = GetRanking(hand);
@@ -151,6 +164,25 @@ namespace CardsCashCasino.Data
         private static List<Card> SortedHand(List<Card> cards)
         {
             return cards.OrderBy(card => (card.GetPokerValue() * 4) - card.Suit).ToList();
+        }
+
+        /// <summary>
+        /// Takes in a list of cards of length > 5 and generates a list of every unique set of 5 cards.
+        /// i.e. for cards [2C,JH,5C,6S,KD,1S,4D], the 5-permutation [2C,JH,5C,1S,4D] will be returned, but never [JH,1S,4D,5C,2C].
+        /// </summary>
+        /// <param name="list">List of cards with length > 5</param>
+        /// <returns>All 5-card permutations of the input list</returns>
+        private static List<List<Card>> Get5CardPermutations(List<Card> list)
+        {
+            IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
+                                                        select
+                                                            from i in Enumerable.Range(0, list.Count)
+                                                            where (m & (1 << i)) != 0
+                                                            select list[i];
+
+            return (from m in full_perms.ToList<IEnumerable<Card>>()
+                    select
+                         (from i in Enumerable.Range(0, 5) select m.ToList<Card>()[i]).ToList()).ToList();
         }
 
         /// <summary>
@@ -272,25 +304,6 @@ namespace CardsCashCasino.Data
                 }
             }
             return pairs;
-        }
-
-        /// <summary>
-        /// Takes in a list of cards of length > 3 (probably 5 when called) and generates a list of every unique set of 3 cards.
-        /// i.e. for cards [2C,JH,5C,6S,KD], the 3-permutation [2C,JH,5C] will be returned, but never [JH,5C,2C].
-        /// </summary>
-        /// <param name="list">List of cards with length > 3</param>
-        /// <returns>All 3-card permutations of the input list</returns>
-        private static List<List<Card>> Get3CardPermutations(List<Card> list)
-        {
-            IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
-                                                        select
-                                                            from i in Enumerable.Range(0, list.Count)
-                                                            where (m & (1 << i)) != 0
-                                                            select list[i];
-
-            return (from m in full_perms.ToList<IEnumerable<Card>>()
-                   select
-                        (from i in Enumerable.Range(0, 3) select m.ToList<Card>()[i]).ToList()).ToList();
         }
     }
 }

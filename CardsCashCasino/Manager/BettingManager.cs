@@ -30,7 +30,7 @@ namespace CardsCashCasino.Manager
         /// The amount of cash the user has on hand.
         /// Initializes to $500.
         /// </summary>
-        public int UserCashValue { get; private set; } = 500;
+        public int UserCashValue { get; private set; } = 4900;
 
         /// <summary>
         /// How much the user bet last time.
@@ -108,6 +108,7 @@ namespace CardsCashCasino.Manager
         public void Bet(int value)
         {
             UserCashValue -= value;
+            UserBet += value;
             _userCashValueIndicator!.Update(UserCashValue);
         }
 
@@ -126,6 +127,14 @@ namespace CardsCashCasino.Manager
         public void OpenBettingMenu()
         {
             _bettingMenu!.OpenMenu();
+        }
+
+        /// <summary>
+        /// Confirms a bet without the UI.
+        /// </summary>
+        public void ConfirmBetWithoutUI(int bet)
+        {
+            UserBet = bet;
         }
     }
 
