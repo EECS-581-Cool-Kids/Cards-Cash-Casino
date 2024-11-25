@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Module Name: UserHand.cs
  *  Purpose: Models the user's hand of cards.
  *  Inputs: None
@@ -42,6 +42,7 @@ namespace CardsCashCasino
         // /// The internal Main menu object.
         // /// </summary>
         // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
+        private MainMenu? _mainMenu;
 
         /// <summary>
         /// The card manager for the game.
@@ -116,24 +117,23 @@ namespace CardsCashCasino
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Load the textures
-            //MainMenuTextures.LoadContent(Content);
+            MainMenuTextures.LoadContent(Content); // Load the MainMenu textures
             DisplayIndicatorTextures.LoadContent(Content);
             CardTextures.LoadContent(Content);
             BettingTextures.LoadContent(Content);
             BlackjackTextures.LoadContent(Content);
 
-            //ChipTextures.LoadContent(Content);
-
+            // Load game managers
             _blackjackManager.LoadContent();
             _texasHoldEmManager.LoadContent(Content);
-            //FiveCardDrawTextures.LoadContent(Content);
-
-            // Load the manager's base content.
             _bettingManager.LoadContent();
-            _blackjackManager.LoadContent();
 
-            //_selectedGame = SelectedGame.BLACKJACK; // temp, remove when main menu is implemented OR change to other games.
-            _selectedGame = SelectedGame.HOLDEM;
+            // Initialize MainMenu
+            _mainMenu = new MainMenu(this); // Pass the current game instance
+            _mainMenu.LoadContent(Content); // Load MainMenu content
+
+            // _selectedGame = SelectedGame.NONE; // temp, remove when main menu is implemented OR change to other games.
+
         }
 
         /// <summary>
@@ -141,73 +141,96 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Update(GameTime gameTime)
         {
-            Console.WriteLine("UHHHHHH");
+
+            // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            
-            // update for the main menu
 
+            // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE)
-                return;
-
-            switch (_selectedGame)
             {
-                case SelectedGame.BLACKJACK:
-                    if (!_bettingManager.IsBetting && !_bettingManager.HasBet)
-                    {
-                        _bettingManager.OpenBettingMenu();
-                    }
-                    else if (!_bettingManager.HasBet)
-                    {
-                        _bettingManager.Update();
-                        base.Update(gameTime);
-                        return;
-                    }
-                    else if (!_blackjackManager.IsPlaying)
-                        _blackjackManager.StartGame();
-                    break;
-                case SelectedGame.HOLDEM:
-                    Console.WriteLine("HOLDEM");
-                    if (!_texasHoldEmManager.IsPlaying)
-                        _texasHoldEmManager.StartGame();
-                    else if (_bettingManager.IsBetting)
-                    {
-                        _bettingManager.Update();
-                        base.Update(gameTime);
-                        return;
-                    }
-                    
-                    break;
+                _mainMenu?.Update(); // Update MainMenu
             }
+            else
+            {
+                // Game-Specific Logic
+                switch (_selectedGame)
+                {
+                    case SelectedGame.BLACKJACK:
+                        if (!_bettingManager.HasBet)
+                        {
+                            _bettingManager.Update();
+                            return;
+                        }
+                        else if (!_blackjackManager.IsPlaying)
+                        {
+                            _blackjackManager.StartGame();
+                        }
+                        _blackjackManager.Update();
+                        break;
 
-            if (_blackjackManager.IsPlaying)
-                _blackjackManager.Update();
-            if (_texasHoldEmManager.IsPlaying)
-                _texasHoldEmManager.Update();
-            // same for five card draw
+                    case SelectedGame.HOLDEM:
+                        if (!_texasHoldEmManager.IsPlaying)
+                        {
+                            _texasHoldEmManager.StartGame();
+                        }
+                        _texasHoldEmManager.Update();
+                        break;
+
+                    case SelectedGame.FIVECARD:
+                        // TODO: Add Five Card Draw logic here
+                        break;
+                }
+            }
 
             base.Update(gameTime);
         }
 
-        /// <summary>
-        /// MonoGame Draw method. Called every tick.
-        /// </summary>
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Green);
 
             _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
-            // same for the main menu
-            if (_blackjackManager.IsPlaying)
-                _blackjackManager.Draw(_spriteBatch!);
-            if (_texasHoldEmManager.IsPlaying)
-                _texasHoldEmManager.Draw(_spriteBatch);
 
-            // same for five card draw
-            _bettingManager.Draw(_spriteBatch);
-            _spriteBatch!.End();
+            if (_selectedGame == SelectedGame.NONE)
+            {
+                _mainMenu?.Draw(_spriteBatch); // Draw MainMenu
+            }
+            else if (_selectedGame == SelectedGame.BLACKJACK)
+            {
+                _blackjackManager.Draw(_spriteBatch);
+            }
+            else if (_selectedGame == SelectedGame.HOLDEM)
+            {
+                _texasHoldEmManager.Draw(_spriteBatch);
+            }
+            // Add logic for Five Card Draw if needed
+
+            _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        public void SetSelectedGame(SelectedGame selectedGame)
+        {
+            _selectedGame = selectedGame;
+        //     // Optionally, you can include logic to initialize the selected game here.
+        //     // For example:
+        //     switch (_selectedGame)
+        //     {
+        //         case SelectedGame.BLACKJACK:
+        //             _blackjackManager.StartGame();
+        //             break;
+        //         case SelectedGame.HOLDEM:
+        //             _texasHoldEmManager.StartGame();
+        //             break;
+        //         case SelectedGame.FIVECARD:
+        //             // TODO: Add initialization for Five Card Draw.
+        //             break;
+        //         case SelectedGame.NONE:
+        //             // Reset or return to the main menu state, if needed.
+        //             break;
+        //     }
         }
 
         /// <summary>
@@ -225,6 +248,8 @@ namespace CardsCashCasino
         NONE,
         BLACKJACK,
         HOLDEM,
-        FIVECARD
+        FIVECARD,
+        MAINMENU //delete this once main menu is implemented
     }
+
 }
