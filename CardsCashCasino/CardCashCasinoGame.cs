@@ -21,6 +21,7 @@ using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Timers;
 
 namespace CardsCashCasino
@@ -100,6 +101,9 @@ namespace CardsCashCasino
             _texasHoldEmManager.RequestCard = _cardManager.DrawCard;
             _texasHoldEmManager.RequestShuffle = _cardManager.Shuffle;
             _texasHoldEmManager.RequestRecycle = _cardManager.Recycle;
+            _texasHoldEmManager.RequestDeckSize = _cardManager.GetDeckSize;
+            _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
+            _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
 
             base.Initialize();
         }
@@ -128,7 +132,8 @@ namespace CardsCashCasino
             _bettingManager.LoadContent();
             _blackjackManager.LoadContent();
 
-            _selectedGame = SelectedGame.BLACKJACK; // temp, remove when main menu is implemented OR change to other games.
+            //_selectedGame = SelectedGame.BLACKJACK; // temp, remove when main menu is implemented OR change to other games.
+            _selectedGame = SelectedGame.HOLDEM;
         }
 
         /// <summary>
@@ -136,6 +141,7 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Update(GameTime gameTime)
         {
+            Console.WriteLine("UHHHHHH");
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
             
@@ -161,8 +167,16 @@ namespace CardsCashCasino
                         _blackjackManager.StartGame();
                     break;
                 case SelectedGame.HOLDEM:
+                    Console.WriteLine("HOLDEM");
                     if (!_texasHoldEmManager.IsPlaying)
                         _texasHoldEmManager.StartGame();
+                    else if (_bettingManager.IsBetting)
+                    {
+                        _bettingManager.Update();
+                        base.Update(gameTime);
+                        return;
+                    }
+                    
                     break;
             }
 
