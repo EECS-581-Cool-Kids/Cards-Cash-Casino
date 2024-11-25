@@ -131,8 +131,8 @@ namespace CardsCashCasino
             _bettingManager.LoadContent();
             _blackjackManager.LoadContent(Content);
 
-            _selectedGame = SelectedGame.BLACKJACK; // temp, remove when main menu is implemented OR change to other games.
-            // _selectedGame = SelectedGame.HOLDEM;
+            // _selectedGame = SelectedGame.BLACKJACK; // temp, remove when main menu is implemented OR change to other games.
+            _selectedGame = SelectedGame.HOLDEM;
         }
 
         /// <summary>
