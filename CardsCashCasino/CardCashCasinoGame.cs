@@ -62,7 +62,8 @@ namespace CardsCashCasino
         /// <summary>
         /// The Texas Hold 'Em manager for the game.
         /// </summary>
-        private TexasHoldEmManager _texasHoldEmManager = new();
+        // TODO: uncomment when Texas Hold 'Em is implemented
+        // private TexasHoldEmManager _texasHoldEmManager = new();
 
         /// <summary>
         /// The currently selected game.
@@ -96,15 +97,16 @@ namespace CardsCashCasino
             _blackjackManager.RequestBet = _bettingManager.Bet;
             _blackjackManager.RequestPayout = _bettingManager.Payout;
             _blackjackManager.RequestMainMenuReturn = EndBlackjack;
-            
-            _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
-            _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
-            _texasHoldEmManager.RequestCard = _cardManager.DrawCard;
-            _texasHoldEmManager.RequestShuffle = _cardManager.Shuffle;
-            _texasHoldEmManager.RequestRecycle = _cardManager.Recycle;
-            _texasHoldEmManager.RequestDeckSize = _cardManager.GetDeckSize;
-            _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
-            _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
+
+            // TODO: uncomment when Texas Hold 'Em is implemented
+            // _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
+            // _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
+            // _texasHoldEmManager.RequestCard = _cardManager.DrawCard;
+            // _texasHoldEmManager.RequestShuffle = _cardManager.Shuffle;
+            // _texasHoldEmManager.RequestRecycle = _cardManager.Recycle;
+            // _texasHoldEmManager.RequestDeckSize = _cardManager.GetDeckSize;
+            // _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
+            // _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
 
             base.Initialize();
         }
@@ -124,8 +126,10 @@ namespace CardsCashCasino
             BlackjackTextures.LoadContent(Content);
 
             // Load game managers
-            _blackjackManager.LoadContent();
-            _texasHoldEmManager.LoadContent(Content);
+            _blackjackManager.LoadContent(Content);
+
+            // TODO: uncomment when Texas Hold 'Em is implemented
+            // _texasHoldEmManager.LoadContent(Content);
             _bettingManager.LoadContent();
 
             // Initialize MainMenu
@@ -170,11 +174,12 @@ namespace CardsCashCasino
                         break;
 
                     case SelectedGame.HOLDEM:
-                        if (!_texasHoldEmManager.IsPlaying)
-                        {
-                            _texasHoldEmManager.StartGame();
-                        }
-                        _texasHoldEmManager.Update();
+                        // TODO: uncomment when Texas Hold 'Em is implemented
+                        // if (!_texasHoldEmManager.IsPlaying)
+                        // {
+                        //     _texasHoldEmManager.StartGame();
+                        // }
+                        // _texasHoldEmManager.Update();
                         break;
 
                     case SelectedGame.FIVECARD:
@@ -200,10 +205,12 @@ namespace CardsCashCasino
             {
                 _blackjackManager.Draw(_spriteBatch);
             }
-            else if (_selectedGame == SelectedGame.HOLDEM && _texasHoldEmManager.IsPlaying)
-            {
-                _texasHoldEmManager.Draw(_spriteBatch);
-            }
+
+            // TODO: uncomment when Texas Hold 'Em is implemented
+            // else if (_selectedGame == SelectedGame.HOLDEM && _texasHoldEmManager.IsPlaying)
+            // {
+                // _texasHoldEmManager.Draw(_spriteBatch);
+            // }
             // Add logic for Five Card Draw if needed
 
             _spriteBatch.End();

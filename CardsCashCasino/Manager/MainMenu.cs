@@ -43,11 +43,6 @@ namespace CardsCashCasino.Manager
         private Timer? _cursorMoveTimeout;
 
         /// <summary>
-        /// The timeout for the user "hitting" their deck.
-        /// </summary>
-        private Timer? _userMoveTimeout;
-
-        /// <summary>
         /// The background texture for the main menu.
         /// </summary>
         private Texture2D? _backgroundTexture;
@@ -137,7 +132,7 @@ namespace CardsCashCasino.Manager
             KeyboardState state = Keyboard.GetState();
 
             // Simulate button selection
-            if (state.IsKeyDown(Keys.Enter) && (_userMoveTimeout is null || !_userMoveTimeout.Enabled))
+            if (state.IsKeyDown(Keys.Enter))
             {
                 // if (_blackjackButton.IsSelected)
                 if (_currentCursorPos == 0)

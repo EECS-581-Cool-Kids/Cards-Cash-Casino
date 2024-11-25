@@ -1,4 +1,5 @@
 ﻿/*
+/*
  *  Module Name: FiveCardDrawManager.cs
  *  Purpose: Manages the game of Five Card Draw.
  *  Inputs: None
@@ -13,7 +14,7 @@
  *  Side effects: None
  *  Invariants: None
  *  Known Faults: None encountered
- */
+ #1#
 
 using System;
 using System.Collections.Generic;
@@ -1929,4 +1930,5 @@ public class FiveCardDrawCursor
     }
     #endregion Methods
 }
+*/
 

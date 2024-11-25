@@ -1,4 +1,4 @@
-﻿/*
+﻿/*/*
  *  Module Name: TexasHoldEmManager.cs
  *  Purpose: Manages the game of Texas Hold Em.
  *  Inputs: None
@@ -13,7 +13,7 @@
  *  Side effects: None
  *  Invariants: None
  *  Known Faults: None encountered
- */
+ #1#
 
 using System;
 using System.Collections.Generic;
@@ -2272,4 +2272,4 @@ namespace CardsCashCasino.Manager
         }
         #endregion Methods
     }
-}
+}*/
