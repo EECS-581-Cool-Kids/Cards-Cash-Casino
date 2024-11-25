@@ -5,8 +5,8 @@
  *  Outputs: None
  *  Additional code sources: None
  *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
- *  Date: 11/3/2024
- *  Last Modified: 11/10/2024
+ *  Date: 11/23/2024
+ *  Last Modified: 11/24/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -627,7 +627,7 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        /// Enter the TexasHoldEm gameflow
+        /// Enter the Five Card Draw gameflow
         /// </summary>
         private void Initialize()
         {
