@@ -136,7 +136,41 @@ namespace CardsCashCasino.Data
         /// </summary>
         public const int POKER_BUTTON_COUNT = 5;
         #endregion Poker
-          
+
+        #region MainMenu
+        /// <summary>
+        /// Timer duration for the main menu.
+        /// </summary>
+        public const int TIMER_DURATION = 150;
+
+        /// <summary>
+        /// The number of buttons in the main menu.
+        /// </summary>
+        public const int MAIN_MENU_BUTTON_COUNT = 4;
+
+        /// <summary>
+        /// The position of the blackjack button.
+        /// </summary>
+        public const int BLACKJACK_BUTTON_POS = 0;
+
+        /// <summary>
+        /// The position of the Five Card Draw button.
+        /// </summary>
+        public const int FIVE_CARD_DRAW_BUTTON_POS = 1;
+
+        /// <summary>
+        /// The position of the Texas Hold 'Em button.
+        /// </summary>
+        public const int TEXAS_HOLD_EM_BUTTON_POS = 2;
+
+        /// <summary>
+        /// The position of the quit button.
+        /// </summary>
+        public const int QUIT_BUTTON_POS = 3;
+
+
+        #endregion
+
           /// <summary>
         /// Event called when a timer times out.
         /// </summary>

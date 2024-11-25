@@ -15,6 +15,7 @@
  *  Known Faults: None encountered
  */
 
+// using CardsCashCasino;
 using CardsCashCasino.Data;
 using CardsCashCasino.Util;
 using Microsoft.Xna.Framework;
@@ -31,7 +32,21 @@ namespace CardsCashCasino.Manager
 
     public class MainMenu
     {
+        #region Properties
+        /// <summary>
+        /// The current position of the cursor.
+        /// </summary>
+        private int _currentCursorPos = 0;
 
+        /// <summary>
+        /// The timeout for the cursor to move.
+        /// </summary>
+        private Timer? _cursorMoveTimeout;
+
+        /// <summary>
+        /// The timeout for the user "hitting" their deck.
+        /// </summary>
+        private Timer? _userMoveTimeout;
 
         /// <summary>
         /// The blackjack button for the main menu.
@@ -57,13 +72,23 @@ namespace CardsCashCasino.Manager
         /// The cursor for the main menu.
         /// </summary>
         private MainMenuCursor _cursor;
+        #endregion Properties
 
+        private CardCashCasinoGame _game; // Field to store reference to CardCashCasinoGame
+
+        public MainMenu(CardCashCasinoGame game)
+        {
+            _game = game;
+            CardCashCasinoGame.GameStartTimeout = new(Constants.TIMER_DURATION);
+            CardCashCasinoGame.GameStartTimeout.Elapsed += Constants.OnTimeoutEvent!;
+            CardCashCasinoGame.GameStartTimeout.Start();
+        }
         /// <summary>
         /// The LoadContent method for the main menu.
         ///</summary>
         public void LoadContent(ContentManager content)
         {
-            int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.BLACKJACK_BUTTON_COUNT) / 2;
+            int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.MAIN_MENU_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
 
             _blackjackButton = new MainMenuActionButton(MainMenuTextures.BlackjackButtonTexture, MainMenuTextures.BlackjackButtonTexture, widthBuffer, buttonYPos);
@@ -71,18 +96,95 @@ namespace CardsCashCasino.Manager
             _texasHoldEmButton = new MainMenuActionButton(MainMenuTextures.TexasHoldEmButtonTexture, MainMenuTextures.TexasHoldEmButtonTexture, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos);
             _quitButton = new MainMenuActionButton(MainMenuTextures.QuitButtonTexture, MainMenuTextures.QuitButtonTexture, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
 
-            // _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture, new Point(widthBuffer, buttonYPos));
-
-
+            _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture, new Point(widthBuffer, buttonYPos));
         }
 
         public void Update()
         {
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+            KeyboardState state = Keyboard.GetState();
+
+            // Simulate button selection
+            if (state.IsKeyDown(Keys.Enter) && (_userMoveTimeout is null || !_userMoveTimeout.Enabled))
             {
-                Environment.Exit(0);
+                // if (_blackjackButton.IsSelected)
+                if (_currentCursorPos == 0)
+                    _game.SetSelectedGame(SelectedGame.BLACKJACK); // Update selected game
+                // else if (_fiveCardDrawButton.IsSelected)
+                else if (_currentCursorPos == 1)
+                    _game.SetSelectedGame(SelectedGame.FIVECARD); // Update selected game
+                // else if (_texasHoldEmButton.IsSelected)
+                else if (_currentCursorPos == 2)
+                    _game.SetSelectedGame(SelectedGame.HOLDEM); // Update selected game
+                // else if (_quitButton.IsSelected)
+                else if (_currentCursorPos == 3)
+                    _game.Exit(); // Quit the game
             }
+
+            // Add logic to navigate the menu (e.g., using arrow keys)
+            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled) && _currentCursorPos < Constants.MAIN_MENU_BUTTON_COUNT - 1)
+            {
+                _currentCursorPos++;
+                _cursor.UpdateLocation(GetNewCursorPos());
+                _cursorMoveTimeout = new Timer(Constants.TIMER_DURATION);
+                _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _cursorMoveTimeout.Start();
+                Console.WriteLine("Selected Game: " + _currentCursorPos);
+            }
+            else if (state.IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled) && _currentCursorPos > 0)
+            {
+                _currentCursorPos--;
+                _cursor.UpdateLocation(GetNewCursorPos());
+                _cursorMoveTimeout = new Timer(Constants.TIMER_DURATION);
+                _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _cursorMoveTimeout.Start();
+                Console.WriteLine("Selected Game: " + _currentCursorPos);
+            }
+
         }
+        public void OnTimeoutEvent(object source, ElapsedEventArgs e)
+        {
+            // Stop and dispose of the timer
+            Timer timer = (Timer)source;
+            timer.Stop();
+            timer.Dispose();
+        }
+
+        public void HandleButtonClick(MainMenuActionButton button)
+        {
+            if (button == _blackjackButton)
+                _game.SetSelectedGame(SelectedGame.BLACKJACK);
+            else if (button == _fiveCardDrawButton)
+                _game.SetSelectedGame(SelectedGame.FIVECARD);
+            else if (button == _texasHoldEmButton)
+                _game.SetSelectedGame(SelectedGame.HOLDEM);
+            else if (button == _quitButton)
+                _game.Exit();
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            _blackjackButton.Draw(spriteBatch);
+            _fiveCardDrawButton.Draw(spriteBatch);
+            _texasHoldEmButton.Draw(spriteBatch);
+            _quitButton.Draw(spriteBatch);
+            _cursor.Draw(spriteBatch);
+        }
+
+
+        private Point GetNewCursorPos()
+        {
+            return _currentCursorPos switch
+            {
+                Constants.BLACKJACK_BUTTON_POS => _blackjackButton.GetAdjustedPos(),
+                Constants.FIVE_CARD_DRAW_BUTTON_POS => _fiveCardDrawButton.GetAdjustedPos(),
+                Constants.TEXAS_HOLD_EM_BUTTON_POS => _texasHoldEmButton.GetAdjustedPos(),
+                Constants.QUIT_BUTTON_POS => _quitButton.GetAdjustedPos(),
+                _ => _blackjackButton.GetAdjustedPos()
+
+
+            };
+        }
+
     }
 
     public static class MainMenuTextures
@@ -107,6 +209,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static Texture2D? QuitButtonTexture { get; private set; }
 
+        // <summary>
+        /// The texture for the cursor.
+        /// </summary>
+        public static Texture2D? CursorTexture { get; private set; }
+
         /// <summary>
         /// Loads the assets for MainMenu.
         /// </summary>
@@ -116,6 +223,8 @@ namespace CardsCashCasino.Manager
             FiveCardDrawButtonTexture = content.Load<Texture2D>("FiveCardDrawButton");
             TexasHoldEmButtonTexture = content.Load<Texture2D>("TexasHoldEmButton");
             QuitButtonTexture = content.Load<Texture2D>("QuitButton");
+            // CursorTexture = content.Load<Texture2D>("Cursor");
+            CursorTexture = content.Load<Texture2D>("BlackjackCursor");
         }
 
 
@@ -217,4 +326,6 @@ namespace CardsCashCasino.Manager
 
 
     }
+
+
 }
