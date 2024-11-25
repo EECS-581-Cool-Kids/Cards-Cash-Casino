@@ -736,6 +736,7 @@ namespace CardsCashCasino.Manager
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
+            IsPlaying = true;
             _roundInit = false;
 
             //collects and places blind bets from small and big blind players
@@ -789,6 +790,8 @@ namespace CardsCashCasino.Manager
                 }
                 hand.Clear();
             }
+
+            IsPlaying = false;
         }
 
         /// <summary>
@@ -2143,14 +2146,14 @@ namespace CardsCashCasino.Manager
         public static void LoadContent(ContentManager content)
         {
             // TODO: Create textures for the buttons.
-            // CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
-            // CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
-            // CheckButtonEnablesTexture = content.Load<Texture2D>("CheckButtonEnabled");
-            // CheckButtonEnablesTexture = content.Load<Texture2D>("CheckButtonDisabled");
-            // RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonEnabled");
-            // RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonDisabled");
-            // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
-            // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
+             CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
+             CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
+             CheckButtonEnabledTexture = content.Load<Texture2D>("CheckButtonEnabled");
+             CheckButtonDisabledTexture = content.Load<Texture2D>("CheckButtonDisabled");
+             RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonDisabled");
+             RaiseButtonDisabledTexture = content.Load<Texture2D>("RaiseButtonEnabled");
+             FoldButtonTexture = content.Load<Texture2D>("FoldButton");
+             AllInButtonTexture = content.Load<Texture2D>("AllInButton");
 
             CursorTexture = content.Load<Texture2D>("BlackjackCursor");
 
@@ -2211,7 +2214,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The disabled button texture.
         /// </summary>
-        private Texture2D _disabledTexture;
+        private Texture2D? _disabledTexture;
 
         /// <summary>
         /// The unselected button texture.
@@ -2248,7 +2251,7 @@ namespace CardsCashCasino.Manager
         /// <param name="spriteBatch"></param>
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture, _buttonRectangle, Color.White);
+            spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture ?? _enabledTexture, _buttonRectangle, Color.White);
         }
 
         /// <summary>

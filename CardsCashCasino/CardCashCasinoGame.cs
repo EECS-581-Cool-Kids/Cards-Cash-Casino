@@ -102,6 +102,7 @@ namespace CardsCashCasino
             _texasHoldEmManager.RequestShuffle = _cardManager.Shuffle;
             _texasHoldEmManager.RequestRecycle = _cardManager.Recycle;
             _texasHoldEmManager.RequestDeckSize = _cardManager.GetDeckSize;
+            _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
             _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
 
             base.Initialize();
@@ -169,7 +170,7 @@ namespace CardsCashCasino
                     Console.WriteLine("HOLDEM");
                     if (!_texasHoldEmManager.IsPlaying)
                         _texasHoldEmManager.StartGame();
-                    else if (!_bettingManager.IsBetting)
+                    else if (_bettingManager.IsBetting)
                     {
                         _bettingManager.Update();
                         base.Update(gameTime);
