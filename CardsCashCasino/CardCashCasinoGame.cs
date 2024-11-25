@@ -196,11 +196,11 @@ namespace CardsCashCasino
             {
                 _mainMenu?.Draw(_spriteBatch); // Draw MainMenu
             }
-            else if (_selectedGame == SelectedGame.BLACKJACK)
+            else if (_selectedGame == SelectedGame.BLACKJACK && _blackjackManager.IsPlaying)
             {
                 _blackjackManager.Draw(_spriteBatch);
             }
-            else if (_selectedGame == SelectedGame.HOLDEM)
+            else if (_selectedGame == SelectedGame.HOLDEM && _texasHoldEmManager.IsPlaying)
             {
                 _texasHoldEmManager.Draw(_spriteBatch);
             }
