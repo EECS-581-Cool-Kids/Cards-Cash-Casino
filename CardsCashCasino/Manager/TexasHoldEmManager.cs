@@ -1394,7 +1394,7 @@ namespace CardsCashCasino.Manager
     #endregion Methods
 
 
-    public class Player
+    public class HoldEmPlayer
     {
         /// <summary>
         /// how much money the user has available in the game
@@ -1424,7 +1424,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Defining constructors for the class
         /// </summary>
-        public Player(PlayerType type)
+        public HoldEmPlayer(PlayerType type)
         {
             PlayerType = type; //defines whether the player is a USER or AI
         }
@@ -1479,14 +1479,14 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Creating list to hold players
         /// </summary>
-        public List<Player> Players;
+        public List<HoldEmPlayer> Players;
 
         /// <summary>
         /// Initiating list to hold player characteristics
         /// </summary>
         public HoldEmPlayerManager()
         {
-            Players = new List<Player>(); // Initialize the Players list
+            Players = new List<HoldEmPlayer>(); // Initialize the Players list
         }
 
         /// <summary>
@@ -1494,11 +1494,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void InitiatePlayers(int numAIs)
         {
-            Players.Add(new Player(PlayerType.USER));
+            Players.Add(new HoldEmPlayer(PlayerType.USER));
 
             for (int players = 0; players < numAIs; players++)
             {
-                Players.Add(new Player(PlayerType.AI));
+                Players.Add(new HoldEmPlayer(PlayerType.AI));
             }
             Random random = new Random();
             int dealer = random.Next(0, Players.Count);

@@ -124,7 +124,7 @@ namespace CardsCashCasino
             BlackjackTextures.LoadContent(Content);
 
             // Load game managers
-            _blackjackManager.LoadContent();
+            _blackjackManager.LoadContent(Content);
             _texasHoldEmManager.LoadContent(Content);
             _bettingManager.LoadContent();
 
@@ -159,6 +159,8 @@ namespace CardsCashCasino
                     case SelectedGame.BLACKJACK:
                         if (!_bettingManager.HasBet)
                         {
+                            if (!_bettingManager.IsBetting)
+                                _bettingManager.OpenBettingMenu();
                             _bettingManager.Update();
                             return;
                         }
@@ -205,6 +207,8 @@ namespace CardsCashCasino
                 _texasHoldEmManager.Draw(_spriteBatch);
             }
             // Add logic for Five Card Draw if needed
+
+            _bettingManager.Draw(_spriteBatch);
 
             _spriteBatch.End();
 
