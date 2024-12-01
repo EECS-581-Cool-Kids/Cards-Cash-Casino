@@ -79,6 +79,7 @@ namespace CardsCashCasino
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            StatisticsUtil.LoadStatisticsFile();
         }
 
         /// <summary>
@@ -95,7 +96,7 @@ namespace CardsCashCasino
             _blackjackManager.RequestCard = _cardManager.DrawCard;
             _blackjackManager.RequestBet = _bettingManager.Bet;
             _blackjackManager.RequestPayout = _bettingManager.Payout;
-            _blackjackManager.RequestMainMenuReturn = EndBlackjack;
+            _blackjackManager.RequestMainMenuReturn = ReturnToMainMenu;
             
             _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
             _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
@@ -144,7 +145,7 @@ namespace CardsCashCasino
 
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+                QuitGame();
 
             // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE)
@@ -218,32 +219,24 @@ namespace CardsCashCasino
         public void SetSelectedGame(SelectedGame selectedGame)
         {
             _selectedGame = selectedGame;
-        //     // Optionally, you can include logic to initialize the selected game here.
-        //     // For example:
-        //     switch (_selectedGame)
-        //     {
-        //         case SelectedGame.BLACKJACK:
-        //             _blackjackManager.StartGame();
-        //             break;
-        //         case SelectedGame.HOLDEM:
-        //             _texasHoldEmManager.StartGame();
-        //             break;
-        //         case SelectedGame.FIVECARD:
-        //             // TODO: Add initialization for Five Card Draw.
-        //             break;
-        //         case SelectedGame.NONE:
-        //             // Reset or return to the main menu state, if needed.
-        //             break;
-        //     }
         }
 
         /// <summary>
         /// Ends the current game by resetting the user bet to zero.
         /// </summary>
-        private void EndBlackjack()
+        private void ReturnToMainMenu()
         {
             BettingManager.UserBet = 0;
-            //_selectedGame = SelectedGame.NONE // uncomment to reset to a state of none, once main menu is built out.
+            _selectedGame = SelectedGame.NONE;
+        }
+
+        /// <summary>
+        /// Quit Game logic. Used to save the statistics file at the end of the game.
+        /// </summary>
+        public void QuitGame()
+        {
+            StatisticsUtil.SaveStatisticsFile();
+            Exit();
         }
     }
 
@@ -252,8 +245,7 @@ namespace CardsCashCasino
         NONE,
         BLACKJACK,
         HOLDEM,
-        FIVECARD,
-        MAINMENU //delete this once main menu is implemented
+        FIVECARD
     }
 
 }

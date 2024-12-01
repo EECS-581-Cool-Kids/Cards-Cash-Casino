@@ -30,7 +30,7 @@ namespace CardsCashCasino.Manager
         /// The amount of cash the user has on hand.
         /// Initializes to $500.
         /// </summary>
-        public int UserCashValue { get; private set; } = 4900;
+        public static int UserCashValue { get; private set; } = 500;
 
         /// <summary>
         /// How much the user bet last time.
@@ -80,6 +80,9 @@ namespace CardsCashCasino.Manager
             _userCashValueIndicator.Update(UserCashValue);
 
             _bettingMenu = new();
+
+            if (StatisticsUtil.GetPreviousCashValue() > 0)
+                UserCashValue = StatisticsUtil.GetPreviousCashValue();
         }
 
         /// <summary>
