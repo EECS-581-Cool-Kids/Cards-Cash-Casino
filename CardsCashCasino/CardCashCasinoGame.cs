@@ -239,8 +239,7 @@ namespace CardsCashCasino
         NONE,
         BLACKJACK,
         HOLDEM,
-        FIVECARD,
-        MAINMENU //delete this once main menu is implemented
+        FIVECARD
     }
 
 }
