@@ -412,11 +412,11 @@ namespace CardsCashCasino.Manager
             {
                 case Phase.INIT:
                     _currentPhase = Phase.DRAW;
-                    HandleDraw();
+                    //HandleDraw();
                     return;
 
                 case Phase.DRAW:
-                    _currentPhase = Phase.TURN;
+                    //_currentPhase = Phase.TURN;
                     HandlePostDraw();
                     return;
 
@@ -570,7 +570,7 @@ namespace CardsCashCasino.Manager
 
 
 
-            RoundLogic();
+            //RoundLogic();
 
         }
 
@@ -586,7 +586,7 @@ namespace CardsCashCasino.Manager
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
 
-            RoundLogic();
+            //RoundLogic();
         }
 
         /// <summary>
@@ -838,7 +838,7 @@ namespace CardsCashCasino.Manager
         {
             if (_players.AdvanceToRoundConclusion())
             {
-                _currentPhase = Phase.FLOP;
+                //_currentPhase = Phase.FLOP;
                 return;
             }
             if (!_roundInit)
@@ -899,81 +899,8 @@ namespace CardsCashCasino.Manager
                 //reset the bets for the next round to 0
                 _players.ResetBets();
                 _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealFlop();
-                return;
-            }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the second round of betting that follows the flop
-        /// </summary>
-        private void HandlePostDraw()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.CONCLUSION;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealTurn();
+                //_currentPhase = Phase.FLOP;
+                //DealFlop();
                 return;
             }
         }
@@ -1107,7 +1034,7 @@ namespace CardsCashCasino.Manager
         }
     }
 
-    public class Player
+    public class FiveCardDrawPlayer
     {
         /// <summary>
         /// how much money the user has available in the game
@@ -1137,7 +1064,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Defining constructors for the class
         /// </summary>
-        public Player(PlayerType type)
+        public FiveCardDrawPlayer(PlayerType type)
         {
             PlayerType = type; //defines whether the player is a USER or AI
         }
@@ -1192,14 +1119,14 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Creating list to hold players
         /// </summary>
-        public List<Player> Players;
+        public List<FiveCardDrawPlayer> Players;
 
         /// <summary>
         /// Initiating list to hold player characteristics
         /// </summary>
         public FiveCardDrawPlayerManager()
         {
-            Players = new List<Player>(); // Initialize the Players list
+            Players = new List<FiveCardDrawPlayer>(); // Initialize the Players list
         }
 
         /// <summary>
@@ -1207,11 +1134,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void InitiatePlayers(int numAIs)
         {
-            Players.Add(new Player(PlayerType.USER));
+            Players.Add(new FiveCardDrawPlayer(PlayerType.USER));
 
             for (int players = 0; players < numAIs; players++)
             {
-                Players.Add(new Player(PlayerType.AI));
+                Players.Add(new FiveCardDrawPlayer(PlayerType.AI));
             }
             Random random = new Random();
             int dealer = random.Next(0, Players.Count);
@@ -1622,7 +1549,7 @@ namespace CardsCashCasino.Manager
             }
         }
     }
-    public class FiveCardDrawPotManager5
+    public class FiveCardDrawPotManager
     {
         /// <summary>
         /// Importing list that will house each pot and its attributes
@@ -1632,7 +1559,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// creating variable name that will house the list containing the TexasHoldEmPots
         /// </summary>
-        public FiveCardDrawPotManager5()
+        public FiveCardDrawPotManager()
         {
             Pots = new List<FiveCardDrawPot>(); // Initialize the Pots list
         }
@@ -1644,7 +1571,7 @@ namespace CardsCashCasino.Manager
         /// <param name="playerBets">List of antes values to be added to the pot.</param>
         public void InitializePot(int ante, List<int> playerBets)
         {
-            Pots.Add(new TexasHoldEmPot(PotType.MAIN)); //create a new pot
+            Pots.Add(new FiveCardDrawPot(PotType.MAIN)); //create a new pot
 
             Pots[0].EligiblePlayers = Enumerable.Range(0, playerBets.Count).ToList(); //add all players as eligible to win the pot
 
@@ -1737,7 +1664,7 @@ namespace CardsCashCasino.Manager
             if (numBets > 1) //if 1 player or less remains, no more side pot manipulation is needed
             {
                 //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
-                Pots.Add(new TexasHoldEmPot(PotType.SIDE));
+                Pots.Add(new FiveCardDrawPot(PotType.SIDE));
                 Pots[Pots.Count - 1].IncrementPot(Pots[0].Total); //shifting the pot that the all in player can win to the side, this pot will no longer be added to
                 Pots[0].DecrementPot(Pots[Pots.Count - 1].Total); //reseting active pot value to empty
                 Pots[Pots.Count - 1].EligiblePlayers = new List<int>(Pots[0].EligiblePlayers); //copys the list of players eligible to win the now side pot

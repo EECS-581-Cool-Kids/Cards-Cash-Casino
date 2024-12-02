@@ -99,36 +99,36 @@ namespace CardsCashCasino.Manager
             _backgroundTexture = content.Load<Texture2D>("MenuBackground");
 
             _blackjackButton = new MainMenuActionButton(
-                MainMenuTextures.BlackjackButtonTexture,
-                MainMenuTextures.BlackjackButtonTexture,
+                MainMenuTextures.BlackjackButtonTexture!,
+                MainMenuTextures.BlackjackButtonTexture!,
                 widthBuffer - buffer,
                 buttonYPos,
                 Constants.MAIN_MENU_BUTTON_WIDTH,
                 Constants.MAIN_MENU_BUTTON_HEIGHT
                 );
-            _fiveCardDrawButton = new MainMenuActionButton(MainMenuTextures.FiveCardDrawButtonTexture,
-                MainMenuTextures.FiveCardDrawButtonTexture,
+            _fiveCardDrawButton = new MainMenuActionButton(MainMenuTextures.FiveCardDrawButtonTexture!,
+                MainMenuTextures.FiveCardDrawButtonTexture!,
                 widthBuffer + Constants.MAIN_MENU_BUTTON_WIDTH,
                 buttonYPos,
                 Constants.MAIN_MENU_BUTTON_WIDTH,
                 Constants.MAIN_MENU_BUTTON_HEIGHT
                 );
-            _texasHoldEmButton = new MainMenuActionButton(MainMenuTextures.TexasHoldEmButtonTexture,
-                MainMenuTextures.TexasHoldEmButtonTexture,
+            _texasHoldEmButton = new MainMenuActionButton(MainMenuTextures.TexasHoldEmButtonTexture!,
+                MainMenuTextures.TexasHoldEmButtonTexture!,
                 widthBuffer + Constants.MAIN_MENU_BUTTON_WIDTH * 2  + buffer,
                 buttonYPos,
                 Constants.MAIN_MENU_BUTTON_WIDTH,
                 Constants.MAIN_MENU_BUTTON_HEIGHT
                 );
 
-            _quitButton = new MainMenuActionButton(MainMenuTextures.QuitButtonTexture,
-                MainMenuTextures.QuitButtonTexture,
+            _quitButton = new MainMenuActionButton(MainMenuTextures.QuitButtonTexture!,
+                MainMenuTextures.QuitButtonTexture!,
                 Constants.WINDOW_WIDTH / 2 - 150 / 2,
                 buttonYPos + 240,
                 150,
                 80
                 );
-            _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture, MainMenuTextures.CursorAltTexture,
+            _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture!, MainMenuTextures.CursorAltTexture!,
                 new Point(widthBuffer - buffer - 12, buttonYPos - 12));
         }
 
