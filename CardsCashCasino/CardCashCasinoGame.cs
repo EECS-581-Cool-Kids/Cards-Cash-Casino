@@ -38,10 +38,9 @@ namespace CardsCashCasino
         /// </summary>
         private SpriteBatch? _spriteBatch;
         
-        // /// <summary>
-        // /// The internal Main menu object.
-        // /// </summary>
-        // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
+        /// <summary>
+        /// The internal Main menu object.
+        /// </summary>
         private MainMenu? _mainMenu;
 
         /// <summary>
