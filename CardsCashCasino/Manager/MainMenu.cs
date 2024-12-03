@@ -139,16 +139,12 @@ namespace CardsCashCasino.Manager
             // Simulate button selection
             if (state.IsKeyDown(Keys.Enter) && (_userMoveTimeout is null || !_userMoveTimeout.Enabled))
             {
-                // if (_blackjackButton.IsSelected)
                 if (_currentCursorPos == 0)
                     _game.SetSelectedGame(SelectedGame.BLACKJACK); // Update selected game
-                // else if (_fiveCardDrawButton.IsSelected)
                 else if (_currentCursorPos == 1)
                     _game.SetSelectedGame(SelectedGame.FIVECARD); // Update selected game
-                // else if (_texasHoldEmButton.IsSelected)
                 else if (_currentCursorPos == 2)
                     _game.SetSelectedGame(SelectedGame.HOLDEM); // Update selected game
-                // else if (_quitButton.IsSelected)
                 else if (_currentCursorPos == 3)
                     _game.QuitGame(); // Quit the game
             }
@@ -206,8 +202,7 @@ namespace CardsCashCasino.Manager
             _quitButton.Draw(spriteBatch);
             _cursor.Draw(spriteBatch, _currentCursorPos);
         }
-
-
+        
         private Point GetNewCursorPos()
         {
             return _currentCursorPos switch
@@ -343,11 +338,6 @@ namespace CardsCashCasino.Manager
         /// Whether or not the button is enabled.
         /// </summary>
         public bool IsEnabled { get; set; } = false;
-
-        /// <summary>
-        /// Whether or not the button is selected.
-        /// </summary>
-        public bool IsSelected { get; set; } = false;
 
         /// <summary>
         /// The constructor for the MainMenuActionButton.

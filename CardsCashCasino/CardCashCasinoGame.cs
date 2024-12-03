@@ -160,7 +160,6 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Update(GameTime gameTime)
         {
-
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 QuitGame();
@@ -192,8 +191,17 @@ namespace CardsCashCasino
 
                     case SelectedGame.HOLDEM:
                         if (!_texasHoldEmManager.IsPlaying)
-                        {
+                        {   
+                            //_texasHoldEmManager.
                             _texasHoldEmManager.StartGame();
+                        }
+                        else if (_bettingManager.IsBetting)
+                        {
+                            //if (!_bettingManager.IsBetting)
+                                //_bettingManager.OpenBettingMenu();
+                            _bettingManager.Update();
+                            break;
+
                         }
                         _texasHoldEmManager.Update();
                         break;
