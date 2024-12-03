@@ -151,7 +151,6 @@ namespace CardsCashCasino.Manager
                 // else if (_quitButton.IsSelected)
                 else if (_currentCursorPos == 3)
                     _game.QuitGame(); // Quit the game
-                
             }
 
             // Add logic to navigate the menu (e.g., using arrow keys)
