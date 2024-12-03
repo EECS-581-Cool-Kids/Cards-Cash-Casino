@@ -192,15 +192,15 @@ namespace CardsCashCasino.Data
             }
 
             return perms;
-            IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
-                                                        select
-                                                            from i in Enumerable.Range(0, list.Count)
-                                                            where (m & (1 << i)) != 0
-                                                            select list[i];
+            //IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
+            //                                            select
+            //                                                from i in Enumerable.Range(0, list.Count)
+            //                                                where (m & (1 << i)) != 0
+            //                                                select list[i];
 
-            return (from m in full_perms.ToList<IEnumerable<Card>>()
-                    select
-                         (from i in Enumerable.Range(0, 5) select m.ToList<Card>()[i]).ToList()).ToList();
+            //return (from m in full_perms.ToList<IEnumerable<Card>>()
+            //        select
+            //             (from i in Enumerable.Range(0, 5) select m.ToList<Card>()[i]).ToList()).ToList();
         }
 
         /// <summary>
