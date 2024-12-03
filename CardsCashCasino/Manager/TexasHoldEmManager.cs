@@ -179,6 +179,11 @@ namespace CardsCashCasino.Manager
         private List<Card> _communityCards = new();
 
         /// <summary>
+        /// The X position for the first community card
+        /// </summary>
+        int communityCardXPos;
+
+        /// <summary>
         /// If the update function is dealing with the raise functionality
         /// </summary>
         private bool _userRaising = false;
@@ -452,20 +457,20 @@ namespace CardsCashCasino.Manager
             {
                 case Phase.INIT:
                     _currentPhase = Phase.FLOP;
-                    DealFlop();
                     return;
 
                 case Phase.FLOP:
+                    DealFlop();
                     _currentPhase = Phase.TURN;
-                    DealTurn();
                     return;
 
                 case Phase.TURN:
+                    DealTurn();
                     _currentPhase = Phase.RIVER;
-                    DealRiver();
                     return;
 
                 case Phase.RIVER:
+                    DealRiver();
                     _currentPhase = Phase.CONCLUSION;
                     return;
 
@@ -658,6 +663,12 @@ namespace CardsCashCasino.Manager
                 hand.Draw(spriteBatch);
             }
 
+            //Draw the community cards
+            foreach (Card hand in _communityCards)
+            {
+                hand.Draw(spriteBatch);
+            }
+
             // Draw the PotUI
             _potUI.Draw(spriteBatch);
         }
@@ -730,7 +741,10 @@ namespace CardsCashCasino.Manager
             int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 40;
 
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
-            int aiHandXPos = 240;
+            int aiHandXPos = 320;
+
+            // Iniitalizing the X position for the first community card
+            communityCardXPos = 380;
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
@@ -739,7 +753,7 @@ namespace CardsCashCasino.Manager
             for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
                 _playerHands[i].SetCenter(aiHandXPos, 100);
-                aiHandXPos += 200;
+                aiHandXPos += 300;
             }
 
             // Deal 2 cards to each player one at a time, starting with the small blind.
@@ -795,6 +809,8 @@ namespace CardsCashCasino.Manager
             {
                 _communityCards.Add(RequestCard!.Invoke());
 
+                _communityCards[i].SetRectangle(communityCardXPos, 430);
+                communityCardXPos += 150;
                 // Add a timeout for the card to be drawn to the screen.
                 // This will allow the user to see the cards being drawn.
                 _cardDealtTimer = new Timer(500);
@@ -811,6 +827,9 @@ namespace CardsCashCasino.Manager
 
             // Deal the turn.
             _communityCards.Add(RequestCard!.Invoke());
+
+            _communityCards[3].SetRectangle(communityCardXPos, 430);
+            communityCardXPos += 150;
 
             // Add a timeout for the card to be drawn to the screen.
             // This will allow the user to see the card being drawn.
@@ -830,6 +849,8 @@ namespace CardsCashCasino.Manager
             // Deal the river.
             _communityCards.Add(RequestCard!.Invoke());
 
+            _communityCards[4].SetRectangle(communityCardXPos, 430);
+            communityCardXPos += 150;
             // Add a timeout for the card to be drawn to the screen.
             // This will allow the user to see the card being drawn.
             _cardDealtTimer = new Timer(500);
