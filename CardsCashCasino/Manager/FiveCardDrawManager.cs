@@ -297,12 +297,13 @@ namespace CardsCashCasino.Manager
 
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
+            int buffer = 15;
 
-            _checkButton = new(FiveCardDrawTextures.CheckButtonEnabledTexture!, widthBuffer, buttonYPos, FiveCardDrawTextures.CheckButtonDisabledTexture!);
-            _callButton = new(FiveCardDrawTextures.CallButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos, FiveCardDrawTextures.CallButtonDisabledTexture!);
-            _raiseButton = new(FiveCardDrawTextures.RaiseButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, FiveCardDrawTextures.RaiseButtonDisabledTexture!);
-            _allInButton = new(FiveCardDrawTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
-            _foldButton = new(FiveCardDrawTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
+            _checkButton = new(FiveCardDrawTextures.CheckButtonEnabledTexture!, TexasHoldEmTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _callButton = new(FiveCardDrawTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _raiseButton = new(FiveCardDrawTextures.RaiseButtonTexture!, TexasHoldEmTextures.RaiseButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _allInButton = new(FiveCardDrawTextures.AllInButtonTexture!, TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3 + buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _foldButton = new(FiveCardDrawTextures.FoldButtonTexture!, TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4 + buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
 
             _cursor = new(FiveCardDrawTextures.CursorTexture!, _checkButton.GetAdjustedPos());
         }
@@ -1061,7 +1062,7 @@ public static class FiveCardDrawTextures
     /// <summary>
     /// The enabled texture for the Raise button.
     /// </summary>    
-    public static Texture2D? RaiseButtonEnabledTexture { get; private set; }
+    public static Texture2D? RaiseButtonTexture { get; private set; }
 
     /// <summary>
     /// The disabled texture for the Raise button. For the occasion that opponent places a bet that would put the user all in.
