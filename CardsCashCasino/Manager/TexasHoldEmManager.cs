@@ -330,12 +330,13 @@ namespace CardsCashCasino.Manager
 
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
+            int buffer = 15;
 
-            _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, widthBuffer, buttonYPos, TexasHoldEmTextures.CheckButtonDisabledTexture!);
-            _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos, TexasHoldEmTextures.CallButtonDisabledTexture!);
-            _raiseButton = new(TexasHoldEmTextures.RaiseButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, TexasHoldEmTextures.RaiseButtonDisabledTexture!);
-            _allInButton = new(TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
-            _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
+            _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, TexasHoldEmTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _raiseButton = new(TexasHoldEmTextures.RaiseButtonTexture!, TexasHoldEmTextures.RaiseButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _allInButton = new(TexasHoldEmTextures.AllInButtonTexture!, TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3 + buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4 + buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
 
@@ -365,16 +366,17 @@ namespace CardsCashCasino.Manager
         /// <returns>The action chosen, or null if no action has been chosen</returns>
         private PokerAction? GetPlayerAction()
         {
+            KeyboardState state = Keyboard.GetState();
             // Handle right key press to move the cursor.
-            if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos++;
-
+                
                 // Wrap the cursor around if it goes past the last button.
                 if (_currentCursorPos >= Constants.POKER_BUTTON_COUNT)
                     _currentCursorPos = 0;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 // Reset the cursor move timer.
                 _cursorMoveTimeout = new Timer(100);
@@ -382,7 +384,7 @@ namespace CardsCashCasino.Manager
                 _cursorMoveTimeout.Start();
             }
             // Handle left key press to move the cursor.
-            else if (Keyboard.GetState().IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            else if (state.IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos--;
 
@@ -390,13 +392,13 @@ namespace CardsCashCasino.Manager
                 if (_currentCursorPos < 0)
                     _currentCursorPos = Constants.POKER_BUTTON_COUNT - 1;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 _cursorMoveTimeout = new Timer(100);
                 _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
                 _cursorMoveTimeout.Start();
             }
-            else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+            else if (state.IsKeyDown(Keys.Enter))
             {
                 if (_userActionTimeout is not null && _userActionTimeout.Enabled)
                     return null;
@@ -423,7 +425,6 @@ namespace CardsCashCasino.Manager
                         return PokerAction.FOLD;
                 }
             }
-
             return null;
         }
 
@@ -1384,12 +1385,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The enabled texture for the Raise button.
         /// </summary>    
-        public static Texture2D? RaiseButtonEnabledTexture { get; private set; }
-
-        /// <summary>
-        /// The disabled texture for the Raise button. For the occasion that opponent places a bet that would put the user all in.
-        /// </summary> 
-        public static Texture2D? RaiseButtonDisabledTexture { get; private set; }
+        public static Texture2D? RaiseButtonTexture { get; private set; }
 
         /// <summary>
         /// The texture for the Fold button.
@@ -1411,18 +1407,16 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static void LoadContent(ContentManager content)
         {
-            // TODO: Create textures for the buttons.
+            
              CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
              CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
              CheckButtonEnabledTexture = content.Load<Texture2D>("CheckButtonEnabled");
              CheckButtonDisabledTexture = content.Load<Texture2D>("CheckButtonDisabled");
-             RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonDisabled");
-             RaiseButtonDisabledTexture = content.Load<Texture2D>("RaiseButtonEnabled");
+             RaiseButtonTexture = content.Load<Texture2D>("RaiseButtonEnabled");
              FoldButtonTexture = content.Load<Texture2D>("FoldButton");
              AllInButtonTexture = content.Load<Texture2D>("AllInButton");
 
             CursorTexture = content.Load<Texture2D>("BlackjackCursor");
-
         }
     }
 
@@ -1442,7 +1436,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The size of the cursor.
         /// </summary>
-        private Point _size = new(144, 80);
+        private Point _size = new(Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
         #endregion Properties
 
         #region  Methods
@@ -1495,7 +1489,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Whether or not the button is enabled.
         /// </summary>
-        public bool IsEnabled { get; private set; } = false;
+        public bool IsEnabled { get; private set; } = true;
 
         /// <summary>
         /// Whether or not the button is selected.
@@ -1504,11 +1498,11 @@ namespace CardsCashCasino.Manager
         #endregion Properties
 
         #region Methods
-        public PokerActionButton(Texture2D enabledTexture, int x, int y, Texture2D disabledTexture = null)
+        public PokerActionButton(Texture2D enabledTexture, Texture2D disabledTexture, int xPos, int yPos, int width, int height)
         {
             _enabledTexture = enabledTexture;
             _disabledTexture = disabledTexture;
-            _buttonRectangle = new Rectangle(x, y, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _buttonRectangle = new Rectangle(xPos, yPos, width, height);
         }
 
         /// <summary>
@@ -1517,7 +1511,7 @@ namespace CardsCashCasino.Manager
         /// <param name="spriteBatch"></param>
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture ?? _enabledTexture, _buttonRectangle, Color.White);
+            spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture, _buttonRectangle, Color.White);
         }
 
         /// <summary>
@@ -1525,7 +1519,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public Point GetAdjustedPos()
         {
-            return new Point(_buttonRectangle.X - 8, _buttonRectangle.Y - 8);
+            return new Point(_buttonRectangle.X, _buttonRectangle.Y);
         }
         #endregion Methods
     }
