@@ -191,7 +191,7 @@ namespace CardsCashCasino.Manager
             else if (button == _texasHoldEmButton)
                 _game.SetSelectedGame(SelectedGame.HOLDEM);
             else if (button == _quitButton)
-                _game.QuitGame();
+                _game.QuitGame(); // Quit the game       
         }
 
         public void Draw(SpriteBatch spriteBatch)

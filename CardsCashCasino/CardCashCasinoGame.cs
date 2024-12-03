@@ -23,6 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Timers;
+using System.Xml.Linq;
 
 namespace CardsCashCasino
 {
@@ -143,6 +144,15 @@ namespace CardsCashCasino
             // Initialize MainMenu
             _mainMenu = new MainMenu(this); // Pass the current game instance
             _mainMenu.LoadContent(Content); // Load MainMenu content
+        }
+
+        /// <summary>
+        /// Quit the game.
+        /// </summary>
+        public void QuitGame()
+        {
+            StatisticsUtil.SaveStatisticsFile(); // Save Data
+            Exit(); // Quit the game
         }
 
         /// <summary>
