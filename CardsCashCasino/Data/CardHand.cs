@@ -87,7 +87,7 @@ namespace CardsCashCasino.Data
             foreach (Card card in _cards)
             {
                 card.SetRectangle(xPos, yPos);
-                xPos += 124;
+                xPos += 30;
             }
         }
 
