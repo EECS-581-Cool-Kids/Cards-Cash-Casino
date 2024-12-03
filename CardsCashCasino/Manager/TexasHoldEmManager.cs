@@ -366,7 +366,7 @@ namespace CardsCashCasino.Manager
         private PokerAction? GetPlayerAction()
         {
             // Handle right key press to move the cursor.
-            if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || _cursorMoveTimeout.Enabled))
+            if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos++;
 
@@ -666,6 +666,7 @@ namespace CardsCashCasino.Manager
                 Constants.CALL_BUTTON_POS => _callButton!.GetAdjustedPos(),
                 Constants.RAISE_BUTTON_POS => _raiseButton!.GetAdjustedPos(),
                 Constants.FOLD_BUTTON_POS => _foldButton!.GetAdjustedPos(),
+                Constants.ALL_IN_BUTTON_POS => _allInButton!.GetAdjustedPos(),
                 _ => _callButton!.GetAdjustedPos()
             };
         }
