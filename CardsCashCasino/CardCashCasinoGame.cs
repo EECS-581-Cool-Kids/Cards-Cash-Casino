@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Derek Norton, Mo Morgan
  *  Date: 10/21/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/2/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -26,6 +26,17 @@ using System.Timers;
 
 namespace CardsCashCasino
 {
+    /// <summary>
+    /// An enumeration of the selected game.
+    /// </summary>
+    public enum SelectedGame
+    {
+        NONE,
+        BLACKJACK,
+        HOLDEM,
+        FIVECARD
+    }
+    
     public class CardCashCasinoGame : Microsoft.Xna.Framework.Game
     {
         /// <summary>
@@ -78,6 +89,7 @@ namespace CardsCashCasino
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            StatisticsUtil.LoadStatisticsFile();
         }
 
         /// <summary>
@@ -141,7 +153,7 @@ namespace CardsCashCasino
 
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+                QuitGame();
 
             // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE)
@@ -232,13 +244,4 @@ namespace CardsCashCasino
             timer.Dispose();
         }
     }
-
-    public enum SelectedGame
-    {
-        NONE,
-        BLACKJACK,
-        HOLDEM,
-        FIVECARD
-    }
-
 }
