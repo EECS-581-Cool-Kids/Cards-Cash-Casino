@@ -727,16 +727,16 @@ namespace CardsCashCasino.Manager
                 GeneratePlayerHands();
 
             // Calculate the position of the user hand.
-            int userHandXPos = Constants.WINDOW_WIDTH / 2;
+            int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 40;
 
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
-            int aiHandXPos = 100;
+            int aiHandXPos = 240;
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
             _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 200);
 
-            for (int i = 1; i < Constants.AI_PLAYER_COUNT; i++)
+            for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
                 _playerHands[i].SetCenter(aiHandXPos, 100);
                 aiHandXPos += 200;
