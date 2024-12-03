@@ -468,6 +468,10 @@ namespace CardsCashCasino.Manager
                 case Phase.RIVER:
                     _currentPhase = Phase.CONCLUSION;
                     return;
+
+                case Phase.CONCLUSION:
+                    RoundConclusion();
+                    return;
             }
         }
 
@@ -569,6 +573,7 @@ namespace CardsCashCasino.Manager
                 // TODO: Verify that the below code is correct.
                 _currentBet += raiseAmount;
                 Raise(0);
+                //_players.Raise(raiseAmount, 0);
 
             }
             else
@@ -667,6 +672,7 @@ namespace CardsCashCasino.Manager
                 Constants.CALL_BUTTON_POS => _callButton!.GetAdjustedPos(),
                 Constants.RAISE_BUTTON_POS => _raiseButton!.GetAdjustedPos(),
                 Constants.FOLD_BUTTON_POS => _foldButton!.GetAdjustedPos(),
+                Constants.ALL_IN_BUTTON_POS => _allInButton!.GetAdjustedPos(),
                 _ => _callButton!.GetAdjustedPos()
             };
         }
@@ -678,7 +684,7 @@ namespace CardsCashCasino.Manager
         {
 
             //creates user and number of ai opponents
-            _players.InitiatePlayers(5);
+            _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
 
             _gameOver = false;
             _userPlaying = false;
@@ -1401,7 +1407,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static void LoadContent(ContentManager content)
         {
-            // int width
+            
              CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
              CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
              CheckButtonEnabledTexture = content.Load<Texture2D>("CheckButtonEnabled");
