@@ -23,6 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Timers;
+using System.Xml.Linq;
 
 namespace CardsCashCasino
 {
@@ -153,7 +154,10 @@ namespace CardsCashCasino
 
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                QuitGame();
+            {
+                StatisticsUtil.SaveStatisticsFile(); // Save Data
+                Exit(); // Quit the game
+            }
 
             // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE)

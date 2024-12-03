@@ -150,7 +150,10 @@ namespace CardsCashCasino.Manager
                     _game.SetSelectedGame(SelectedGame.HOLDEM); // Update selected game
                 // else if (_quitButton.IsSelected)
                 else if (_currentCursorPos == 3)
-                    _game.QuitGame(); // Quit the game
+                {
+                    StatisticsUtil.SaveStatisticsFile(); // Save Data
+                    _game.Exit(); // Quit the game
+                }
             }
 
             // Add logic to navigate the menu (e.g., using arrow keys)
@@ -191,7 +194,10 @@ namespace CardsCashCasino.Manager
             else if (button == _texasHoldEmButton)
                 _game.SetSelectedGame(SelectedGame.HOLDEM);
             else if (button == _quitButton)
-                _game.QuitGame();
+            {
+                StatisticsUtil.SaveStatisticsFile(); // Save Data
+                _game.Exit(); // Quit the game
+            }       
         }
 
         public void Draw(SpriteBatch spriteBatch)
