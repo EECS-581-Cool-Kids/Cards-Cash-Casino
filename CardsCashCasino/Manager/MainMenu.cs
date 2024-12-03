@@ -172,8 +172,8 @@ namespace CardsCashCasino.Manager
                 _cursorMoveTimeout.Start();
                 Console.WriteLine("Selected Game: " + _currentCursorPos);
             }
-
         }
+        
         public void OnTimeoutEvent(object source, ElapsedEventArgs e)
         {
             // Stop and dispose of the timer
@@ -205,7 +205,6 @@ namespace CardsCashCasino.Manager
             _texasHoldEmButton.Draw(spriteBatch);
             _quitButton.Draw(spriteBatch);
             _cursor.Draw(spriteBatch, _currentCursorPos);
-
         }
 
 
@@ -218,11 +217,8 @@ namespace CardsCashCasino.Manager
                 Constants.TEXAS_HOLD_EM_BUTTON_POS => _texasHoldEmButton.GetAdjustedPos(),
                 Constants.QUIT_BUTTON_POS => _quitButton.GetAdjustedPos(),
                 _ => _blackjackButton.GetAdjustedPos()
-
-
             };
         }
-
     }
 
     public static class MainMenuTextures
@@ -270,8 +266,6 @@ namespace CardsCashCasino.Manager
             CursorTexture = content.Load<Texture2D>("MenuCursor");
             CursorAltTexture = content.Load<Texture2D>("MenuAltCursor");
         }
-
-
     }
 
     public class MainMenuCursor
@@ -326,7 +320,6 @@ namespace CardsCashCasino.Manager
                 spriteBatch.Draw(_cursorTexture, _cursorRectangle, Color.White);
             }
         }
-
     }
 
     public class MainMenuActionButton

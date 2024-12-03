@@ -62,7 +62,7 @@ namespace CardsCashCasino.Manager
     }
 
     /// <summary>
-    /// The type of player being referred to in the HoldEmPlayerMangager Class
+    /// The type of player being referred to in the HoldEmPlayerManager Class
     /// </summary>
     public enum PlayerType
     {
