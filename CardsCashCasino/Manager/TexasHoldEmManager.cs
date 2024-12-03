@@ -370,12 +370,12 @@ namespace CardsCashCasino.Manager
             // Handle right key press to move the cursor.
             if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
+                _currentCursorPos++;
+                
                 // Wrap the cursor around if it goes past the last button.
                 if (_currentCursorPos >= Constants.POKER_BUTTON_COUNT)
                     _currentCursorPos = 0;
 
-                _currentCursorPos++;
-                
                 _cursor.UpdateLocation(GetNewCursorPos());
 
                 // Reset the cursor move timer.
@@ -392,7 +392,7 @@ namespace CardsCashCasino.Manager
                 if (_currentCursorPos < 0)
                     _currentCursorPos = Constants.POKER_BUTTON_COUNT - 1;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 _cursorMoveTimeout = new Timer(100);
                 _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
