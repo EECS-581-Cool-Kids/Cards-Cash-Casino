@@ -457,20 +457,20 @@ namespace CardsCashCasino.Manager
             {
                 case Phase.INIT:
                     _currentPhase = Phase.FLOP;
-                    DealFlop();
                     return;
 
                 case Phase.FLOP:
+                    DealFlop();
                     _currentPhase = Phase.TURN;
-                    DealTurn();
                     return;
 
                 case Phase.TURN:
+                    DealTurn();
                     _currentPhase = Phase.RIVER;
-                    DealRiver();
                     return;
 
                 case Phase.RIVER:
+                    DealRiver();
                     _currentPhase = Phase.CONCLUSION;
                     return;
 
