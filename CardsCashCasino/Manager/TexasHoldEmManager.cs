@@ -56,6 +56,8 @@ namespace CardsCashCasino.Manager
     {
         #region Properties
 
+        private bool initialized = false;
+
         /// <summary>
         /// The pot UI for displaying the pot value.
         /// </summary>
@@ -476,6 +478,8 @@ namespace CardsCashCasino.Manager
 
                 case Phase.CONCLUSION:
                     RoundConclusion();
+                    _currentPhase = Phase.INIT;
+                    StartGame();
                     return;
             }
         }
@@ -719,7 +723,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void StartGame()
         {
-            Initialize();
+            if (!initialized)
+            {
+                Initialize();
+                initialized = true;
+            }
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
@@ -780,7 +788,8 @@ namespace CardsCashCasino.Manager
                 }
                 hand.Clear();
             }
-
+            _communityCards.Clear();
+            
             IsPlaying = false;
         }
 
@@ -944,15 +953,33 @@ namespace CardsCashCasino.Manager
                 _ante += 2;
             }
             else
+            {
                 //decrement blind countdown after each hand
                 _blindIncreaseCountdown -= 1;
-
+            }
             //check if any players are out of money and need to be eliminated
             _players.EliminatePlayers();
 
             //set the blinds for next round
             _players.SetNextRoundBlinds();
             _potManager.ResetPots();
+
+            // Discard cards from, and clear, each hand.
+            foreach (CardHand hand in _playerHands)
+            {
+                foreach (Card card in hand.Cards)
+                {
+                    RequestCardDiscard!(card);
+                }
+                hand.Clear();
+            }
+            foreach (Card card in _communityCards)
+            {
+                RequestCardDiscard!(card);
+            }
+            //discard all community cards
+            _communityCards.Clear();
+
             _currentPhase = Phase.INIT;
         }
 
