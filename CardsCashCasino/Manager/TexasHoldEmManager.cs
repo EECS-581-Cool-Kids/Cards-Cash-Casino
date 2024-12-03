@@ -467,6 +467,10 @@ namespace CardsCashCasino.Manager
                 case Phase.RIVER:
                     _currentPhase = Phase.CONCLUSION;
                     return;
+
+                case Phase.CONCLUSION:
+                    RoundConclusion();
+                    return;
             }
         }
 
@@ -568,6 +572,7 @@ namespace CardsCashCasino.Manager
                 // TODO: Verify that the below code is correct.
                 _currentBet += raiseAmount;
                 Raise(0);
+                //_players.Raise(raiseAmount, 0);
 
             }
             else
@@ -678,7 +683,7 @@ namespace CardsCashCasino.Manager
         {
 
             //creates user and number of ai opponents
-            _players.InitiatePlayers(5);
+            _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
 
             _gameOver = false;
             _userPlaying = false;
