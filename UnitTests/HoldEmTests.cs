@@ -5,9 +5,9 @@ namespace CardsCashCasino.NUnit
     [TestClass]
     public class HoldEmTests
     {
-        private TexasHoldEmPotManager PotManager = new TexasHoldEmPotManager();
+        private PotManager PotManager = new PotManager();
         public TexasHoldEmManager HoldEmManager = new TexasHoldEmManager();
-        private HoldEmPlayerManager Players = new ();
+        private PlayerManager Players = new PlayerManager();
 
         /// <summary>
         /// Testing InitializePot
