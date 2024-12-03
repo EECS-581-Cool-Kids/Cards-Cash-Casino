@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Derek Norton, Mo Morgan
  *  Date: 10/21/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/2/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -26,6 +26,17 @@ using System.Timers;
 
 namespace CardsCashCasino
 {
+    /// <summary>
+    /// An enumeration of the selected game.
+    /// </summary>
+    public enum SelectedGame
+    {
+        NONE,
+        BLACKJACK,
+        HOLDEM,
+        FIVECARD
+    }
+    
     public class CardCashCasinoGame : Microsoft.Xna.Framework.Game
     {
         /// <summary>
@@ -239,13 +250,4 @@ namespace CardsCashCasino
             Exit();
         }
     }
-
-    public enum SelectedGame
-    {
-        NONE,
-        BLACKJACK,
-        HOLDEM,
-        FIVECARD
-    }
-
 }
