@@ -147,6 +147,15 @@ namespace CardsCashCasino
         }
 
         /// <summary>
+        /// Quit the game.
+        /// </summary>
+        public void QuitGame()
+        {
+            StatisticsUtil.SaveStatisticsFile(); // Save Data
+            Exit(); // Quit the game
+        }
+
+        /// <summary>
         /// MonoGame Update method. Called every tick.
         /// </summary>
         protected override void Update(GameTime gameTime)
@@ -154,10 +163,7 @@ namespace CardsCashCasino
 
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-            {
-                StatisticsUtil.SaveStatisticsFile(); // Save Data
-                Exit(); // Quit the game
-            }
+                QuitGame();
 
             // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE)
