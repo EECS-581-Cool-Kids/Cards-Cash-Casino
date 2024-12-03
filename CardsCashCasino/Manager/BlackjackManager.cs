@@ -174,11 +174,6 @@ namespace CardsCashCasino.Manager
         /// Call to request a payout of a certain amount.
         /// </summary>
         public Action<int>? RequestPayout { get; set; }
-
-        /// <summary>
-        /// Requests a return to the main menu.
-        /// </summary>
-        public Action? RequestMainMenuReturn { get; set; }
         #endregion Properties
 
         /// <summary>
@@ -569,10 +564,9 @@ namespace CardsCashCasino.Manager
             _currentBet = 0;
             _blackjack = false;
             IsPlaying = false;
+            BettingManager.UserBet = 0;
 
             System.Threading.Thread.Sleep(500);
-
-            RequestMainMenuReturn!.Invoke();
         }
 
         /// <summary>

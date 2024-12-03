@@ -71,6 +71,11 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
+        /// Requests a return to the main menu.
+        /// </summary>
+        public static Action<SelectedGame>? RequestMainMenuReturn { get; set; }
+
+        /// <summary>
         /// Loads the betting manager's content.
         /// </summary>
         public void LoadContent()
@@ -465,7 +470,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
-            if (_cursorMoveTimeout is not null && _cursorMoveTimeout.Enabled)
+            if ((_cursorMoveTimeout is not null && _cursorMoveTimeout.Enabled) || (CardCashCasinoGame.GameStartTimeout is not null && CardCashCasinoGame.GameStartTimeout.Enabled))
                 return;
 
             if (Keyboard.GetState().IsKeyDown(Keys.Up))
@@ -653,6 +658,7 @@ namespace CardsCashCasino.Manager
         {
             _currentBet = 0;
             Open = false;
+            BettingManager.RequestMainMenuReturn!.Invoke(SelectedGame.NONE);
         }
 
         /// <summary>

@@ -49,10 +49,9 @@ namespace CardsCashCasino
         /// </summary>
         private SpriteBatch? _spriteBatch;
         
-        // /// <summary>
-        // /// The internal Main menu object.
-        // /// </summary>
-        // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
+        /// <summary>
+        /// The internal Main menu object.
+        /// </summary>
         private MainMenu? _mainMenu;
 
         /// <summary>
@@ -107,7 +106,6 @@ namespace CardsCashCasino
             _blackjackManager.RequestCard = _cardManager.DrawCard;
             _blackjackManager.RequestBet = _bettingManager.Bet;
             _blackjackManager.RequestPayout = _bettingManager.Payout;
-            _blackjackManager.RequestMainMenuReturn = ReturnToMainMenu;
             
             _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
             _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
@@ -117,6 +115,8 @@ namespace CardsCashCasino
             _texasHoldEmManager.RequestDeckSize = _cardManager.GetDeckSize;
             _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
             _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
+
+            BettingManager.RequestMainMenuReturn = SetSelectedGame;
 
             base.Initialize();
         }
@@ -143,9 +143,6 @@ namespace CardsCashCasino
             // Initialize MainMenu
             _mainMenu = new MainMenu(this); // Pass the current game instance
             _mainMenu.LoadContent(Content); // Load MainMenu content
-
-            // _selectedGame = SelectedGame.NONE; // temp, remove when main menu is implemented OR change to other games.
-
         }
 
         /// <summary>
@@ -174,7 +171,7 @@ namespace CardsCashCasino
                             if (!_bettingManager.IsBetting)
                                 _bettingManager.OpenBettingMenu();
                             _bettingManager.Update();
-                            return;
+                            break;
                         }
                         else if (!_blackjackManager.IsPlaying)
                         {
@@ -230,24 +227,21 @@ namespace CardsCashCasino
         public void SetSelectedGame(SelectedGame selectedGame)
         {
             _selectedGame = selectedGame;
+
+            GameStartTimeout = new(1000);
+            GameStartTimeout.Elapsed += OnTimeoutEvent!;
+            GameStartTimeout.Start();
         }
 
         /// <summary>
-        /// Ends the current game by resetting the user bet to zero.
+        /// Event called when a timer times out.
         /// </summary>
-        private void ReturnToMainMenu()
+        private static void OnTimeoutEvent(object source, ElapsedEventArgs e)
         {
-            BettingManager.UserBet = 0;
-            _selectedGame = SelectedGame.NONE;
-        }
-
-        /// <summary>
-        /// Quit Game logic. Used to save the statistics file at the end of the game.
-        /// </summary>
-        public void QuitGame()
-        {
-            StatisticsUtil.SaveStatisticsFile();
-            Exit();
+            // Stop and dispose of the timer
+            Timer timer = (Timer)source;
+            timer.Stop();
+            timer.Dispose();
         }
     }
 }
