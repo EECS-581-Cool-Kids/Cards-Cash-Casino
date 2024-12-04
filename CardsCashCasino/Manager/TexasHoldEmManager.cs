@@ -21,6 +21,7 @@ using System.Linq;
 using System.Numerics;
 using System.Timers;
 using CardsCashCasino.Data;
+using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -201,11 +202,6 @@ namespace CardsCashCasino.Manager
         //public Func<int> GetRaiseAmount { get; set; }
 
         /// <summary>
-        /// Initializing TexasHoldEmPotManager class
-        /// </summary>
-        //TexasHoldEmPotManager _potManager = new TexasHoldEmPotManager();
-
-        /// <summary>
         /// Initializing PlayerManager class
         /// </summary>
         PlayerManager _players = new PlayerManager();
@@ -214,6 +210,81 @@ namespace CardsCashCasino.Manager
         /// Variable to hold the Pots Manager class
         /// </summary>
         private PotManager _potManager = new PotManager();
+
+        /// <summary>
+        /// Variable holding pot value front end info
+        /// </summary>
+        private PokerPotValueIndicator? _pokerPotValueIndicator;
+
+        /// <summary>
+        /// Variable connecting user stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userStackIndicator;
+
+        /// <summary>
+        /// Variable connecting user bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 2 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 3 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 4 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourIdentifier;
 
         /// <summary>
         /// The cursor.
@@ -346,6 +417,22 @@ namespace CardsCashCasino.Manager
             _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4 + buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
+
+            _pokerPotValueIndicator = new();
+            _userStackIndicator = new();
+            _userBetIndicator = new();
+            _aiOneStackIndicator = new();
+            _aiOneBetIndicator = new();
+            _aiTwoStackIndicator = new();
+            _aiTwoBetIndicator = new();
+            _aiThreeStackIndicator = new();
+            _aiThreeBetIndicator = new();
+            _aiFourStackIndicator = new();
+            _aiFourBetIndicator = new();
+            _aiOneIdentifier = new();
+            _aiTwoIdentifier = new();
+            _aiThreeIdentifier = new();
+            _aiFourIdentifier = new();
 
             _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content); // Load pot textures
@@ -537,6 +624,7 @@ namespace CardsCashCasino.Manager
                 {
                     _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                     _potManager.AddToPot(_currentBet, _players.PackageBets());
+                    _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
                     _players.ResetBets();
                     _roundInit = false;
                     _currentPhase = Phase.CONCLUSION;
@@ -549,9 +637,17 @@ namespace CardsCashCasino.Manager
                 //finalize bets for the round and add them to the pots
                 _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                 _potManager.AddToPot(_currentBet, _players.PackageBets());
+                _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
 
                 //reset the bets for the next round to 0
                 _players.ResetBets();
+
+                //update all player bet values to 0
+                _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+                _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+                _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+                _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+                _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
                 _roundInit = false;
                 NextPhase();
                 return;
@@ -624,6 +720,9 @@ namespace CardsCashCasino.Manager
             // We will now carry out logic needed to finish users turn. 
             // At the start of the next call to Update(), it should be the next player's turn.
 
+            //update user bet value
+            _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
 
 
             RoundLogic();
@@ -642,6 +741,29 @@ namespace CardsCashCasino.Manager
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
             Call(playerIndex);
+
+            //update all ai stack and bet visuals
+            if (playerIndex == 1)
+            {
+                _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+                _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            }
+            else if (playerIndex == 2)
+            {
+                _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+                _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            }
+            else if (playerIndex == 3)
+            {
+                _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+                _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            }
+            else if (playerIndex == 4)
+            {
+                _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
+                _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
+            }
+
             RoundLogic();
         }
 
@@ -673,6 +795,23 @@ namespace CardsCashCasino.Manager
                 hand.Draw(spriteBatch);
             }
 
+            //Draw player stack, bet, and identifiers 
+            _pokerPotValueIndicator!.Draw(spriteBatch);
+            _userStackIndicator!.Draw(spriteBatch);
+            _userBetIndicator!.Draw(spriteBatch);
+            _aiOneBetIndicator!.Draw(spriteBatch);
+            _aiOneStackIndicator!.Draw(spriteBatch);
+            _aiTwoBetIndicator!.Draw(spriteBatch);
+            _aiTwoStackIndicator!.Draw(spriteBatch);
+            _aiThreeBetIndicator!.Draw(spriteBatch);
+            _aiThreeStackIndicator!.Draw(spriteBatch);
+            _aiFourBetIndicator!.Draw(spriteBatch);
+            _aiFourStackIndicator!.Draw(spriteBatch);
+            _aiOneIdentifier!.Draw(spriteBatch);
+            _aiTwoIdentifier!.Draw(spriteBatch);
+            _aiThreeIdentifier!.Draw(spriteBatch);
+            _aiFourIdentifier!.Draw(spriteBatch);
+
             // Draw the PotUI
             _potUI.Draw(spriteBatch);
         }
@@ -697,6 +836,12 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void Initialize()
         {
+            int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int aiStackYPos = 220;
+            int aiBetYPos = 246;
+            int aiIdentifierYPos = 194;
 
             //creates user and number of ai opponents
             _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
@@ -712,6 +857,30 @@ namespace CardsCashCasino.Manager
             _blindIncreaseCountdown = 4;
             _smallBlindBet = 1;
             _bigBlindBet = 2;
+
+
+            //setting position for all front end player and pot info
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 325);
+            _userStackIndicator!.SetPosition(userStackXPos, 605);
+            _userBetIndicator!.SetPosition(userBetXPos, 579);
+            _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
+            _aiOneStackIndicator!.SetPosition(220, aiStackYPos);
+            _aiOneBetIndicator!.SetPosition(220, aiBetYPos);
+            _aiTwoIdentifier!.SetPosition(520, aiIdentifierYPos);
+            _aiTwoStackIndicator!.SetPosition(520, aiStackYPos);
+            _aiTwoBetIndicator!.SetPosition(520, aiBetYPos);
+            _aiThreeIdentifier!.SetPosition(820, aiIdentifierYPos);
+            _aiThreeStackIndicator!.SetPosition(820, aiStackYPos);
+            _aiThreeBetIndicator!.SetPosition(820, aiBetYPos);
+            _aiFourIdentifier!.SetPosition(1120, aiIdentifierYPos);
+            _aiFourStackIndicator!.SetPosition(1120, aiStackYPos);
+            _aiFourBetIndicator!.SetPosition(1120, aiBetYPos);
+
+            //setting ai identifiers
+            _aiOneIdentifier!.Update(1);
+            _aiTwoIdentifier!.Update(2);
+            _aiThreeIdentifier!.Update(3);
+            _aiFourIdentifier!.Update(4);
 
             _playerHands = new List<CardHand>(); // Initialize the list of player hands.
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
@@ -731,11 +900,25 @@ namespace CardsCashCasino.Manager
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
+            _players.ResetBets();
+            _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
+            
             IsPlaying = true;
             _roundInit = false;
 
             //collects and places blind bets from small and big blind players
             _players.CollectBlinds(_smallBlindBet, _bigBlindBet); //collects and places blind bets from small and big blind players
+            _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
+            _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+            _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+            _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+            _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
+            _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
 
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
             if (RequestDeckSize!.Invoke() < (_capacity / 2))
@@ -1038,6 +1221,7 @@ namespace CardsCashCasino.Manager
                 {
                     _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                     _potManager.AddToPot(_currentBet, _players.PackageBets());
+                    _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
                     _players.ResetBets();
                     _roundInit = false;
                     _currentPhase = Phase.CONCLUSION;
@@ -1049,6 +1233,7 @@ namespace CardsCashCasino.Manager
                 //finalize bets for the round and add them to the pots
                 _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                 _potManager.AddToPot(_currentBet, _players.PackageBets());
+                _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
 
                 //reset the bets for the next round to 0
                 _players.ResetBets();
