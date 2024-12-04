@@ -193,7 +193,7 @@ namespace CardsCashCasino
                         if (!_texasHoldEmManager.IsPlaying)
                         {   
                             //_texasHoldEmManager.
-                            _texasHoldEmManager.StartGame();
+                            _texasHoldEmManager.Initialize();
                         }
                         else if (_bettingManager.IsBetting)
                         {

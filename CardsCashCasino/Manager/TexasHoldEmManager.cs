@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Timers;
@@ -142,18 +143,18 @@ namespace CardsCashCasino.Manager
         /// The index of the player that is the dealer for the current round.
         /// Increments by one each round.
         /// </summary>
-        private static int _currentDealer = new Random().Next(0, Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentDealer;
 
         /// <summary>
         /// The index of the player that is the small blind for the current round.
         /// Increments by one each round.
         /// </summary>
-        private static int _currentSmallBlind = (_currentDealer + 1) % (Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentSmallBlind;
 
         /// <summary>
         /// The index of the player that is the big blind for the current round.
         /// </summary>
-        private static int _currentBigBlind = (_currentSmallBlind + 1) % (Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentBigBlind;
 
         /// <summary>
         /// The number of rounds left until the blinds increase.
@@ -285,6 +286,8 @@ namespace CardsCashCasino.Manager
         /// Variable connecting ai player 4 identifier to front end
         /// </summary>
         private PlayerValuesIndicator? _aiFourIdentifier;
+
+        private PlayerValuesIndicator? _aiOnePosition;
 
         /// <summary>
         /// The cursor.
@@ -454,6 +457,23 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
+        /// Delay
+        /// </summary>
+        private void BlockingDelay(int milliseconds)
+        {
+            // Get the current time
+            var stopwatch = Stopwatch.StartNew();
+
+            // Loop until the specified time has passed
+            while (stopwatch.ElapsedMilliseconds < milliseconds)
+            {
+                // Do nothing (block)
+            }
+
+            stopwatch.Stop();
+        }
+
+        /// <summary>
         /// Reads the players inputs to see if they have chosen an action.
         /// Will not block the flow of execution.
         /// </summary>
@@ -546,20 +566,20 @@ namespace CardsCashCasino.Manager
             {
                 case Phase.INIT:
                     _currentPhase = Phase.FLOP;
+                    DealFlop();
                     return;
 
                 case Phase.FLOP:
-                    DealFlop();
                     _currentPhase = Phase.TURN;
+                    DealTurn();
                     return;
 
                 case Phase.TURN:
-                    DealTurn();
-                    _currentPhase = Phase.RIVER;
+                    _currentPhase = Phase.CONCLUSION;
+                    DealRiver();
                     return;
 
                 case Phase.RIVER:
-                    DealRiver();
                     _currentPhase = Phase.CONCLUSION;
                     return;
 
@@ -589,8 +609,16 @@ namespace CardsCashCasino.Manager
                 // Set the current bet to the big blind.
                 _currentBet = _bigBlindBet;
 
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
+                if (_currentPhase == Phase.INIT)
+                {
+                    //set the starting bettor to the player to the left of the big blind
+                    playerIndex = _players.GetPreflopStartingBettor();
+                }
+                else
+                {
+                    // Set the player index to the player to the left of the big blind
+                    playerIndex = _players.GetStartingBettorIndex();
+                }
                 _roundInit = true;
             }
             //round init not needed, advance the player index to next player
@@ -604,7 +632,7 @@ namespace CardsCashCasino.Manager
             if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
             {
                 //if player is either folded or all in, skip the player's turn
-                if (_players.IsActivePlayer(playerIndex))
+                if (!_players.IsActivePlayer(playerIndex))
                 {
                     return;
                 }
@@ -641,6 +669,7 @@ namespace CardsCashCasino.Manager
 
                 //reset the bets for the next round to 0
                 _players.ResetBets();
+                _currentBet = 0;
 
                 //update all player bet values to 0
                 _userBetIndicator!.Update(_players.Players[0].PlayerBet);
@@ -659,6 +688,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+
             // Return if the AI is still taking an action.
             if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
@@ -724,9 +754,7 @@ namespace CardsCashCasino.Manager
             _userBetIndicator!.Update(_players.Players[0].PlayerBet);
             _userStackIndicator!.Update(_players.Players[0].PlayerStack);
 
-
             RoundLogic();
-
         }
 
         /// <summary>
@@ -738,7 +766,7 @@ namespace CardsCashCasino.Manager
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
 
             // ...
-
+            BlockingDelay(500);
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
             Call(playerIndex);
 
@@ -834,7 +862,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Enter the TexasHoldEm gameflow
         /// </summary>
-        private void Initialize()
+        public void Initialize()
         {
             int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) - 60;
             int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
@@ -885,25 +913,26 @@ namespace CardsCashCasino.Manager
             _playerHands = new List<CardHand>(); // Initialize the list of player hands.
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
+
+            StartGame();
         }
 
         /// <summary>
         /// Enter the TexasHoldEm gameflow
         /// </summary>
-        public void StartGame()
+        private void StartGame()
         {
-            if (!initialized)
-            {
-                Initialize();
-                initialized = true;
-            }
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
             _players.ResetBets();
             _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
             _userStackIndicator!.Update(_players.Players[0].PlayerStack);
-            
+            _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
+
             IsPlaying = true;
             _roundInit = false;
 
@@ -943,7 +972,7 @@ namespace CardsCashCasino.Manager
 
             for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
-                _playerHands[i].SetCenter(aiHandXPos, 100);
+                _playerHands[i].SetCenter(aiHandXPos, 80);
                 aiHandXPos += 300;
             }
 
@@ -1162,305 +1191,6 @@ namespace CardsCashCasino.Manager
             }
             //discard all community cards
             _communityCards.Clear();
-
-            _currentPhase = Phase.INIT;
-        }
-
-
-        /// <summary>
-        /// handles the initial stage of betting before any community cards appear
-        /// </summary>
-        private void HandlePreflop()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.FLOP;
-                DealFlop();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetPreflopStartingBettor();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //if player is either folded or all in, skip the player's turn
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-
-                //if only one player has not folded, prepare pot to award to player and advance to conclusion
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-                _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealFlop();
-                return;
-            }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the second round of betting that follows the flop
-        /// </summary>
-        private void HandleFlop()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.TURN;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.TURN;
-                DealTurn();
-                return;
-            }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the third round of betting that follows the turn
-        /// </summary>
-        private void HandleTurn()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.RIVER;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.RIVER;
-                DealTurn();
-                return;
-            }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the second round of betting that follows the flop
-        /// </summary>
-        private void HandleRiver()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.CONCLUSION;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealTurn();
-                return;
-            }
         }
 
         /// <summary>
