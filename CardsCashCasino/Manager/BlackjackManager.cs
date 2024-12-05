@@ -28,7 +28,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The pot UI for visualizing the bet value.
         /// </summary>
-        private PotUI _potUI;
+        private PotUI? _potUI;
 
         /// <summary>
         /// The dealer's hand.
@@ -526,10 +526,10 @@ namespace CardsCashCasino.Manager
             _dealerHand.SetCenter(handXPos, 85);
 
             // Add the two initial cards.
-            initialHand.AddCard(new Card(Suit.CLUBS, Value.JACK));
-            _dealerHand.AddCard(new Card(Suit.DIAMONDS, Value.TWO));
-            initialHand.AddCard(new Card(Suit.SPADES, Value.JACK));
-            _dealerHand.AddCard(new Card(Suit.DIAMONDS, Value.TWO));
+            initialHand.AddCard(RequestCard!.Invoke());
+            _dealerHand.AddCard(RequestCard!.Invoke());
+            initialHand.AddCard(RequestCard!.Invoke());
+            _dealerHand.AddCard(RequestCard!.Invoke());
 
             // Add the initial hand to the list of user hands.
             _userHands.Add(initialHand);
