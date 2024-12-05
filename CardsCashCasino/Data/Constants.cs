@@ -30,12 +30,12 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The window height.
         /// </summary>
-        public const int WINDOW_HEIGHT = 900;
+        public const int WINDOW_HEIGHT = 600;
 
         /// <summary>
         /// The window width.
         /// </summary>
-        public const int WINDOW_WIDTH = 1500;
+        public const int WINDOW_WIDTH = 1000;
 
         /// <summary>
         /// The width of a button.
