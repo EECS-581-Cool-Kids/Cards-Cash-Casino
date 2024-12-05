@@ -195,7 +195,7 @@ namespace CardsCashCasino.Data
     public enum Value
     {
         [BlackjackValue(1, 11)]
-        [PokerValue(1)]
+        [PokerValue(14)]
         ACE,
         
         [BlackjackValue(2)]

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CardsCashCasino.Data;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +25,8 @@ namespace CardsCashCasino.Manager
         IN,
         FOLDED,
         CALLED,
-        ALLIN
+        ALLIN,
+        BROKE,
     }
 
     /// <summary>
@@ -137,6 +140,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void InitiatePlayers(int numAIs)
         {
+            Players.Clear();
             Players.Add(new Player(PlayerType.USER));
 
             for (int players = 0; players < numAIs; players++)
@@ -206,14 +210,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool IsActivePlayer(int playerIndex)
         {
-            if (Players[playerIndex].PlayerStatus == PlayerStatus.FOLDED || Players[playerIndex].PlayerStatus == PlayerStatus.ALLIN)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            PlayerStatus status = Players[playerIndex].PlayerStatus;
+            return (status == PlayerStatus.IN || status == PlayerStatus.CALLED); 
         }
 
         /// <summary>
@@ -307,11 +305,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool AdvanceRound()
         {
-            if (!Players.Any(player => player.PlayerStatus == PlayerStatus.IN)) //if all players have had their turn, have called the existing bet, folded, or are all in
-            {
-                return true;
-            }
-            return false;
+            // if all players have had their turn, have called the existing bet, folded, are broke, or are all in
+            return !Players.Any(player => player.PlayerStatus == PlayerStatus.IN);
         }
 
         /// <summary>
@@ -321,11 +316,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool AdvanceToRoundConclusion()
         {
-            if (Players.Count(player => player.PlayerStatus == PlayerStatus.CALLED) <= 1 && Players.Count(player => player.PlayerStatus == PlayerStatus.ALLIN) >= 1)
-            {
-                return true;
-            }
-            return false;
+            int called = Players.Count(player => player.PlayerStatus == PlayerStatus.CALLED);
+            int _in = Players.Count(player => player.PlayerStatus == PlayerStatus.IN);
+            int allIn = Players.Count(player => player.PlayerStatus == PlayerStatus.ALLIN);
+            return (allIn > 0) && (_in + called <= 1);
         }
 
         /// <summary>
@@ -334,7 +328,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool OnePlayerLeft()
         {
-            if (Players.Count(player => player.PlayerStatus == PlayerStatus.FOLDED) == Players.Count - 1)
+            int folded = Players.Count(player => player.PlayerStatus == PlayerStatus.FOLDED);
+            int broke = Players.Count(player => player.PlayerStatus == PlayerStatus.BROKE);
+            
+            if (folded + broke == Players.Count - 1)
             {
                 return true;
             }
@@ -352,7 +349,8 @@ namespace CardsCashCasino.Manager
                 {
                     Players[player].DecrementBet(Players[player].PlayerBet);
                 }
-                if (Players[player].PlayerStatus == PlayerStatus.CALLED)
+                PlayerStatus status = Players[player].PlayerStatus;
+                if (status != PlayerStatus.FOLDED && status != PlayerStatus.BROKE)
                 {
                     Players[player].PlayerStatus = PlayerStatus.IN;
                 }
@@ -404,9 +402,9 @@ namespace CardsCashCasino.Manager
                 {
                     if (Players[player].PlayerPosition == PlayerPosition.DEALER) //shift dealer chip 1 to left if dealer was eliminated
                     {
-                        Players[player + 1 % Players.Count].PlayerPosition = PlayerPosition.DEALER;
+                        Players[(player + 1) % Players.Count].PlayerPosition = PlayerPosition.DEALER;
                     }
-                    Players.RemoveAt(player);
+                    Players[player].PlayerStatus = PlayerStatus.BROKE;
                 }
             }
         }
@@ -487,6 +485,101 @@ namespace CardsCashCasino.Manager
             {
                 Players[winningPlayers[player]].IncrementStack(payout);
             }
+        }
+    }
+    public class PlayerValuesIndicator
+    {
+        /// <summary>
+        /// The first digit.
+        /// </summary>
+        private IndicatorDigit _firstDigit = new();
+
+        /// <summary>
+        /// The second digit.
+        /// </summary>
+        private IndicatorDigit _secondDigit = new();
+
+        /// <summary>
+        /// The third digit.
+        /// </summary>
+        private IndicatorDigit _thirdDigit = new();
+
+        /// <summary>
+        /// The fourth digit.
+        /// </summary>
+        private IndicatorDigit _fourthDigit = new();
+
+        /// <summary>
+        /// The previous value.
+        /// </summary>
+        private int _previousValue = 0;
+
+        /// <summary>
+        /// Sets the position of the indicator.
+        /// </summary>
+        /// <param name="xPos">The x coordinate</param>
+        /// <param name="yPos">The y coordinate</param>
+        public void SetPosition(int xPos, int yPos)
+        {
+            _firstDigit.SetPosition(xPos, yPos);
+            _secondDigit.SetPosition(xPos + 21, yPos);
+            _thirdDigit.SetPosition(xPos + 42, yPos);
+            _fourthDigit.SetPosition(xPos + 63, yPos);
+        }
+
+        /// <summary>
+        /// Updates the indicator based on the value of the hand.
+        /// </summary>
+        public void Update(int potValue)
+        {
+
+            int firstDigit;
+            int secondDigit;
+            int thirdDigit;
+            int fourthDigit;
+
+            if (potValue == _previousValue)
+                return;
+
+            if (potValue < 100)
+            {
+                firstDigit = 0;
+                secondDigit = 0;
+                thirdDigit = potValue / 10;
+                fourthDigit = potValue % 10;
+            }
+            else if (potValue < 1000)
+            {
+                firstDigit = 0;
+                secondDigit = potValue / 100;
+                thirdDigit = (potValue / 10) % 10;
+                fourthDigit = potValue % 10;
+            }
+            else
+            {
+                firstDigit = potValue / 1000;
+                secondDigit = (potValue / 100) % 10;
+                thirdDigit = (potValue / 10) % 10;
+                fourthDigit = potValue % 10;
+            }
+
+            _firstDigit.Update(firstDigit);
+            _secondDigit.Update(secondDigit);
+            _thirdDigit.Update(thirdDigit);
+            _fourthDigit.Update(fourthDigit);
+
+            _previousValue = potValue;
+        }
+
+        /// <summary>
+        /// Draw method for the value indicator.
+        /// </summary>
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            _firstDigit.Draw(spriteBatch);
+            _secondDigit.Draw(spriteBatch);
+            _thirdDigit.Draw(spriteBatch);
+            _fourthDigit.Draw(spriteBatch);
         }
     }
 }

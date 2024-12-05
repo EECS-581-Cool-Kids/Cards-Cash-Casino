@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CardsCashCasino.Data;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -267,6 +269,101 @@ namespace CardsCashCasino.Manager
         public List<int> PlayersEligible(int potNumber)
         {
             return Pots[potNumber].EligiblePlayers;
+        }
+    }
+    public class PokerPotValueIndicator
+    {
+        /// <summary>
+        /// The first digit.
+        /// </summary>
+        private IndicatorDigit _firstDigit = new();
+
+        /// <summary>
+        /// The second digit.
+        /// </summary>
+        private IndicatorDigit _secondDigit = new();
+
+        /// <summary>
+        /// The third digit.
+        /// </summary>
+        private IndicatorDigit _thirdDigit = new();
+
+        /// <summary>
+        /// The fourth digit.
+        /// </summary>
+        private IndicatorDigit _fourthDigit = new();
+
+        /// <summary>
+        /// The previous value.
+        /// </summary>
+        private int _previousValue = 0;
+
+        /// <summary>
+        /// Sets the position of the indicator.
+        /// </summary>
+        /// <param name="xPos">The x coordinate</param>
+        /// <param name="yPos">The y coordinate</param>
+        public void SetPosition(int xPos, int yPos)
+        {
+            _firstDigit.SetPosition(xPos, yPos);
+            _secondDigit.SetPosition(xPos + 21, yPos);
+            _thirdDigit.SetPosition(xPos + 42, yPos);
+            _fourthDigit.SetPosition(xPos + 63, yPos);
+        }
+
+        /// <summary>
+        /// Updates the indicator based on the value of the hand.
+        /// </summary>
+        public void Update(int potValue)
+        {
+
+            int firstDigit;
+            int secondDigit;
+            int thirdDigit;
+            int fourthDigit;
+
+            if (potValue == _previousValue)
+                return;
+
+            if (potValue < 100)
+            {
+                firstDigit = 0;
+                secondDigit = 0;
+                thirdDigit = potValue / 10;
+                fourthDigit = potValue % 10;
+            }
+            else if (potValue < 1000)
+            {
+                firstDigit = 0;
+                secondDigit = potValue / 100;
+                thirdDigit = (potValue / 10) % 10;
+                fourthDigit = potValue % 10;
+            }
+            else
+            {
+                firstDigit = potValue / 1000;
+                secondDigit = (potValue / 100) % 10;
+                thirdDigit = (potValue / 10) % 10;
+                fourthDigit = potValue % 10;
+            }
+
+            _firstDigit.Update(firstDigit);
+            _secondDigit.Update(secondDigit);
+            _thirdDigit.Update(thirdDigit);
+            _fourthDigit.Update(fourthDigit);
+
+            _previousValue = potValue;
+        }
+
+        /// <summary>
+        /// Draw method for the value indicator.
+        /// </summary>
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            _firstDigit.Draw(spriteBatch);
+            _secondDigit.Draw(spriteBatch);
+            _thirdDigit.Draw(spriteBatch);
+            _fourthDigit.Draw(spriteBatch);
         }
     }
 }
