@@ -818,9 +818,83 @@ namespace CardsCashCasino.Manager
                 return new(PokerAction.CHECK, 0);
             }
 
-            // TODO: Implement (the rest of) PassiveAI
+            CardHand hand = _playerHands[playerIndex];
+            int stack = _players.Players[playerIndex].PlayerStack;
+            // If we can't...
+            // Higher bias = more likely to fold. lower bias = more likely to allin/ raise.
+            // Super arbitrary...
+            double bias = 0;
 
-            return new(PokerAction.CALL, 0);
+            // If somebody is going all in
+            if (_players.Players.Any(player => player.PlayerStatus == PlayerStatus.ALLIN))
+                bias += 0.75; // Scary...
+            else if (_currentBet >= stack)
+                bias += 0.7;
+            else if (_currentBet > stack / 5)
+                bias += 0.4;
+            else if (_currentBet > stack / 10)
+                bias += 0.25;
+            else if (_currentBet > stack / 20)
+                bias += 0.15;
+            
+            
+            if (_currentPhase != Phase.INIT)
+            {
+                Tuple<List<Card>, PokerUtil.Ranking> _tmp = PokerUtil.GetScore(_communityCards, hand.Cards.ToList());
+                PokerUtil.Ranking rank = _tmp.Item2;
+                bias += (rank) switch
+                {
+                    PokerUtil.Ranking.HIGH_CARD => -0.1,
+                    PokerUtil.Ranking.PAIR => 0.1,
+                    PokerUtil.Ranking.TWO_PAIR => 0.12,
+                    PokerUtil.Ranking.THREE_OF_A_KIND => 0.15,
+                    PokerUtil.Ranking.STRAIGHT => 0.25,
+                    PokerUtil.Ranking.FLUSH => 0.3,
+                    PokerUtil.Ranking.FULL_HOUSE => 0.35,
+                    // Logic should probably change if four of a kind is in community cards and AI has like a 2 and a 3
+                    PokerUtil.Ranking.FOUR_OF_A_KIND => 0.4, 
+                    PokerUtil.Ranking.STRAIGHT_FLUSH => 0.45, 
+                    PokerUtil.Ranking.ROYAL_FLUSH => 0.75, 
+                    _ => -5, // ?
+                };
+            } else
+            {
+                if (hand.Cards[0].Value == hand.Cards[1].Value)
+                {
+                    bias -= 0.1;
+                } else
+                {
+                    int sum = hand.Cards.Sum(card => card.GetPokerValue());
+                    if (sum < 5) bias += 0.3;
+                    else if (sum < 10) bias += 0.2;
+                    else if (sum < 15) bias += 0.1;
+                    else if (sum < 20) bias -= 0.05;
+                    else if (sum < 25) bias -= 0.07;
+                }
+            }
+
+            Random rand = new();
+            double roll = rand.NextDouble() + bias;
+            const double p_all_in = 0.0025;
+            const double p_raise = 0.1;
+            const double p_call= 0.95;
+            //const double p_fold = 1;
+
+            // if roll < p_<action_n>, do action_n. else, check p_<action_n+1
+            if (roll < p_all_in)
+                return new(PokerAction.ALL_IN, 0);
+            else if (roll < p_raise)
+            {
+                // Arbitrary.
+                // If you come up with a better formula, feel free to change.
+                int modifier = Math.Min(((int)(_potManager.GetPotAmounts()[0] / (bias + 1))), stack);
+                int myRaise = Math.Min((int)(modifier / (bias + 1)), (stack - _currentBet));
+                return new(PokerAction.RAISE, myRaise);
+            } 
+            else if (roll < p_call)
+                return new(PokerAction.CHECK, 0);
+            else
+                return new(PokerAction.FOLD, 0);
         }
 
         /// <summary>
@@ -829,9 +903,96 @@ namespace CardsCashCasino.Manager
         /// <returns>Tuple(poker action, raising? raiseamount : 0)</returns>
         private Tuple<PokerAction, int> AggressiveAI()
         {
-            // TODO: Implement AggressiveAI
-            return new(PokerAction.CALL, 0);
+
+            CardHand hand = _playerHands[playerIndex];
+            int stack = _players.Players[playerIndex].PlayerStack;
+            // If we can't...
+            // Higher bias = more likely to fold. lower bias = more likely to allin/ raise.
+            // Super arbitrary...
+            double bias = 0;
+
+            // If somebody is going all in
+            if (_players.Players.Any(player => player.PlayerStatus == PlayerStatus.ALLIN))
+                bias += 0.7; // Scary...
+            else if (_currentBet >= stack)
+                bias += 0.6;
+            else if (_currentBet > stack / 5)
+                bias += 0.3;
+            else if (_currentBet > stack / 10)
+                bias += 0.15;
+            else if (_currentBet > stack / 20)
+                bias += 0.1;
+
+
+            if (_currentPhase != Phase.INIT)
+            {
+                Tuple<List<Card>, PokerUtil.Ranking> _tmp = PokerUtil.GetScore(_communityCards, hand.Cards.ToList());
+                PokerUtil.Ranking rank = _tmp.Item2;
+                bias -= (rank) switch
+                {
+                    PokerUtil.Ranking.HIGH_CARD => -0.05,
+                    PokerUtil.Ranking.PAIR => 0.15,
+                    PokerUtil.Ranking.TWO_PAIR => 0.2,
+                    PokerUtil.Ranking.THREE_OF_A_KIND => 0.23,
+                    PokerUtil.Ranking.STRAIGHT => 0.28,
+                    PokerUtil.Ranking.FLUSH => 0.32,
+                    PokerUtil.Ranking.FULL_HOUSE => 0.35,
+                    // Logic should probably change if four of a kind is in community cards and AI has like a 2 and a 3
+                    PokerUtil.Ranking.FOUR_OF_A_KIND => 0.4,
+                    PokerUtil.Ranking.STRAIGHT_FLUSH => 0.45,
+                    PokerUtil.Ranking.ROYAL_FLUSH => 0.75,
+                    _ => -5, // ?
+                };
+            }
+            else
+            {
+                if (hand.Cards[0].Value == hand.Cards[1].Value)
+                {
+                    bias -= 0.2;
+                }
+                else
+                {
+                    int sum = hand.Cards.Sum(card => card.GetPokerValue());
+                    if (sum < 5) bias += 0.2;
+                    else if (sum < 10) bias += 0.1;
+                    else if (sum < 15) bias += 0.05;
+                    else if (sum < 20) bias -= 0.08;
+                    else if (sum < 25) bias -= 0.1;
+                }
+            }
+            
+            
+            Random rand = new();
+            double roll = rand.NextDouble() + bias;
+            const double p_all_in = 0.0025;
+            const double p_raise = 0.3;
+            const double p_call= 0.97;
+            //const double p_fold = 1;
+
+            if (_currentBet == 0)
+            {
+                if (bias > 0 && roll < 0.6)
+                {
+                    return new(PokerAction.CHECK, 0);
+                }
+            }
+
+            // if roll < p_<action_n>, do action_n. else, check p_<action_n+1
+            if (roll < p_all_in) return new(PokerAction.ALL_IN, 0);
+            else if (roll < p_raise)
+            {
+                // Arbitrary.
+                // If you come up with a better formula, feel free to change.
+                int modifier = Math.Min(((int)(_potManager.GetPotAmounts()[0] / (bias + 1))), stack);
+                int myRaise = Math.Min((int)(modifier / (bias + 1)), (stack - _currentBet));
+                return new(PokerAction.RAISE, myRaise);
+            }
+            else if (roll < p_call)
+                if (_currentBet == 0) return new(PokerAction.CALL, 0);
+                else return new(PokerAction.CHECK, 0);
+            else return new(PokerAction.FOLD, 0);
         }
+    
 
         /// <summary>
         /// Picks either passive or aggressive AI randomly.
