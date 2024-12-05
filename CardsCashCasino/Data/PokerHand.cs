@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace CardsCashCasino.Data
 {
-    public class PokerUserHand : CardHand
+    public class PokerHand : CardHand
     {
         /// <summary>
         /// <inheritdoc/>

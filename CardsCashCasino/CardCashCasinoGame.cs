@@ -156,7 +156,7 @@ namespace CardsCashCasino
                 QuitGame();
 
             // Main Menu Logic
-            if (_selectedGame == SelectedGame.NONE)
+            if (_selectedGame == SelectedGame.NONE && (GameStartTimeout is null || !GameStartTimeout.Enabled))
             {
                 _mainMenu?.Update(); // Update MainMenu
             }
