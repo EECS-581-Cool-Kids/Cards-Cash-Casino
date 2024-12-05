@@ -55,8 +55,15 @@ namespace CardsCashCasino.Data
         /// </summary>
         public virtual void AddCard(Card newCard)
         {
+            newCard.HideTexture();
             _cards.Add(newCard);
             RecalculateCardPositions();
+        }
+
+        public void UnhideCards()
+        {
+            _cards[0].GetTexture();
+            _cards[1].GetTexture();
         }
 
         /// <summary>

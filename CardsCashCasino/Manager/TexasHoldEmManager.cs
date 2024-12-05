@@ -287,8 +287,6 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private PlayerValuesIndicator? _aiFourIdentifier;
 
-        private PlayerValuesIndicator? _aiOnePosition;
-
         /// <summary>
         /// The cursor.
         /// </summary>
@@ -437,7 +435,7 @@ namespace CardsCashCasino.Manager
             _aiThreeIdentifier = new();
             _aiFourIdentifier = new();
 
-            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 220)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content); // Load pot textures
         }
 
@@ -446,6 +444,12 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
+            //if player is either folded or all in, skip the player's turn
+            if (!_players.IsActivePlayer(playerIndex))
+            {
+                playerIndex += 1;
+            }
+
             // If it's currently player's turn
             if (playerIndex == 0)
                 UpdateWhileUserPlaying();
@@ -575,11 +579,15 @@ namespace CardsCashCasino.Manager
                     return;
 
                 case Phase.TURN:
-                    _currentPhase = Phase.CONCLUSION;
+                    _currentPhase = Phase.RIVER;
                     DealRiver();
                     return;
 
                 case Phase.RIVER:
+                    for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
+                    {
+                        _playerHands[i].UnhideCards();
+                    }
                     _currentPhase = Phase.CONCLUSION;
                     return;
 
@@ -606,18 +614,17 @@ namespace CardsCashCasino.Manager
 
             if (!_roundInit)
             {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
                 if (_currentPhase == Phase.INIT)
                 {
                     //set the starting bettor to the player to the left of the big blind
                     playerIndex = _players.GetPreflopStartingBettor();
+                    _currentBet = _bigBlindBet;
                 }
                 else
                 {
                     // Set the player index to the player to the left of the big blind
                     playerIndex = _players.GetStartingBettorIndex();
+                    _currentBet = 0;
                 }
                 _roundInit = true;
             }
@@ -631,11 +638,6 @@ namespace CardsCashCasino.Manager
             //loop will terminate and betting round will end once conditions are met
             if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
             {
-                //if player is either folded or all in, skip the player's turn
-                if (!_players.IsActivePlayer(playerIndex))
-                {
-                    return;
-                }
                 // If the player is the user, set the user playing flag to true.
                 if (playerIndex == 0)
                 {
@@ -656,6 +658,7 @@ namespace CardsCashCasino.Manager
                     _players.ResetBets();
                     _roundInit = false;
                     _currentPhase = Phase.CONCLUSION;
+                    NextPhase();
                     return;
                 }
             }
@@ -688,7 +691,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
-
+            //if player is either folded or all in, skip the player's turn
+            if (!_players.IsActivePlayer(playerIndex))
+            {
+                return;
+            }
             // Return if the AI is still taking an action.
             if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
@@ -728,7 +735,15 @@ namespace CardsCashCasino.Manager
                         Fold(0);
                         break;
                     case PokerAction.CHECK:
-                        Check(0);
+                        if (_currentBet != 0)
+                        {
+                            UpdateWhileUserPlaying();
+                            return;
+                        }
+                        else
+                        {
+                            Check(0);
+                        }
                         break;
                     case PokerAction.CALL:
                         Call(0);
@@ -768,7 +783,14 @@ namespace CardsCashCasino.Manager
             // ...
             BlockingDelay(500);
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
-            Call(playerIndex);
+            if (_currentBet == 0)
+            {
+                Check(playerIndex);
+            }
+            else
+            {
+                Call(playerIndex);
+            }
 
             //update all ai stack and bet visuals
             if (playerIndex == 1)
@@ -791,7 +813,6 @@ namespace CardsCashCasino.Manager
                 _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
                 _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
             }
-
             RoundLogic();
         }
 
@@ -888,7 +909,7 @@ namespace CardsCashCasino.Manager
 
 
             //setting position for all front end player and pot info
-            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 325);
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 380);
             _userStackIndicator!.SetPosition(userStackXPos, 605);
             _userBetIndicator!.SetPosition(userBetXPos, 579);
             _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
@@ -984,6 +1005,7 @@ namespace CardsCashCasino.Manager
                 _playerHands[dealStartIndex].AddCard(RequestCard!());
                 dealStartIndex = (dealStartIndex + 1) % _playerHands.Count;
             }
+            _playerHands[0].UnhideCards();
         }
 
         /// <summary>
@@ -1083,6 +1105,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void RoundConclusion()
         {
+            BlockingDelay(2000);
+
             PokerUtil.Ranking bestRanking = PokerUtil.Ranking.HIGH_CARD;
             // List of hands that (so far) are tied for the best rank.
             // Pair of player idx and their optimal 5-card hand. 
@@ -1220,7 +1244,6 @@ namespace CardsCashCasino.Manager
                     Call(playerIndex);
                     break;
                 case PokerAction.RAISE:
-                    // _currentBet = Front end method of setting raise amount for user : AI calculated raise amount
                     Raise(playerIndex);
                     break;
                 case PokerAction.ALL_IN:
