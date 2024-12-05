@@ -447,6 +447,13 @@ namespace CardsCashCasino.Manager
             if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
 
+            //// Let the player look at the outcome and then continue.
+            //if (_currentPhase == Phase.CONCLUSION)
+            //{
+            //    UpdateWhileUserPlaying();
+            //    return;
+            //}
+
             //if player is either folded or all in, skip the player's turn
             if (!_players.IsActivePlayer(playerIndex))
             {
@@ -708,6 +715,16 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+            //// If we are waiting for the player to press enter to manually continue
+            //if (_currentPhase == Phase.CONCLUSION)
+            //{
+            //    KeyboardState state = Keyboard.GetState();
+            //    if (state.IsKeyDown(Keys.Enter)) // If the user presses enter
+            //    {
+            //        NextPhase(); // Continue
+            //    }
+            //    return;
+            //}
             //if player is either folded or all in, skip the player's turn
             if (!_players.IsActivePlayer(playerIndex))
             {
@@ -966,6 +983,11 @@ namespace CardsCashCasino.Manager
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
             _players.ResetBets();
+            
+            for (int player = 0; player < _players.Players.Count; player++)
+                if (_players.Players[player].PlayerStatus != PlayerStatus.BROKE)     
+                    _players.Players[player].PlayerStatus = PlayerStatus.IN;
+           
             _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
             _userStackIndicator!.Update(_players.Players[0].PlayerStack);
             _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);

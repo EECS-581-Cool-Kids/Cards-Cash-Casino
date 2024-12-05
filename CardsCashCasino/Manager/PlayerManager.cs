@@ -350,7 +350,7 @@ namespace CardsCashCasino.Manager
                     Players[player].DecrementBet(Players[player].PlayerBet);
                 }
                 PlayerStatus status = Players[player].PlayerStatus;
-                if (status != PlayerStatus.BROKE)
+                if (status != PlayerStatus.FOLDED && status != PlayerStatus.BROKE)
                 {
                     Players[player].PlayerStatus = PlayerStatus.IN;
                 }
