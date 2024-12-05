@@ -532,7 +532,7 @@ namespace CardsCashCasino.Manager
                 }
             }
 
-            _cursorMoveTimeout = new(100);
+            _cursorMoveTimeout = new(75);
             _cursorMoveTimeout.Elapsed += Constants.OnTimeoutEvent!;
             _cursorMoveTimeout.Start();
         }
