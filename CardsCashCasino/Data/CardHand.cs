@@ -53,10 +53,9 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// Adds a card to the hand.
         /// </summary>
-        public virtual void AddCard(Card newCard)
+        public virtual void AddCard(Card card)
         {
-            newCard.HideTexture();
-            _cards.Add(newCard);
+            _cards.Add(card);
             RecalculateCardPositions();
         }
 
@@ -87,7 +86,7 @@ namespace CardsCashCasino.Data
                 return;
 
             int cardCount = _cards.Count;
-            int width = (cardCount * 99) + ((cardCount - 1) * 25);
+            int width = 99 + ((cardCount - 1) * 30);
             int xPos = ((Point)_center).X - (width / 2);
             int yPos = ((Point)_center).Y - 70;
 

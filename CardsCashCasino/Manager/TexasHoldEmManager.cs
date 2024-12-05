@@ -68,7 +68,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The user's hand of cards.
         /// </summary>
-        private UserHand _userHand = new();
+        private PokerUserHand _pokerUserHand = new();
 
         /// <summary>
         /// The internal poker utility object. Used to determine the winner of the game and for AI decision-making.
@@ -1074,7 +1074,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void GeneratePlayerHands()
         {
-            _playerHands.Add(_userHand);
+            _playerHands.Add(_pokerUserHand);
             for (int i = 0; i < Constants.AI_PLAYER_COUNT; i++)
             {
                 _playerHands.Add(new PokerAIHand());

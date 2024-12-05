@@ -23,7 +23,15 @@ using System.Threading.Tasks;
 
 namespace CardsCashCasino.Data
 {
-    public class UserHand : CardHand
+    public class PokerUserHand : CardHand
     {
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override void AddCard(Card card)
+        {
+            card.HideTexture();
+            base.AddCard(card);
+        }
     }
 }
