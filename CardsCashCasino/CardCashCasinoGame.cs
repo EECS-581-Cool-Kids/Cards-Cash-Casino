@@ -192,16 +192,12 @@ namespace CardsCashCasino
                     case SelectedGame.HOLDEM:
                         if (!_texasHoldEmManager.IsPlaying)
                         {   
-                            //_texasHoldEmManager.
                             _texasHoldEmManager.Initialize();
                         }
                         else if (_bettingManager.IsBetting)
                         {
-                            //if (!_bettingManager.IsBetting)
-                                //_bettingManager.OpenBettingMenu();
                             _bettingManager.Update();
                             break;
-
                         }
                         _texasHoldEmManager.Update();
                         break;

@@ -444,10 +444,15 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
+            if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
+                return;
+
             //if player is either folded or all in, skip the player's turn
             if (!_players.IsActivePlayer(playerIndex))
             {
-                playerIndex += 1;
+
+                RoundLogic();
+                return;
             }
 
             // If it's currently player's turn
@@ -458,6 +463,11 @@ namespace CardsCashCasino.Manager
 
             int totalPotValue = _potManager.Pots.Sum(pot => pot.Total); // Calculate total pot value
             _potUI.UpdatePot(totalPotValue);
+        }
+
+        private void NextPlayer()
+        {
+            playerIndex = (playerIndex + 1) % _playerHands.Count;
         }
 
         /// <summary>
@@ -593,8 +603,15 @@ namespace CardsCashCasino.Manager
 
                 case Phase.CONCLUSION:
                     RoundConclusion();
-                    _currentPhase = Phase.INIT;
-                    StartGame();
+                    if (_players.Players[0].PlayerStatus== PlayerStatus.BROKE)
+                    {
+                        EndGame();
+                    } 
+                    else
+                    {
+                        _currentPhase = Phase.INIT;
+                        StartGame();
+                    }
                     return;
             }
         }
@@ -631,7 +648,7 @@ namespace CardsCashCasino.Manager
             //round init not needed, advance the player index to next player
             else
             {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
+                NextPlayer();
             }
 
             // iterate through the players starting with the player to the left of the big blind. and handle their actions.
@@ -779,9 +796,11 @@ namespace CardsCashCasino.Manager
         {
             // Should have some AI related nonsense here.
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
+            
+            _AIActionTimeout = new(500);
+            _AIActionTimeout.Elapsed += Constants.OnTimeoutEvent!;
+            _AIActionTimeout.Start();
 
-            // ...
-            BlockingDelay(500);
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
             if (_currentBet == 0)
             {
@@ -956,6 +975,7 @@ namespace CardsCashCasino.Manager
 
             IsPlaying = true;
             _roundInit = false;
+            _currentPhase = Phase.INIT;
 
             //collects and places blind bets from small and big blind players
             _players.CollectBlinds(_smallBlindBet, _bigBlindBet); //collects and places blind bets from small and big blind players

@@ -25,7 +25,8 @@ namespace CardsCashCasino.Manager
         IN,
         FOLDED,
         CALLED,
-        ALLIN
+        ALLIN,
+        BROKE,
     }
 
     /// <summary>
@@ -139,6 +140,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void InitiatePlayers(int numAIs)
         {
+            Players.Clear();
             Players.Add(new Player(PlayerType.USER));
 
             for (int players = 0; players < numAIs; players++)
@@ -208,14 +210,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool IsActivePlayer(int playerIndex)
         {
-            if (Players[playerIndex].PlayerStatus == PlayerStatus.FOLDED || Players[playerIndex].PlayerStatus == PlayerStatus.ALLIN)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            PlayerStatus status = Players[playerIndex].PlayerStatus;
+            return (status == PlayerStatus.IN || status == PlayerStatus.CALLED); 
         }
 
         /// <summary>
@@ -309,11 +305,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool AdvanceRound()
         {
-            if (!Players.Any(player => player.PlayerStatus == PlayerStatus.IN)) //if all players have had their turn, have called the existing bet, folded, or are all in
-            {
-                return true;
-            }
-            return false;
+            // if all players have had their turn, have called the existing bet, folded, are broke, or are all in
+            return !Players.Any(player => player.PlayerStatus == PlayerStatus.IN);
         }
 
         /// <summary>
@@ -323,11 +316,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool AdvanceToRoundConclusion()
         {
-            if (Players.Count(player => player.PlayerStatus == PlayerStatus.CALLED) <= 1 && Players.Count(player => player.PlayerStatus == PlayerStatus.ALLIN) >= 1)
-            {
-                return true;
-            }
-            return false;
+            int called = Players.Count(player => player.PlayerStatus == PlayerStatus.CALLED);
+            int _in = Players.Count(player => player.PlayerStatus == PlayerStatus.IN);
+            int allIn = Players.Count(player => player.PlayerStatus == PlayerStatus.ALLIN);
+            return (allIn > 0) && (_in + called <= 1);
         }
 
         /// <summary>
@@ -336,7 +328,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool OnePlayerLeft()
         {
-            if (Players.Count(player => player.PlayerStatus == PlayerStatus.FOLDED) == Players.Count - 1)
+            int folded = Players.Count(player => player.PlayerStatus == PlayerStatus.FOLDED);
+            int broke = Players.Count(player => player.PlayerStatus == PlayerStatus.BROKE);
+            
+            if (folded + broke == Players.Count - 1)
             {
                 return true;
             }
@@ -354,7 +349,8 @@ namespace CardsCashCasino.Manager
                 {
                     Players[player].DecrementBet(Players[player].PlayerBet);
                 }
-                if (Players[player].PlayerStatus == PlayerStatus.CALLED)
+                PlayerStatus status = Players[player].PlayerStatus;
+                if (status != PlayerStatus.BROKE)
                 {
                     Players[player].PlayerStatus = PlayerStatus.IN;
                 }
@@ -406,9 +402,9 @@ namespace CardsCashCasino.Manager
                 {
                     if (Players[player].PlayerPosition == PlayerPosition.DEALER) //shift dealer chip 1 to left if dealer was eliminated
                     {
-                        Players[player + 1 % Players.Count].PlayerPosition = PlayerPosition.DEALER;
+                        Players[(player + 1) % Players.Count].PlayerPosition = PlayerPosition.DEALER;
                     }
-                    Players.RemoveAt(player);
+                    Players[player].PlayerStatus = PlayerStatus.BROKE;
                 }
             }
         }
