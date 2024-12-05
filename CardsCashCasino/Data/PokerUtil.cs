@@ -80,10 +80,10 @@ namespace CardsCashCasino.Data
 
             Ranking best = Ranking.HIGH_CARD;
             List<List<Card>> bestHands = new();
-
-            foreach (List<Card> iCards in Get5CardPermutations(community.Concat(cards).ToList()))
+            List<List<Card>> cardPerms = Get5CardPermutations(community.Concat(cards).ToList());
+            foreach (List<Card> iCards in cardPerms)
             {
-                List<Card> hand = SortedHand(iCards.Concat(cards).ToList());
+                List<Card> hand = SortedHand(iCards);
                 Ranking current = GetRanking(hand);
                 if (current < best)
                 {
@@ -147,7 +147,7 @@ namespace CardsCashCasino.Data
              * So we will use 64 bit integer.
              */
             long handVal = 0;
-            for (int j = 4; j >= 0; j++)
+            for (int j = 4; j >= 0; j--)
             {
                 handVal += (long)Math.Pow((j + 1), hand[j].GetPokerValue());
             }
@@ -174,15 +174,33 @@ namespace CardsCashCasino.Data
         /// <returns>All 5-card permutations of the input list</returns>
         private static List<List<Card>> Get5CardPermutations(List<Card> list)
         {
-            IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
-                                                        select
-                                                            from i in Enumerable.Range(0, list.Count)
-                                                            where (m & (1 << i)) != 0
-                                                            select list[i];
+            List<List<Card>> perms = new();
+            for (int m = 0; m < (1 << list.Count); m++)
+            {
+                List<Card> cur = new();
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if ((m & (1 << i)) != 0)
+                    {
+                        cur.Add(list[i]);
+                    }
+                }
+                if (cur.Count == 5)
+                {
+                    perms.Add(cur);
+                }
+            }
 
-            return (from m in full_perms.ToList<IEnumerable<Card>>()
-                    select
-                         (from i in Enumerable.Range(0, 5) select m.ToList<Card>()[i]).ToList()).ToList();
+            return perms;
+            //IEnumerable<IEnumerable<Card>> full_perms = from m in Enumerable.Range(0, 1 << list.Count)
+            //                                            select
+            //                                                from i in Enumerable.Range(0, list.Count)
+            //                                                where (m & (1 << i)) != 0
+            //                                                select list[i];
+
+            //return (from m in full_perms.ToList<IEnumerable<Card>>()
+            //        select
+            //             (from i in Enumerable.Range(0, 5) select m.ToList<Card>()[i]).ToList()).ToList();
         }
 
         /// <summary>

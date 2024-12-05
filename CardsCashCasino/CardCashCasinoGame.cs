@@ -23,6 +23,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Timers;
+using System.Xml.Linq;
 
 namespace CardsCashCasino
 {
@@ -146,11 +147,19 @@ namespace CardsCashCasino
         }
 
         /// <summary>
+        /// Quit the game.
+        /// </summary>
+        public void QuitGame()
+        {
+            StatisticsUtil.SaveStatisticsFile(); // Save Data
+            Exit(); // Quit the game
+        }
+
+        /// <summary>
         /// MonoGame Update method. Called every tick.
         /// </summary>
         protected override void Update(GameTime gameTime)
         {
-
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 QuitGame();
@@ -182,8 +191,13 @@ namespace CardsCashCasino
 
                     case SelectedGame.HOLDEM:
                         if (!_texasHoldEmManager.IsPlaying)
+                        {   
+                            _texasHoldEmManager.Initialize();
+                        }
+                        else if (_bettingManager.IsBetting)
                         {
-                            _texasHoldEmManager.StartGame();
+                            _bettingManager.Update();
+                            break;
                         }
                         _texasHoldEmManager.Update();
                         break;

@@ -17,10 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Timers;
 using CardsCashCasino.Data;
+using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -52,49 +54,11 @@ namespace CardsCashCasino.Manager
         RIVER
     }
 
-    /// <summary>
-    /// Identifies the pot type for the TexasHoldEmPotManager Class
-    /// </summary>
-    public enum PotType
-    {
-        MAIN,
-        SIDE
-    }
-
-    /// <summary>
-    /// The type of player being referred to in the HoldEmPlayerManager Class
-    /// </summary>
-    public enum PlayerType
-    {
-        USER,
-        AI
-    }
-
-    /// <summary>
-    /// The status of the player in the current round
-    /// </summary>
-    public enum PlayerStatus
-    {
-        IN,
-        FOLDED,
-        CALLED,
-        ALLIN
-    }
-
-    /// <summary>
-    /// The identifier applied to each player regarding blinds and player betting order
-    /// </summary>
-    public enum PlayerPosition
-    {
-        DEALER,
-        SMALLBLIND,
-        BIGBLIND,
-        NONE
-    }
-
     public class TexasHoldEmManager
     {
         #region Properties
+
+        private bool initialized = false;
 
         /// <summary>
         /// The pot UI for displaying the pot value.
@@ -179,18 +143,18 @@ namespace CardsCashCasino.Manager
         /// The index of the player that is the dealer for the current round.
         /// Increments by one each round.
         /// </summary>
-        private static int _currentDealer = new Random().Next(0, Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentDealer;
 
         /// <summary>
         /// The index of the player that is the small blind for the current round.
         /// Increments by one each round.
         /// </summary>
-        private static int _currentSmallBlind = (_currentDealer + 1) % (Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentSmallBlind;
 
         /// <summary>
         /// The index of the player that is the big blind for the current round.
         /// </summary>
-        private static int _currentBigBlind = (_currentSmallBlind + 1) % (Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentBigBlind;
 
         /// <summary>
         /// The number of rounds left until the blinds increase.
@@ -219,6 +183,11 @@ namespace CardsCashCasino.Manager
         private List<Card> _communityCards = new();
 
         /// <summary>
+        /// The X position for the first community card
+        /// </summary>
+        int communityCardXPos;
+
+        /// <summary>
         /// If the update function is dealing with the raise functionality
         /// </summary>
         private bool _userRaising = false;
@@ -234,19 +203,89 @@ namespace CardsCashCasino.Manager
         //public Func<int> GetRaiseAmount { get; set; }
 
         /// <summary>
-        /// Initializing TexasHoldEmPotManager class
-        /// </summary>
-        //TexasHoldEmPotManager _potManager = new TexasHoldEmPotManager();
-
-        /// <summary>
         /// Initializing PlayerManager class
         /// </summary>
-        HoldEmPlayerManager _players = new HoldEmPlayerManager();
+        PlayerManager _players = new PlayerManager();
 
         /// <summary>
         /// Variable to hold the Pots Manager class
         /// </summary>
-        private TexasHoldEmPotManager _potManager = new TexasHoldEmPotManager();
+        private PotManager _potManager = new PotManager();
+
+        /// <summary>
+        /// Variable holding pot value front end info
+        /// </summary>
+        private PokerPotValueIndicator? _pokerPotValueIndicator;
+
+        /// <summary>
+        /// Variable connecting user stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userStackIndicator;
+
+        /// <summary>
+        /// Variable connecting user bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 2 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 3 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 4 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourIdentifier;
 
         /// <summary>
         /// The cursor.
@@ -370,16 +409,33 @@ namespace CardsCashCasino.Manager
 
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
+            int buffer = 15;
 
-            _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, widthBuffer, buttonYPos, TexasHoldEmTextures.CheckButtonDisabledTexture!);
-            _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH, buttonYPos, TexasHoldEmTextures.CallButtonDisabledTexture!);
-            _raiseButton = new(TexasHoldEmTextures.RaiseButtonEnabledTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, TexasHoldEmTextures.RaiseButtonDisabledTexture!);
-            _allInButton = new(TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3, buttonYPos);
-            _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4, buttonYPos);
+            _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, TexasHoldEmTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _raiseButton = new(TexasHoldEmTextures.RaiseButtonTexture!, TexasHoldEmTextures.RaiseButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _allInButton = new(TexasHoldEmTextures.AllInButtonTexture!, TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3 + buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _foldButton = new(TexasHoldEmTextures.FoldButtonTexture!, TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4 + buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
 
             _cursor = new(TexasHoldEmTextures.CursorTexture!, _checkButton.GetAdjustedPos());
 
-            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
+            _pokerPotValueIndicator = new();
+            _userStackIndicator = new();
+            _userBetIndicator = new();
+            _aiOneStackIndicator = new();
+            _aiOneBetIndicator = new();
+            _aiTwoStackIndicator = new();
+            _aiTwoBetIndicator = new();
+            _aiThreeStackIndicator = new();
+            _aiThreeBetIndicator = new();
+            _aiFourStackIndicator = new();
+            _aiFourBetIndicator = new();
+            _aiOneIdentifier = new();
+            _aiTwoIdentifier = new();
+            _aiThreeIdentifier = new();
+            _aiFourIdentifier = new();
+
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 220)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content); // Load pot textures
         }
 
@@ -388,6 +444,24 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
+            if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
+                return;
+
+            //// Let the player look at the outcome and then continue.
+            //if (_currentPhase == Phase.CONCLUSION)
+            //{
+            //    UpdateWhileUserPlaying();
+            //    return;
+            //}
+
+            //if player is either folded or all in, skip the player's turn
+            if (!_players.IsActivePlayer(playerIndex))
+            {
+
+                RoundLogic();
+                return;
+            }
+
             // If it's currently player's turn
             if (playerIndex == 0)
                 UpdateWhileUserPlaying();
@@ -398,6 +472,28 @@ namespace CardsCashCasino.Manager
             _potUI.UpdatePot(totalPotValue);
         }
 
+        private void NextPlayer()
+        {
+            playerIndex = (playerIndex + 1) % _playerHands.Count;
+        }
+
+        /// <summary>
+        /// Delay
+        /// </summary>
+        private void BlockingDelay(int milliseconds)
+        {
+            // Get the current time
+            var stopwatch = Stopwatch.StartNew();
+
+            // Loop until the specified time has passed
+            while (stopwatch.ElapsedMilliseconds < milliseconds)
+            {
+                // Do nothing (block)
+            }
+
+            stopwatch.Stop();
+        }
+
         /// <summary>
         /// Reads the players inputs to see if they have chosen an action.
         /// Will not block the flow of execution.
@@ -405,16 +501,17 @@ namespace CardsCashCasino.Manager
         /// <returns>The action chosen, or null if no action has been chosen</returns>
         private PokerAction? GetPlayerAction()
         {
+            KeyboardState state = Keyboard.GetState();
             // Handle right key press to move the cursor.
-            if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || _cursorMoveTimeout.Enabled))
+            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos++;
-
+                
                 // Wrap the cursor around if it goes past the last button.
                 if (_currentCursorPos >= Constants.POKER_BUTTON_COUNT)
                     _currentCursorPos = 0;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 // Reset the cursor move timer.
                 _cursorMoveTimeout = new Timer(100);
@@ -422,7 +519,7 @@ namespace CardsCashCasino.Manager
                 _cursorMoveTimeout.Start();
             }
             // Handle left key press to move the cursor.
-            else if (Keyboard.GetState().IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            else if (state.IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos--;
 
@@ -430,13 +527,13 @@ namespace CardsCashCasino.Manager
                 if (_currentCursorPos < 0)
                     _currentCursorPos = Constants.POKER_BUTTON_COUNT - 1;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 _cursorMoveTimeout = new Timer(100);
                 _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
                 _cursorMoveTimeout.Start();
             }
-            else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+            else if (state.IsKeyDown(Keys.Enter))
             {
                 if (_userActionTimeout is not null && _userActionTimeout.Enabled)
                     return null;
@@ -463,7 +560,6 @@ namespace CardsCashCasino.Manager
                         return PokerAction.FOLD;
                 }
             }
-
             return null;
         }
 
@@ -505,7 +601,24 @@ namespace CardsCashCasino.Manager
                     return;
 
                 case Phase.RIVER:
+                    for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
+                    {
+                        _playerHands[i].UnhideCards();
+                    }
                     _currentPhase = Phase.CONCLUSION;
+                    return;
+
+                case Phase.CONCLUSION:
+                    RoundConclusion();
+                    if (_players.Players[0].PlayerStatus== PlayerStatus.BROKE)
+                    {
+                        EndGame();
+                    } 
+                    else
+                    {
+                        _currentPhase = Phase.INIT;
+                        StartGame();
+                    }
                     return;
             }
         }
@@ -525,28 +638,30 @@ namespace CardsCashCasino.Manager
 
             if (!_roundInit)
             {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
+                if (_currentPhase == Phase.INIT)
+                {
+                    //set the starting bettor to the player to the left of the big blind
+                    playerIndex = _players.GetPreflopStartingBettor();
+                    _currentBet = _bigBlindBet;
+                }
+                else
+                {
+                    // Set the player index to the player to the left of the big blind
+                    playerIndex = _players.GetStartingBettorIndex();
+                    _currentBet = 0;
+                }
                 _roundInit = true;
             }
             //round init not needed, advance the player index to next player
             else
             {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
+                NextPlayer();
             }
 
             // iterate through the players starting with the player to the left of the big blind. and handle their actions.
             //loop will terminate and betting round will end once conditions are met
             if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
             {
-                //if player is either folded or all in, skip the player's turn
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    return;
-                }
                 // If the player is the user, set the user playing flag to true.
                 if (playerIndex == 0)
                 {
@@ -563,9 +678,11 @@ namespace CardsCashCasino.Manager
                 {
                     _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                     _potManager.AddToPot(_currentBet, _players.PackageBets());
+                    _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
                     _players.ResetBets();
                     _roundInit = false;
                     _currentPhase = Phase.CONCLUSION;
+                    NextPhase();
                     return;
                 }
             }
@@ -575,9 +692,18 @@ namespace CardsCashCasino.Manager
                 //finalize bets for the round and add them to the pots
                 _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                 _potManager.AddToPot(_currentBet, _players.PackageBets());
+                _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
 
                 //reset the bets for the next round to 0
                 _players.ResetBets();
+                _currentBet = 0;
+
+                //update all player bet values to 0
+                _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+                _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+                _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+                _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+                _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
                 _roundInit = false;
                 NextPhase();
                 return;
@@ -589,6 +715,21 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+            //// If we are waiting for the player to press enter to manually continue
+            //if (_currentPhase == Phase.CONCLUSION)
+            //{
+            //    KeyboardState state = Keyboard.GetState();
+            //    if (state.IsKeyDown(Keys.Enter)) // If the user presses enter
+            //    {
+            //        NextPhase(); // Continue
+            //    }
+            //    return;
+            //}
+            //if player is either folded or all in, skip the player's turn
+            if (!_players.IsActivePlayer(playerIndex))
+            {
+                return;
+            }
             // Return if the AI is still taking an action.
             if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
@@ -608,6 +749,7 @@ namespace CardsCashCasino.Manager
                 // TODO: Verify that the below code is correct.
                 _currentBet += raiseAmount;
                 Raise(0);
+                //_players.Raise(raiseAmount, 0);
 
             }
             else
@@ -627,7 +769,15 @@ namespace CardsCashCasino.Manager
                         Fold(0);
                         break;
                     case PokerAction.CHECK:
-                        Check(0);
+                        if (_currentBet != 0)
+                        {
+                            UpdateWhileUserPlaying();
+                            return;
+                        }
+                        else
+                        {
+                            Check(0);
+                        }
                         break;
                     case PokerAction.CALL:
                         Call(0);
@@ -649,10 +799,11 @@ namespace CardsCashCasino.Manager
             // We will now carry out logic needed to finish users turn. 
             // At the start of the next call to Update(), it should be the next player's turn.
 
-
+            //update user bet value
+            _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
 
             RoundLogic();
-
         }
 
         /// <summary>
@@ -662,11 +813,42 @@ namespace CardsCashCasino.Manager
         {
             // Should have some AI related nonsense here.
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
-
-            // ...
+            
+            _AIActionTimeout = new(500);
+            _AIActionTimeout.Elapsed += Constants.OnTimeoutEvent!;
+            _AIActionTimeout.Start();
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
-            Call(playerIndex);
+            if (_currentBet == 0)
+            {
+                Check(playerIndex);
+            }
+            else
+            {
+                Call(playerIndex);
+            }
+
+            //update all ai stack and bet visuals
+            if (playerIndex == 1)
+            {
+                _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+                _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            }
+            else if (playerIndex == 2)
+            {
+                _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+                _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            }
+            else if (playerIndex == 3)
+            {
+                _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+                _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            }
+            else if (playerIndex == 4)
+            {
+                _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
+                _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
+            }
             RoundLogic();
         }
 
@@ -692,6 +874,29 @@ namespace CardsCashCasino.Manager
                 hand.Draw(spriteBatch);
             }
 
+            //Draw the community cards
+            foreach (Card hand in _communityCards)
+            {
+                hand.Draw(spriteBatch);
+            }
+
+            //Draw player stack, bet, and identifiers 
+            _pokerPotValueIndicator!.Draw(spriteBatch);
+            _userStackIndicator!.Draw(spriteBatch);
+            _userBetIndicator!.Draw(spriteBatch);
+            _aiOneBetIndicator!.Draw(spriteBatch);
+            _aiOneStackIndicator!.Draw(spriteBatch);
+            _aiTwoBetIndicator!.Draw(spriteBatch);
+            _aiTwoStackIndicator!.Draw(spriteBatch);
+            _aiThreeBetIndicator!.Draw(spriteBatch);
+            _aiThreeStackIndicator!.Draw(spriteBatch);
+            _aiFourBetIndicator!.Draw(spriteBatch);
+            _aiFourStackIndicator!.Draw(spriteBatch);
+            _aiOneIdentifier!.Draw(spriteBatch);
+            _aiTwoIdentifier!.Draw(spriteBatch);
+            _aiThreeIdentifier!.Draw(spriteBatch);
+            _aiFourIdentifier!.Draw(spriteBatch);
+
             // Draw the PotUI
             _potUI.Draw(spriteBatch);
         }
@@ -706,6 +911,7 @@ namespace CardsCashCasino.Manager
                 Constants.CALL_BUTTON_POS => _callButton!.GetAdjustedPos(),
                 Constants.RAISE_BUTTON_POS => _raiseButton!.GetAdjustedPos(),
                 Constants.FOLD_BUTTON_POS => _foldButton!.GetAdjustedPos(),
+                Constants.ALL_IN_BUTTON_POS => _allInButton!.GetAdjustedPos(),
                 _ => _callButton!.GetAdjustedPos()
             };
         }
@@ -713,11 +919,17 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Enter the TexasHoldEm gameflow
         /// </summary>
-        private void Initialize()
+        public void Initialize()
         {
+            int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int aiStackYPos = 220;
+            int aiBetYPos = 246;
+            int aiIdentifierYPos = 194;
 
             //creates user and number of ai opponents
-            _players.InitiatePlayers(5);
+            _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
 
             _gameOver = false;
             _userPlaying = false;
@@ -731,25 +943,74 @@ namespace CardsCashCasino.Manager
             _smallBlindBet = 1;
             _bigBlindBet = 2;
 
+
+            //setting position for all front end player and pot info
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 380);
+            _userStackIndicator!.SetPosition(userStackXPos, 605);
+            _userBetIndicator!.SetPosition(userBetXPos, 579);
+            _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
+            _aiOneStackIndicator!.SetPosition(220, aiStackYPos);
+            _aiOneBetIndicator!.SetPosition(220, aiBetYPos);
+            _aiTwoIdentifier!.SetPosition(520, aiIdentifierYPos);
+            _aiTwoStackIndicator!.SetPosition(520, aiStackYPos);
+            _aiTwoBetIndicator!.SetPosition(520, aiBetYPos);
+            _aiThreeIdentifier!.SetPosition(820, aiIdentifierYPos);
+            _aiThreeStackIndicator!.SetPosition(820, aiStackYPos);
+            _aiThreeBetIndicator!.SetPosition(820, aiBetYPos);
+            _aiFourIdentifier!.SetPosition(1120, aiIdentifierYPos);
+            _aiFourStackIndicator!.SetPosition(1120, aiStackYPos);
+            _aiFourBetIndicator!.SetPosition(1120, aiBetYPos);
+
+            //setting ai identifiers
+            _aiOneIdentifier!.Update(1);
+            _aiTwoIdentifier!.Update(2);
+            _aiThreeIdentifier!.Update(3);
+            _aiFourIdentifier!.Update(4);
+
             _playerHands = new List<CardHand>(); // Initialize the list of player hands.
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
+
+            StartGame();
         }
 
         /// <summary>
         /// Enter the TexasHoldEm gameflow
         /// </summary>
-        public void StartGame()
+        private void StartGame()
         {
-            Initialize();
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
+            _players.ResetBets();
+            
+            for (int player = 0; player < _players.Players.Count; player++)
+                if (_players.Players[player].PlayerStatus != PlayerStatus.BROKE)     
+                    _players.Players[player].PlayerStatus = PlayerStatus.IN;
+           
+            _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
+            _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
+
             IsPlaying = true;
             _roundInit = false;
+            _currentPhase = Phase.INIT;
 
             //collects and places blind bets from small and big blind players
             _players.CollectBlinds(_smallBlindBet, _bigBlindBet); //collects and places blind bets from small and big blind players
+            _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
+            _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+            _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+            _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+            _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
+            _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
 
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
             if (RequestDeckSize!.Invoke() < (_capacity / 2))
@@ -760,19 +1021,22 @@ namespace CardsCashCasino.Manager
                 GeneratePlayerHands();
 
             // Calculate the position of the user hand.
-            int userHandXPos = Constants.WINDOW_WIDTH / 2;
+            int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 40;
 
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
-            int aiHandXPos = 100;
+            int aiHandXPos = 320;
+
+            // Iniitalizing the X position for the first community card
+            communityCardXPos = 380;
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
             _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 200);
 
-            for (int i = 1; i < Constants.AI_PLAYER_COUNT; i++)
+            for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
-                _playerHands[i].SetCenter(aiHandXPos, 100);
-                aiHandXPos += 200;
+                _playerHands[i].SetCenter(aiHandXPos, 80);
+                aiHandXPos += 300;
             }
 
             // Deal 2 cards to each player one at a time, starting with the small blind.
@@ -783,6 +1047,7 @@ namespace CardsCashCasino.Manager
                 _playerHands[dealStartIndex].AddCard(RequestCard!());
                 dealStartIndex = (dealStartIndex + 1) % _playerHands.Count;
             }
+            _playerHands[0].UnhideCards();
         }
 
         /// <summary>
@@ -799,7 +1064,8 @@ namespace CardsCashCasino.Manager
                 }
                 hand.Clear();
             }
-
+            _communityCards.Clear();
+            
             IsPlaying = false;
         }
 
@@ -828,6 +1094,8 @@ namespace CardsCashCasino.Manager
             {
                 _communityCards.Add(RequestCard!.Invoke());
 
+                _communityCards[i].SetRectangle(communityCardXPos, 430);
+                communityCardXPos += 150;
                 // Add a timeout for the card to be drawn to the screen.
                 // This will allow the user to see the cards being drawn.
                 _cardDealtTimer = new Timer(500);
@@ -844,6 +1112,9 @@ namespace CardsCashCasino.Manager
 
             // Deal the turn.
             _communityCards.Add(RequestCard!.Invoke());
+
+            _communityCards[3].SetRectangle(communityCardXPos, 430);
+            communityCardXPos += 150;
 
             // Add a timeout for the card to be drawn to the screen.
             // This will allow the user to see the card being drawn.
@@ -863,6 +1134,8 @@ namespace CardsCashCasino.Manager
             // Deal the river.
             _communityCards.Add(RequestCard!.Invoke());
 
+            _communityCards[4].SetRectangle(communityCardXPos, 430);
+            communityCardXPos += 150;
             // Add a timeout for the card to be drawn to the screen.
             // This will allow the user to see the card being drawn.
             _cardDealtTimer = new Timer(500);
@@ -874,6 +1147,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void RoundConclusion()
         {
+            BlockingDelay(2000);
+
             PokerUtil.Ranking bestRanking = PokerUtil.Ranking.HIGH_CARD;
             // List of hands that (so far) are tied for the best rank.
             // Pair of player idx and their optimal 5-card hand. 
@@ -956,311 +1231,32 @@ namespace CardsCashCasino.Manager
                 _ante += 2;
             }
             else
+            {
                 //decrement blind countdown after each hand
                 _blindIncreaseCountdown -= 1;
-
+            }
             //check if any players are out of money and need to be eliminated
             _players.EliminatePlayers();
 
             //set the blinds for next round
             _players.SetNextRoundBlinds();
             _potManager.ResetPots();
-            _currentPhase = Phase.INIT;
-        }
 
-
-        /// <summary>
-        /// handles the initial stage of betting before any community cards appear
-        /// </summary>
-        private void HandlePreflop()
-        {
-            if (_players.AdvanceToRoundConclusion())
+            // Discard cards from, and clear, each hand.
+            foreach (CardHand hand in _playerHands)
             {
-                _currentPhase = Phase.FLOP;
-                DealFlop();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetPreflopStartingBettor();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //if player is either folded or all in, skip the player's turn
-                if (_players.IsActivePlayer(playerIndex))
+                foreach (Card card in hand.Cards)
                 {
-                    return;
+                    RequestCardDiscard!(card);
                 }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-
-                //if only one player has not folded, prepare pot to award to player and advance to conclusion
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
+                hand.Clear();
             }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
+            foreach (Card card in _communityCards)
             {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealFlop();
-                return;
+                RequestCardDiscard!(card);
             }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the second round of betting that follows the flop
-        /// </summary>
-        private void HandleFlop()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.TURN;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.TURN;
-                DealTurn();
-                return;
-            }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the third round of betting that follows the turn
-        /// </summary>
-        private void HandleTurn()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.RIVER;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.RIVER;
-                DealTurn();
-                return;
-            }
-        }
-
-        /// <summary>
-        /// rules, flow and exceptions for the second round of betting that follows the flop
-        /// </summary>
-        private void HandleRiver()
-        {
-            if (_players.AdvanceToRoundConclusion())
-            {
-                _currentPhase = Phase.CONCLUSION;
-                DealTurn();
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    //player is either folded or all in, skip the player's turn
-                    return;
-                }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
-            }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
-
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                _currentPhase = Phase.FLOP;
-                DealTurn();
-                return;
-            }
+            //discard all community cards
+            _communityCards.Clear();
         }
 
         /// <summary>
@@ -1290,7 +1286,6 @@ namespace CardsCashCasino.Manager
                     Call(playerIndex);
                     break;
                 case PokerAction.RAISE:
-                    // _currentBet = Front end method of setting raise amount for user : AI calculated raise amount
                     Raise(playerIndex);
                     break;
                 case PokerAction.ALL_IN:
@@ -1393,715 +1388,6 @@ namespace CardsCashCasino.Manager
     }
     #endregion Methods
 
-
-    public class HoldEmPlayer
-    {
-        /// <summary>
-        /// how much money the user has available in the game
-        /// </summary>
-        public int PlayerStack { get; set; } = 500; // will be set to users account funds
-
-        /// <summary>
-        /// represents if the player is the USER or an AI
-        /// </summary>
-        public PlayerType PlayerType { get; set; }
-
-        /// <summary>
-        /// represents if the player is IN (still participating in the round), FOLDED, CALLED, or ALL-IN
-        /// </summary>
-        public PlayerStatus PlayerStatus { get; set; } = PlayerStatus.IN;
-
-        /// <summary>
-        /// if the player is the DEALER, BIGBLIND, SMALLBLIND, or NONE
-        /// </summary>
-        public PlayerPosition PlayerPosition { get; set; } = PlayerPosition.NONE;
-
-        /// <summary>
-        /// holds the value of the players bet in the current round
-        /// </summary>
-        public int PlayerBet { get; set; } = 0;
-
-        /// <summary>
-        /// Defining constructors for the class
-        /// </summary>
-        public HoldEmPlayer(PlayerType type)
-        {
-            PlayerType = type; //defines whether the player is a USER or AI
-        }
-
-        /// <summary>
-        /// Adds winnings to a players chip stack
-        /// <param name="value">The amount added</param>
-        /// </summary>
-        public void IncrementStack(int value)
-        {
-            PlayerStack += value;
-        }
-
-        /// <summary>
-        /// Subtracts funds from a players chip stack
-        /// <param name="value">The amount subtracted</param>
-        /// </summary>
-        public void DecrementStack(int value)
-        {
-            if (value <= 0 || PlayerStack - value < 0)
-            {
-                return;
-            }
-            PlayerStack -= value;
-        }
-
-        /// <summary>
-        /// Adds funds from a players chip bet
-        /// /// <param name="value">The amount added</param>
-        /// </summary>
-        public void IncrementBet(int value)
-        {
-            PlayerBet += value;
-        }
-
-        /// <summary>
-        /// Subtracts from the player bet total in the round
-        /// <param name="value">The amount subtracted</param>
-        /// </summary>
-        public void DecrementBet(int value)
-        {
-            if (value <= 0 || PlayerBet - value < 0)
-            {
-                return;
-            }
-            PlayerBet -= value;
-        }
-    }
-
-    public class HoldEmPlayerManager
-    {
-        /// <summary>
-        /// Creating list to hold players
-        /// </summary>
-        public List<HoldEmPlayer> Players;
-
-        /// <summary>
-        /// Initiating list to hold player characteristics
-        /// </summary>
-        public HoldEmPlayerManager()
-        {
-            Players = new List<HoldEmPlayer>(); // Initialize the Players list
-        }
-
-        /// <summary>
-        /// Creates USER and specified number of AI opponents
-        /// </summary>
-        public void InitiatePlayers(int numAIs)
-        {
-            Players.Add(new HoldEmPlayer(PlayerType.USER));
-
-            for (int players = 0; players < numAIs; players++)
-            {
-                Players.Add(new HoldEmPlayer(PlayerType.AI));
-            }
-            Random random = new Random();
-            int dealer = random.Next(0, Players.Count);
-            Players[dealer].PlayerPosition = PlayerPosition.DEALER;
-            Players[(dealer + 1) % Players.Count].PlayerPosition = PlayerPosition.SMALLBLIND;
-            Players[(dealer + 2) % Players.Count].PlayerPosition = PlayerPosition.BIGBLIND;
-        }
-
-        /// <summary>
-        /// Collect each player's antes for the beginning of the round
-        /// </summary>
-        public void GenerateAntes(int ante)
-        {
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (ante > Players[player].PlayerStack)
-                {
-                    Players[player].IncrementBet(Players[player].PlayerStack);
-                    Players[player].DecrementStack(Players[player].PlayerStack);
-                    Players[player].PlayerStatus = PlayerStatus.ALLIN;
-                }
-                else
-                {
-                    Call(ante, player);
-                }
-            }
-        }
-        /// <summary>
-        /// Gets the position of the first bet to be placed in the preflop round
-        /// </summary>
-        public int GetPreflopStartingBettor()
-        {
-            int index = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.BIGBLIND);
-            index = (index + 1) % Players.Count;
-            return index;
-        }
-
-        /// <summary>
-        /// Gets the position of the first bet to be placed in all rounds following the preflop
-        /// </summary>
-        public int GetStartingBettorIndex()
-        {
-            int index = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.SMALLBLIND);
-            bool activePlayer = false;
-            while (!activePlayer)
-            {
-                if (!IsActivePlayer(index))
-                {
-                    index = (index + 1) % Players.Count;
-                }
-                else
-                {
-                    activePlayer = true;
-                }
-            }
-            return index;
-        }
-
-        /// <summary>
-        /// If the player is eligible to place a bet returns true
-        /// <param name="playerIndex">The index of the current player</param>
-        /// </summary>
-        public bool IsActivePlayer(int playerIndex)
-        {
-            if (Players[playerIndex].PlayerStatus == PlayerStatus.FOLDED || Players[playerIndex].PlayerStatus == PlayerStatus.ALLIN)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// Places a bet
-        /// <param name="amount">The amount of the highest bet placed in the round</param>
-        /// <param name="playerIndex">The index of the current player</param>
-        /// </summary>
-        public void Call(int amount, int playerIndex)
-        {
-            int bet = amount - Players[playerIndex].PlayerBet; //subtracts the player's existing bet from the amount needed
-            Players[playerIndex].IncrementBet(bet);
-            Players[playerIndex].DecrementStack(bet);
-            if (Players[playerIndex].PlayerStack == 0)
-            {
-                Players[playerIndex].PlayerStatus = PlayerStatus.ALLIN;
-                return;
-            }
-            Players[playerIndex].PlayerStatus = PlayerStatus.CALLED;
-        }
-
-        /// <summary>
-        /// Increase the player's bet amount, remove funds from player stack, reset status of all players that can still bet
-        /// <param name="playerIndex">The index of the current player</param>
-        /// <param name="playerIndex">The index of the current player</param>
-        /// </summary>
-        public void Raise(int amount, int playerIndex)
-        {
-            Players[playerIndex].IncrementBet(amount);
-            Players[playerIndex].DecrementStack(amount);
-
-            // Iterate through list of players to reset the status for those who called
-            // Those players will need to match the raise in order to continue playing
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (player == playerIndex)
-                {
-                    Players[player].PlayerStatus = PlayerStatus.CALLED;
-                }
-                else if (Players[player].PlayerStatus == PlayerStatus.CALLED)
-                {
-                    Players[player].PlayerStatus = PlayerStatus.IN;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Places an all in bet, Increase the player's bet amount, remove funds from player stack, reset status of all players that can still bet
-        /// <param name="playerIndex">The index of the current player</param>
-        /// </summary>
-        public int AllInBet(int playerIndex)
-        {
-            Players[playerIndex].IncrementBet(Players[playerIndex].PlayerStack);
-            Players[playerIndex].DecrementStack(Players[playerIndex].PlayerStack);
-
-            // Iterate through list of players to reset the status for those who called
-            // Those players will need to match the all-in bet in order to continue playing
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (player == playerIndex)
-                {
-                    Players[player].PlayerStatus = PlayerStatus.ALLIN;
-                }
-                else if (Players[player].PlayerStatus == PlayerStatus.CALLED)
-                {
-                    Players[player].PlayerStatus = PlayerStatus.IN;
-                }
-            }
-            return Players[playerIndex].PlayerBet;
-        }
-
-        /// <summary>
-        /// Folds the active player
-        /// <param name="playerIndex">The index of the current player</param>
-        /// </summary>
-        public void Fold(int playerIndex)
-        {
-            Players[playerIndex].PlayerStatus = PlayerStatus.FOLDED;
-        }
-
-        /// <summary>
-        /// Active player bets nothing
-        /// <param name="playerIndex">The index of the current player</param>
-        /// </summary>
-        public void Check(int playerIndex)
-        {
-            Players[playerIndex].PlayerStatus = PlayerStatus.CALLED;
-        }
-
-        /// <summary>
-        /// Conditions to be met to advance to the next round
-        /// </summary>
-        public bool AdvanceRound()
-        {
-            if (!Players.Any(player => player.PlayerStatus == PlayerStatus.IN)) //if all players have had their turn, have called the existing bet, folded, or are all in
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// If true, only one player is able to place a bet, the rest are all-in.
-        /// All player hands will become visible
-        /// The game will bypass all remaining betting opportunities and advance through stages to the RoundConclusion
-        /// </summary>
-        public bool AdvanceToRoundConclusion()
-        {
-            if (Players.Count(player => player.PlayerStatus == PlayerStatus.CALLED) <= 1 && Players.Count(player => player.PlayerStatus == PlayerStatus.ALLIN) >= 1)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// If true, only one player is not folded.
-        /// The game will bypass all remaining stages and payout MAIN pot to remaining player
-        /// </summary>
-        public bool OnePlayerLeft()
-        {
-            if (Players.Count(player => player.PlayerStatus == PlayerStatus.FOLDED) == Players.Count - 1)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// At the end of a round, resets all player bets to 0
-        /// </summary>
-        public void ResetBets()
-        {
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (Players[player].PlayerBet != 0)
-                {
-                    Players[player].DecrementBet(Players[player].PlayerBet);
-                }
-                if (Players[player].PlayerStatus == PlayerStatus.CALLED)
-                {
-                    Players[player].PlayerStatus = PlayerStatus.IN;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Packages bets placed by folded players to be added to the main pot
-        /// </summary>
-        public List<int> PackageFoldedBets()
-        {
-            List<int> foldedBets = new List<int>();
-
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (Players[player].PlayerStatus == PlayerStatus.FOLDED && Players[player].PlayerBet > 0)
-                {
-                    foldedBets.Add(Players[player].PlayerBet);
-                }
-            }
-            return foldedBets;
-        }
-
-        /// <summary>
-        /// Packages bets made by active players to be added to main pot, creating side pots if needed
-        /// </summary>
-        public List<int> PackageBets()
-        {
-            List<int> bets = new List<int>();
-
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (Players[player].PlayerStatus != PlayerStatus.FOLDED && Players[player].PlayerBet > 0)
-                {
-                    bets.Add(Players[player].PlayerBet);
-                }
-            }
-            return bets;
-        }
-
-        /// <summary>
-        ///Eliminates players that are out of money before a new round begins
-        /// </summary>
-        public void EliminatePlayers()
-        {
-            for (int player = 0; player < Players.Count; player++)
-            {
-                if (Players[player].PlayerStack == 0)
-                {
-                    if (Players[player].PlayerPosition == PlayerPosition.DEALER) //shift dealer chip 1 to left if dealer was eliminated
-                    {
-                        Players[player + 1 % Players.Count].PlayerPosition = PlayerPosition.DEALER;
-                    }
-                    Players.RemoveAt(player);
-                }
-            }
-        }
-
-        /// <summary>
-        ///shifts the blind to the next positions
-        /// </summary>
-        public void SetNextRoundBlinds()
-        {
-            //blind shift rules if there are only 2 players remaining 
-            if (Players.Count < 3)
-            {
-                if (Players[0].PlayerPosition == PlayerPosition.BIGBLIND)
-                {
-                    Players[0].PlayerPosition = PlayerPosition.SMALLBLIND;
-                    Players[1].PlayerPosition = PlayerPosition.BIGBLIND;
-                }
-                else
-                {
-                    Players[0].PlayerPosition = PlayerPosition.BIGBLIND;
-                    Players[1].PlayerPosition = PlayerPosition.SMALLBLIND;
-                }
-            }
-            else
-            {
-                int dealer = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.DEALER);
-                if (Players.Count > 3) //if a only 3 players exist, no player is set to NONE
-                {
-                    Players[dealer].PlayerPosition = PlayerPosition.NONE;
-                }
-                Players[(dealer + 1) % Players.Count].PlayerPosition = PlayerPosition.DEALER;
-                Players[(dealer + 2) % Players.Count].PlayerPosition = PlayerPosition.SMALLBLIND;
-                Players[(dealer + 3) % Players.Count].PlayerPosition = PlayerPosition.BIGBLIND;
-            }
-        }
-
-        /// <summary>
-        ///collect blind bets from small and big blind players
-        ///<param name="smallBlind">The amount the small blind must wager</param>
-        ///<param name="bigBlind">The amount the big blind must wager</param>
-        /// </summary>
-        public void CollectBlinds(int _smallBlind, int _bigBlind)
-        {
-            int smallBlindPosition = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.SMALLBLIND);
-            if (Players[smallBlindPosition].PlayerStack <= _smallBlind) //if blind causes player to go all in
-            {
-                Players[smallBlindPosition].IncrementBet(Players[smallBlindPosition].PlayerStack);
-                Players[smallBlindPosition].DecrementStack(Players[smallBlindPosition].PlayerStack);
-                Players[smallBlindPosition].PlayerStatus = PlayerStatus.ALLIN;
-            }
-            else
-            {
-                Players[smallBlindPosition].IncrementBet(_smallBlind);
-                Players[smallBlindPosition].DecrementStack(_smallBlind);
-            }
-            int bigBlindPosition = Players.FindIndex(player => player.PlayerPosition == PlayerPosition.BIGBLIND);
-            if (Players[bigBlindPosition].PlayerStack <= _bigBlind) //if blind causes player to go all in
-            {
-                Players[bigBlindPosition].IncrementBet(Players[bigBlindPosition].PlayerStack);
-                Players[bigBlindPosition].DecrementStack(Players[bigBlindPosition].PlayerStack);
-                Players[bigBlindPosition].PlayerStatus = PlayerStatus.ALLIN;
-            }
-            else
-            {
-                Players[bigBlindPosition].IncrementBet(_bigBlind);
-                Players[bigBlindPosition].DecrementStack(_bigBlind);
-            }
-        }
-
-        /// <summary>
-        /// adds the amount from the pot that the player has won
-        /// <param name="winningPlayers">The list of indexes of the players that have won the pot</param>
-        /// <param name="payout">The amount each player has won</param>
-        /// </summary>
-        public void Payout(List<int> winningPlayers, int payout)
-        {
-            for (int player = 0; player < winningPlayers.Count; player++)
-            {
-                Players[winningPlayers[player]].IncrementStack(payout);
-            }
-        }
-    }
-    /// <summary>
-    /// Manages the pot in a Texas Hold'em game, including adding and distributing chips.
-    /// </summary>
-    public class TexasHoldEmPot
-    {
-        /// <summary>
-        /// Contains the total amount of money contained in a pot, initiated as empty (0)
-        /// </summary>
-        public int Total { get; set; } = 0;
-
-        /// <summary>
-        /// Whether the pot is the MAIN pot (the active pot that bets are allocated to) or a SIDE pot (the pot that an all-in player is eligible to win)
-        /// </summary>
-        public PotType PotType { get; set; }
-
-        /// <summary>
-        /// The list of players eligible to win a given pot
-        /// </summary>
-        public List<int> EligiblePlayers { get; set; }
-
-        /// <summary>
-        /// Initiating the Pot and with the type of pot as its characteristic
-        /// </summary>
-        public TexasHoldEmPot(PotType type)
-        {
-            PotType = type; //importing the pot type to identify a pot as MAIN or SIDE
-        }
-
-        /// <summary>
-        /// Increment the total of the pot by a specified value.
-        /// </summary>
-        /// <param name="value">The amount to increment the pot's total by.</param>
-        public void IncrementPot(int value)
-        {
-            Total += value;
-        }
-
-        /// <summary>
-        /// Decrement the total of the pot by a specified value.
-        /// </summary>
-        /// <param name="value">The amount to decrement the pot's total by.</param>
-        public void DecrementPot(int value)
-        {
-            if (value <= 0 || Total - value < 0)
-            {
-                return;
-            }
-
-            Total -= value;
-        }
-
-        /// <summary>
-        /// Decrement the total of the pot by a specified value.
-        /// </summary>
-        /// <param name="playerIndex">The position of the player being removed from pot eligiblity .</param>
-        public void RemoveEligiblePlayer(int playerIndex)
-        {
-            if (EligiblePlayers.Contains(playerIndex))
-            {
-                EligiblePlayers.Remove(playerIndex);
-            }
-        }
-    }
-    public class TexasHoldEmPotManager
-    {
-        /// <summary>
-        /// Importing list that will house each pot and its attributes
-        /// </summary>
-        public List<TexasHoldEmPot> Pots { get; set; }
-
-        /// <summary>
-        /// creating variable name that will house the list containing the TexasHoldEmPots
-        /// </summary>
-        public TexasHoldEmPotManager()
-        {
-            Pots = new List<TexasHoldEmPot>(); // Initialize the Pots list
-        }
-
-        /// <summary>
-        /// Initialize the main pot, if any players are short side pots will be created.
-        /// </summary>
-        /// <param name="_ante">The ante needed to be added by each player to the pot.</param>
-        /// <param name="playerBets">List of antes values to be added to the pot.</param>
-        public void InitializePot(int ante, List<int> playerBets)
-        {
-            Pots.Add(new TexasHoldEmPot(PotType.MAIN)); //create a new pot
-
-            Pots[0].EligiblePlayers = Enumerable.Range(0, playerBets.Count).ToList(); //add all players as eligible to win the pot
-
-            if (playerBets.All(ante => ante == playerBets[0])) //if all bets match the ante add to main pot
-            {
-                AddToPot(ante, playerBets);
-            }
-            else //create side pots if any bets do not match the ante
-            {
-                CreateSidePots(ante, playerBets);
-            }
-        }
-
-        /// <summary>
-        /// Adds a bets to the pot.
-        /// </summary>
-        /// <param name="_currentBet">The amount each player is contributing to the pot.</param>
-        /// <param name="playerBets">List of bet values to be added to the pot.</param>
-        public void AddToPot(int currentBet, List<int> playerBets)
-        {
-            if (playerBets.All(bet => bet == playerBets[0]))
-            {
-                Pots.First(pot => pot.PotType == PotType.MAIN).IncrementPot(currentBet * playerBets.Count);
-            }
-            else
-            {
-                CreateSidePots(currentBet, playerBets);
-            }
-        }
-
-        /// <summary>
-        //Adds bets of players that were folded to the pot
-        /// </summary>
-        /// <param name="playersBets"> list of bets that were placed but folded due to a raise in that round</param>
-        public void AddFoldedBetsToPot(List<int> playerBets)
-        {
-            if (playerBets.Any())
-            {
-                for (int bet = 0; bet < playerBets.Count(); bet++)
-                {
-                    Pots[0].IncrementPot(playerBets[bet]);
-                }
-            }
-        }
-
-        /// <summary>
-        ///Removes a player that has folded from eligiblility for all pots
-        /// </summary>
-        /// <param name="playersIndex"> position of the player that as folded</param>
-        public void RemoveFoldedPlayers(int playerIndex)
-        {
-            for (int pot = 0; pot < Pots.Count; pot++)
-            {
-                Pots[pot].RemoveEligiblePlayer(playerIndex);
-            }
-        }
-
-        /// <summary>
-        /// Creates side pots as needed at the end of a round of betting.
-        /// </summary>
-        /// <param name="currentBet">The amount to add to the pot.</param>
-        /// <param name="playerBets">The list of bets from players still active after the round of betting.</param>
-        public void CreateSidePots(int currentBet, List<int> playerBets)
-        {
-            int allInBet = 0; //initiating variable that will hold all in wager
-            int numBets = playerBets.Count;
-
-            //all-in bet added to the pot, other players matched bets added to pot as well
-            allInBet = playerBets.Min();
-            AddToPot(allInBet, Enumerable.Repeat(allInBet, numBets).ToList());
-
-            //subtracting all-in bet value from all other bets, the all-in bet value has already been added to a pot
-            for (int player = 0; player < numBets; player++)
-            {
-                playerBets[player] -= allInBet; // Subtract the amount put into pot from each bet
-            }
-            currentBet -= allInBet;
-
-            //modify list of players that are eligible for the new main pot by removing player(s) that are all-in
-            List<int> allInPlayers = playerBets
-                .Select((value, index) => new { value, index })  // Keep both the value and the index
-                .Where(x => x.value == 0)  // Filter where the bet is 0 (all-in)
-                .Select(x => Pots[0].EligiblePlayers[x.index])  // Select the corresponding player from EligiblePlayers at the same index
-                .ToList();
-
-            //remove players that are all in from future side pot calculations that are necessary
-            numBets -= allInPlayers.Count;
-            playerBets.RemoveAll(value => value == 0);
-
-            if (numBets > 1) //if 1 player or less remains, no more side pot manipulation is needed
-            {
-                //New side pot created. Pot that all-in player can win is shifted to inactive position, no more bets can be added to this pot
-                Pots.Add(new TexasHoldEmPot(PotType.SIDE));
-                Pots[Pots.Count - 1].IncrementPot(Pots[0].Total); //shifting the pot that the all in player can win to the side, this pot will no longer be added to
-                Pots[0].DecrementPot(Pots[Pots.Count - 1].Total); //reseting active pot value to empty
-                Pots[Pots.Count - 1].EligiblePlayers = new List<int>(Pots[0].EligiblePlayers); //copys the list of players eligible to win the now side pot
-
-                //removing all players that are all in from eligibility from main pot and any pots created in the future
-                for (int player = 0; player < allInPlayers.Count; player++)
-                {
-                    Pots[0].RemoveEligiblePlayer(allInPlayers[player]);
-                }
-            }
-            //no more bets left to add to any pots
-            if (numBets == 0)
-            {
-                return;
-            }
-            //if there is a second player that has gone all in this round, recursively add pots until player that has called max bet has been reached
-            if (currentBet != playerBets.Min())
-            {
-                CreateSidePots(currentBet, playerBets);
-                return;
-            }
-            //protects from scenerio where last remaining player from adding excessive amount to the pot
-            if (numBets > 1)
-            {
-                //add remainder of bets from players not all-in into new main pot
-                AddToPot(currentBet, playerBets);
-            }
-        }
-
-        /// <summary>
-        /// Pays out the winnings to the player for the individual pot. 
-        /// <param name="winners">Number of players that have won the pot.</param>
-        /// <param name="potNumber">The pot that is being referred to.</param>
-        /// <returns>The amount that each winner has won</returns>
-        /// </summary>
-        public int DistributePot(int winners, int potNumber)
-        {
-            if (winners != 0) //prevent division by 0
-            {
-                int _payout = Pots[potNumber].Total / winners; //splits payout if more than 1 winner is present
-                return _payout;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Returns the amount contained in each pot
-        /// <returns>A list of the amounts contained within each pot</returns>
-        /// </summary>
-        public List<int> GetPotAmounts()
-        {
-            return Pots.Select(pot => pot.Total).ToList();
-        }
-
-        /// <summary>
-        /// Resets the pots list to an empty state.
-        /// </summary>
-        public void ResetPots()
-        {
-            Pots.Clear();
-        }
-
-        /// <summary>
-        /// Resets the pots list to an empty state.
-        /// <param name="potNumber">The pot that is being referred to.</param>
-        /// <returns>The list of players eligible to win the pot being referred to</returns>
-        /// </summary>
-        public List<int> PlayersEligible(int potNumber)
-        {
-            return Pots[potNumber].EligiblePlayers;
-        }
-    }
-
-
     public static class TexasHoldEmTextures
     {
         /// <summary>
@@ -2127,12 +1413,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The enabled texture for the Raise button.
         /// </summary>    
-        public static Texture2D? RaiseButtonEnabledTexture { get; private set; }
-
-        /// <summary>
-        /// The disabled texture for the Raise button. For the occasion that opponent places a bet that would put the user all in.
-        /// </summary> 
-        public static Texture2D? RaiseButtonDisabledTexture { get; private set; }
+        public static Texture2D? RaiseButtonTexture { get; private set; }
 
         /// <summary>
         /// The texture for the Fold button.
@@ -2154,18 +1435,16 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public static void LoadContent(ContentManager content)
         {
-            // TODO: Create textures for the buttons.
+            
              CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
              CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
              CheckButtonEnabledTexture = content.Load<Texture2D>("CheckButtonEnabled");
              CheckButtonDisabledTexture = content.Load<Texture2D>("CheckButtonDisabled");
-             RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonDisabled");
-             RaiseButtonDisabledTexture = content.Load<Texture2D>("RaiseButtonEnabled");
+             RaiseButtonTexture = content.Load<Texture2D>("RaiseButtonEnabled");
              FoldButtonTexture = content.Load<Texture2D>("FoldButton");
              AllInButtonTexture = content.Load<Texture2D>("AllInButton");
 
             CursorTexture = content.Load<Texture2D>("BlackjackCursor");
-
         }
     }
 
@@ -2185,7 +1464,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The size of the cursor.
         /// </summary>
-        private Point _size = new(144, 80);
+        private Point _size = new(Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
         #endregion Properties
 
         #region  Methods
@@ -2238,7 +1517,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Whether or not the button is enabled.
         /// </summary>
-        public bool IsEnabled { get; private set; } = false;
+        public bool IsEnabled { get; private set; } = true;
 
         /// <summary>
         /// Whether or not the button is selected.
@@ -2247,11 +1526,11 @@ namespace CardsCashCasino.Manager
         #endregion Properties
 
         #region Methods
-        public PokerActionButton(Texture2D enabledTexture, int x, int y, Texture2D disabledTexture = null)
+        public PokerActionButton(Texture2D enabledTexture, Texture2D disabledTexture, int xPos, int yPos, int width, int height)
         {
             _enabledTexture = enabledTexture;
             _disabledTexture = disabledTexture;
-            _buttonRectangle = new Rectangle(x, y, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _buttonRectangle = new Rectangle(xPos, yPos, width, height);
         }
 
         /// <summary>
@@ -2260,7 +1539,7 @@ namespace CardsCashCasino.Manager
         /// <param name="spriteBatch"></param>
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture ?? _enabledTexture, _buttonRectangle, Color.White);
+            spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture, _buttonRectangle, Color.White);
         }
 
         /// <summary>
@@ -2268,7 +1547,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public Point GetAdjustedPos()
         {
-            return new Point(_buttonRectangle.X - 8, _buttonRectangle.Y - 8);
+            return new Point(_buttonRectangle.X, _buttonRectangle.Y);
         }
         #endregion Methods
     }
