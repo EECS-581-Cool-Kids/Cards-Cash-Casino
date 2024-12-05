@@ -807,25 +807,80 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
+        /// Picks passive AI action.
+        /// </summary>
+        /// <returns>Tuple(poker action, raising? raiseamount : 0)</returns>
+        private Tuple<PokerAction, int> PassiveAI()
+        {
+            // If you can play for free, play for free.
+            if (_currentBet == 0)
+            {
+                return new(PokerAction.CHECK, 0);
+            }
+
+            // TODO: Implement (the rest of) PassiveAI
+
+            return new(PokerAction.CALL, 0);
+        }
+
+        /// <summary>
+        /// Picks aggressive AI action.
+        /// </summary>
+        /// <returns>Tuple(poker action, raising? raiseamount : 0)</returns>
+        private Tuple<PokerAction, int> AggressiveAI()
+        {
+            // TODO: Implement AggressiveAI
+            return new(PokerAction.CALL, 0);
+        }
+
+        /// <summary>
+        /// Picks either passive or aggressive AI randomly.
+        /// </summary>
+        /// <param name="hand"></param>
+        /// <returns>Tuple(poker action, raising? raiseamount : 0)</returns>
+        private Tuple<PokerAction, int> PassiveAggressiveAI()
+        {
+            Random rand = new Random();
+            if (rand.NextDouble() >= 0.5)
+            {
+                return PassiveAI();
+            }
+            return AggressiveAI();
+        }
+
+
+        /// <summary>
         /// Updates the AI player index
         /// </summary>
         private void UpdateWhileAIPlaying()
         {
             // Should have some AI related nonsense here.
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
-            
             _AIActionTimeout = new(500);
             _AIActionTimeout.Elapsed += Constants.OnTimeoutEvent!;
             _AIActionTimeout.Start();
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
-            if (_currentBet == 0)
+            Tuple<PokerAction, int> action = (playerIndex) switch
             {
-                Check(playerIndex);
-            }
-            else
+                1 => PassiveAI(),
+                2 => AggressiveAI(),
+                _ => PassiveAggressiveAI()
+            };
+            
+            switch (action.Item1)
             {
-                Call(playerIndex);
+                case PokerAction.CALL:
+                    Call(playerIndex); break;
+                case PokerAction.CHECK:
+                    Check(playerIndex); break;
+                case PokerAction.RAISE:
+                    _currentBet += action.Item2;
+                    Raise(playerIndex); break;
+                case PokerAction.FOLD:
+                    Fold(playerIndex); break;
+                case PokerAction.ALL_IN:
+                    AllIn(playerIndex); break;
             }
 
             //update all ai stack and bet visuals
