@@ -110,6 +110,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private bool _userFolded = false;
 
+        private bool _gameFinished = false;
+
         /// <summary>
         /// The current betting phase of the game.
         /// </summary>
@@ -449,13 +451,14 @@ namespace CardsCashCasino.Manager
             {
                 playerIndex += 1;
             }
-
-            // If it's currently player's turn
-            if (playerIndex == 0)
-                UpdateWhileUserPlaying();
             else
-                UpdateWhileAIPlaying();
-
+            {
+                // If it's currently player's turn
+                if (playerIndex == 0)
+                    UpdateWhileUserPlaying();
+                else
+                    UpdateWhileAIPlaying();
+            }
             int totalPotValue = _potManager.Pots.Sum(pot => pot.Total); // Calculate total pot value
             _potUI.UpdatePot(totalPotValue);
         }
@@ -484,6 +487,10 @@ namespace CardsCashCasino.Manager
         /// <returns>The action chosen, or null if no action has been chosen</returns>
         private PokerAction? GetPlayerAction()
         {
+            if (_gameFinished)
+            {
+                return PokerAction.CHECK;
+            }
             KeyboardState state = Keyboard.GetState();
             // Handle right key press to move the cursor.
             if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
@@ -588,6 +595,7 @@ namespace CardsCashCasino.Manager
                     {
                         _playerHands[i].UnhideCards();
                     }
+                    _gameFinished = true;
                     _currentPhase = Phase.CONCLUSION;
                     return;
 
@@ -779,11 +787,11 @@ namespace CardsCashCasino.Manager
         {
             // Should have some AI related nonsense here.
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
-
+            
             // ...
             BlockingDelay(500);
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
-            if (_currentBet == 0)
+            if (_currentBet == 0 || _gameFinished)
             {
                 Check(playerIndex);
             }
@@ -943,6 +951,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void StartGame()
         {
+            _gameFinished = false;
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
