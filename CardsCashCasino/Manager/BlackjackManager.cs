@@ -28,7 +28,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The pot UI for visualizing the bet value.
         /// </summary>
-        private PotUI _potUI;
+        private PotUI? _potUI;
 
         /// <summary>
         /// The dealer's hand.
@@ -238,7 +238,9 @@ namespace CardsCashCasino.Manager
             }
             else if ((_roundFinishTimeout is null || !_roundFinishTimeout.Enabled) && !_roundFinished)
             {
-                if (dealerHandValue > Constants.MAX_BLACKJACK_VALUE)
+                BlackjackUserHand currentHand = _userHands[_selectedUserHand];
+
+                if (dealerHandValue > Constants.MAX_BLACKJACK_VALUE && !currentHand.HandEvaluated)
                 {
                     RequestPayout!.Invoke(_currentBet * 2);
                     StatisticsUtil.WinBlackjackGame(_currentBet);
@@ -249,6 +251,7 @@ namespace CardsCashCasino.Manager
 
                     _resultLabel!.CanDraw = true;
                     _roundFinished = true;
+                    currentHand.HandEvaluated = true;
 
                     _roundFinishTimeout = new Timer(500);
                     _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
@@ -256,12 +259,11 @@ namespace CardsCashCasino.Manager
                 }
                 else if (_selectedUserHand < _userHands.Count && (_roundFinishTimeout is null || !_roundFinishTimeout.Enabled))
                 {
-                    BlackjackUserHand currentHand = _userHands[_selectedUserHand];
-
                     if (dealerHandValue > currentHand.GetBlackjackValue())
                     {
                         _resultLabel!.SetTexture(BlackjackResult.LOSS);
                         CurrentHandStatus = BlackjackResult.LOSS;
+
                         StatisticsUtil.LoseBlackjackGame(_currentBet);
                     }
                     else if (dealerHandValue == currentHand.GetBlackjackValue())
@@ -287,13 +289,10 @@ namespace CardsCashCasino.Manager
                     _roundFinishTimeout.Start();
 
                     _roundFinished = true;
-                }
-                else
-                {
-                    EndGame();
+                    currentHand.HandEvaluated = true;
                 }
             }
-            else
+            else if (_roundFinished && _userHands.Last().HandEvaluated)
             {
                 EndGame();
             }
@@ -592,8 +591,6 @@ namespace CardsCashCasino.Manager
                 _roundFinishTimeout.Elapsed += OnRoundFinishTimeoutEvent!;
                 _roundFinishTimeout.Start();
 
-                _userBust = true;
-
                 StatisticsUtil.LoseBlackjackGame(_currentBet);
             }
             else
@@ -642,6 +639,8 @@ namespace CardsCashCasino.Manager
             currentHand.RecalculateCardPositions();
 
             _userHandValueIndicator!.Update(currentHand.GetBlackjackValue());
+
+            RequestBet!.Invoke(_currentBet);
         }
 
         /// <summary>
@@ -692,6 +691,10 @@ namespace CardsCashCasino.Manager
             _dealerMoveTimeout = new(500);
             _dealerMoveTimeout.Elapsed += OnTimeoutEvent!;
             _dealerMoveTimeout.Start();
+
+            _selectedUserHand = 0;
+            while (_userHands[_selectedUserHand].GetBlackjackValue() > Constants.MAX_BLACKJACK_VALUE)
+                _selectedUserHand++;
         }
 
         /// <summary>
