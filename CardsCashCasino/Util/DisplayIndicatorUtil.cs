@@ -115,7 +115,7 @@ namespace CardsCashCasino.Util
         public static Texture2D? DollarSignTexture { get; private set; }
         
         /// <summary>
-        ///
+        /// Texture for the poker chip turn indicator
         /// </summary>
         public static Texture2D? TurnTexture { get; private set; }
 
