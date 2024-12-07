@@ -439,7 +439,8 @@ namespace CardsCashCasino.Manager
             _aiTwoIdentifier = new();
             _aiThreeIdentifier = new();
             _aiFourIdentifier = new();
-            _turnIndicator = new(content.Load<Texture2D>("TEMP_CHIP"));
+            _turnIndicator = new();
+            _turnIndicator.SetTexture(this.turnTexture);
 
             _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 220)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content); // Load pot textures
