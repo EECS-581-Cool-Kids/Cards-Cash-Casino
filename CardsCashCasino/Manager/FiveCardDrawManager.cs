@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
  *  Date: 11/23/2024
- *  Last Modified: 11/24/2024
+ *  Last Modified: 12/6/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -155,10 +155,8 @@ namespace CardsCashCasino.Manager
         private int playerIndex;
 
         /// <summary>
-        /// The list of community cards. This is the cards that are shared by all players.
+        /// Tracks if the user is raising. Used within UpdateWhileUserPlaying() to allow user to make a decision.
         /// </summary>
-        private List<Card> _communityCards = new();
-
         private bool _userRaising = false;
 
         /// <summary>
@@ -170,11 +168,87 @@ namespace CardsCashCasino.Manager
         /// Initializing PlayerManager class
         /// </summary>
         PlayerManager _players = new PlayerManager();
+        
+                /// <summary>
+        /// Variable holding pot value front end info
+        /// </summary>
+        private PokerPotValueIndicator? _pokerPotValueIndicator;
+
+        /// <summary>
+        /// Variable connecting user stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userStackIndicator;
+
+        /// <summary>
+        /// Variable connecting user bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 2 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 3 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 4 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourIdentifier;
 
         /// <summary>
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
+        
         #region buttons
         /// <summary>
         /// The check button.
@@ -271,13 +345,15 @@ namespace CardsCashCasino.Manager
             POSTDRAW,
             CONCLUSION
         }
+        
         /// <summary>
-        /// What phase are we currently in?
+        /// Tracks which phase the game is in.
         /// Set by update.
         /// </summary>
         private Phase _currentPhase;
+        
         /// <summary>
-        /// What user is currently active?
+        /// Represents the index of the current player. Used to track the player whose turn it is.
         /// Set by update.
         /// </summary>
         private int _currentPlayer;
@@ -287,7 +363,7 @@ namespace CardsCashCasino.Manager
         #region Methods
 
         /// <summary>
-        /// The LoadContent method for Texas HoldEm.
+        /// The LoadContent method for Five Card Draw.
         /// <param name="location"></param>
         /// </summary>
         public void LoadContent(ContentManager content)
@@ -751,22 +827,22 @@ namespace CardsCashCasino.Manager
                     _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards[4].GetTexture();
 
                     // Get ranking and optimal hand 
-                    Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList());
+                    PokerUtil.Ranking handRank = PokerUtil.GetScore(_playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList());
                     // If this ties the best ranking
-                    if (pair.Item2 == bestRanking)
+                    if (handRank == bestRanking)
                     {
                         // Mark this hand as needing to be tie broken
-                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i],_playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList()));
                     }
                     // If this hand beats the old best ranking
-                    else if (pair.Item2 < bestRanking)
+                    else if (handRank < bestRanking)
                     {
                         // Update the value
-                        bestRanking = pair.Item2;
+                        bestRanking = handRank;
                         // Don't worry about losing hands
                         bestHands.Clear();
                         // Keep track of this hand
-                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i],_playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList()));
                     }
                 }
                 // Players that will receive a payout.
@@ -806,7 +882,7 @@ namespace CardsCashCasino.Manager
                         }
                     }
                 }
-
+                
                 // payout the pot to the winning player(s)
                 _players.Payout(winners, _potManager.DistributePot(winners.Count, potNumber));
             }
@@ -839,7 +915,6 @@ namespace CardsCashCasino.Manager
         {
             if (_players.AdvanceToRoundConclusion())
             {
-                //_currentPhase = Phase.FLOP;
                 return;
             }
             if (!_roundInit)

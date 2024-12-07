@@ -291,6 +291,7 @@ namespace CardsCashCasino.Manager
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
+        
         #region buttons
         /// <summary>
         /// The check button.
