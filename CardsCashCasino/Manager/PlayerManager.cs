@@ -1,4 +1,15 @@
-﻿using CardsCashCasino.Data;
+﻿/*
+ *  Module Name: PlayerManager.cs
+ *  Purpose: Controls logic and rules for players in Texas Hold Em and Five Card Draw
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Derek Norton
+ *  Date: 11/12/2024
+ *  Last Modified: 12/6/2024
+ */
+
+using CardsCashCasino.Data;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;

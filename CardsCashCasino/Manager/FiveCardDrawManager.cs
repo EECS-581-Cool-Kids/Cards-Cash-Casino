@@ -17,10 +17,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Timers;
 using CardsCashCasino.Data;
+using CardsCashCasino.Manager;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,18 +32,40 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace CardsCashCasino.Manager
 {
+
     /// <summary>
-    /// Identifies what stage of betting the game is currently in
+    /// The possible actions that a player can take in FiveCardDraw.
     /// </summary>
-    public enum FiveCardDrawBettingPhase
+    public enum FCDPokerAction
     {
-        PREDRAW,
-        POSTDRAW
+        FOLD,
+        CHECK,
+        CALL,
+        RAISE,
+        ALL_IN
+    }
+
+    /// <summary>
+    /// The possible actions that a player can take when switching out a card in Five Card Draw.
+    /// </summary>
+    public enum CardPos
+    {
+        FIRST,
+        SECOND,
+        THIRD,
+        FOURTH,
+        FIFTH,
+        CONFIRM
     }
 
     public class FiveCardDrawManager
     {
         #region Properties
+
+        /// <summary>
+        /// The pot UI for displaying the pot value.
+        /// </summary>
+        private PotUI _potUI;
 
         /// <summary>
         /// The user's hand of cards.
@@ -78,6 +103,16 @@ namespace CardsCashCasino.Manager
         private bool _userPlaying;
 
         /// <summary>
+        /// If true, the update statement is cut short to exclusively deal with a player swapping out their cards
+        /// </summary>
+        private bool _handleDraw = false;
+
+        /// <summary>
+        /// The current animation phase after a player determines which card(s) they would like swapped out
+        /// </summary>
+        private int _discardAnimationsPhase = 0;
+
+        /// <summary>
         /// Set when the round has been completed, and the game is ready to move to the next round.
         /// </summary>
         private bool _roundFinished = false;
@@ -90,7 +125,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The current betting phase of the game.
         /// </summary>
-        private FiveCardDrawBettingPhase _bettingPhase = FiveCardDrawBettingPhase.PREDRAW;
+        private FCDPhase _bettingPhase = FCDPhase.DRAW;
 
         /// <summary>
         /// The current bet for the game.
@@ -120,18 +155,18 @@ namespace CardsCashCasino.Manager
         /// The index of the player that is the dealer for the current round.
         /// Increments by one each round.
         /// </summary>
-        private static int _currentDealer = new Random().Next(0, Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentDealer;
 
         /// <summary>
         /// The index of the player that is the small blind for the current round.
         /// Increments by one each round.
         /// </summary>
-        private static int _currentSmallBlind = (_currentDealer + 1) % (Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentSmallBlind;
 
         /// <summary>
         /// The index of the player that is the big blind for the current round.
         /// </summary>
-        private static int _currentBigBlind = (_currentSmallBlind + 1) % (Constants.AI_PLAYER_COUNT + 1);
+        private static int _currentBigBlind;
 
         /// <summary>
         /// The number of rounds left until the blinds increase.
@@ -147,7 +182,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// A list of each player's hand.
         /// </summary>
-        private List<CardHand> _playerHands { get; set; }
+        public List<CardHand> _playerHands { get; set; }
 
         /// <summary>
         /// The index of the player whose turn it is
@@ -155,21 +190,154 @@ namespace CardsCashCasino.Manager
         private int playerIndex;
 
         /// <summary>
-        /// The list of community cards. This is the cards that are shared by all players.
+        /// If the update function is dealing with the raise functionality
         /// </summary>
-        private List<Card> _communityCards = new();
-
         private bool _userRaising = false;
 
         /// <summary>
-        /// Initializing TexasHoldEmPotManager class
+        /// Call to tell betting manager to start trying to get a raise amount.
         /// </summary>
-        PotManager _potManager = new PotManager();
+        public Action StartRaise { get; set; }
+
+        /// <summary>
+        /// Call to ask betting manager if raise code has completed.
+        /// </summary>
+        //public Func<int> GetRaiseAmount { get; set; }
 
         /// <summary>
         /// Initializing PlayerManager class
         /// </summary>
         PlayerManager _players = new PlayerManager();
+
+        /// <summary>
+        /// Variable to hold the Pots Manager class
+        /// </summary>
+        private PotManager _potManager = new PotManager();
+
+        /// <summary>
+        /// Variable holding pot value front end info
+        /// </summary>
+        private PokerPotValueIndicator? _pokerPotValueIndicator;
+
+        /// <summary>
+        /// Variable connecting user stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userStackIndicator;
+
+        /// <summary>
+        /// Variable connecting user bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 2 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 3 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 4 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourIdentifier;
+
+        /// <summary>
+        /// Card data for the first card in the player's hand.
+        /// </summary>
+        private Card _firstCardData;
+
+        /// <summary>
+        /// Card data for the second card in the player's hand.
+        /// </summary>
+        private Card _secondCardData;
+
+        /// <summary>
+        /// Card data for the third card in the player's hand.
+        /// </summary>
+        private Card _thirdCardData;
+
+        /// <summary>
+        /// Card data for the fourth card in the player's hand.
+        /// </summary>
+        private Card _fourthCardData;
+
+        /// <summary>
+        /// Card data for the fifth card in the player's hand.
+        /// </summary>
+        private Card _fifthCardData;
+
+        /// <summary>
+        /// The Y position of a card that has not been selected
+        /// </summary>
+        private int _unselectedYPos = 640;
+
+        /// <summary>
+        /// The Y position of a card that has been selected
+        /// </summary>
+        private int _selectedYPos = 490;
+
+        /// <summary>
+        /// If true the user has confirmed the cards they would like to discard and discard animations will begin
+        /// </summary>
+        private bool _discardAnimations = false;
+
+        /// <summary>
+        /// The list of cards the player would like to discard
+        /// </summary>
+        private List<int> discardIndexes = new List<int>();
+
+        /// <summary>
+        /// The number of cards the player has discarded, used for iteration purposes and resupplying the cards into the user's hand
+        /// </summary>
+        private int numCardsDiscarded = 0;
 
         /// <summary>
         /// The cursor.
@@ -200,6 +368,36 @@ namespace CardsCashCasino.Manager
         /// The all in button.
         /// </summary>
         private PokerActionButton? _allInButton;
+
+        /// <summary>
+        /// Button to add one dollar.
+        /// </summary>
+        private CardButton _firstCardButton;
+
+        /// <summary>
+        /// Button to add five dollar.
+        /// </summary>
+        private CardButton _secondCardButton;
+
+        /// <summary>
+        /// Button to add ten dollar.
+        /// </summary>
+        private CardButton _thirdCardButton;
+
+        /// <summary>
+        /// Button to add twenty five dollar.
+        /// </summary>
+        private CardButton _fourthCardButton;
+
+        /// <summary>
+        /// Button to add fifty dollar.
+        /// </summary>
+        private CardButton _fifthCardButton;
+
+        /// <summary>
+        /// Button to confirm bet.
+        /// </summary>
+        private CardButton _confirmButton;
         #endregion
 
         #region timers
@@ -264,9 +462,8 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Identifies what phase of the gameflow is active regarding dealing cards
         /// </summary>
-        enum Phase
+        enum FCDPhase
         {
-            INIT,
             DRAW,
             POSTDRAW,
             CONCLUSION
@@ -275,7 +472,7 @@ namespace CardsCashCasino.Manager
         /// What phase are we currently in?
         /// Set by update.
         /// </summary>
-        private Phase _currentPhase;
+        private FCDPhase _currentPhase;
         /// <summary>
         /// What user is currently active?
         /// Set by update.
@@ -287,7 +484,7 @@ namespace CardsCashCasino.Manager
         #region Methods
 
         /// <summary>
-        /// The LoadContent method for Texas HoldEm.
+        /// The LoadContent method for Five Card Draw.
         /// <param name="location"></param>
         /// </summary>
         public void LoadContent(ContentManager content)
@@ -299,25 +496,100 @@ namespace CardsCashCasino.Manager
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
             int buffer = 15;
 
-            _checkButton = new(FiveCardDrawTextures.CheckButtonEnabledTexture!, TexasHoldEmTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
-            _callButton = new(FiveCardDrawTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
-            _raiseButton = new(FiveCardDrawTextures.RaiseButtonTexture!, TexasHoldEmTextures.RaiseButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
-            _allInButton = new(FiveCardDrawTextures.AllInButtonTexture!, TexasHoldEmTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3 + buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
-            _foldButton = new(FiveCardDrawTextures.FoldButtonTexture!, TexasHoldEmTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4 + buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            if (!_handleDraw)
+            {
+                _checkButton = new(FiveCardDrawTextures.CheckButtonEnabledTexture!, FiveCardDrawTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+                _callButton = new(FiveCardDrawTextures.CallButtonEnabledTexture!, FiveCardDrawTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+                _raiseButton = new(FiveCardDrawTextures.RaiseButtonTexture!, FiveCardDrawTextures.RaiseButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+                _allInButton = new(FiveCardDrawTextures.AllInButtonTexture!, FiveCardDrawTextures.AllInButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 3 + buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+                _foldButton = new(FiveCardDrawTextures.FoldButtonTexture!, FiveCardDrawTextures.FoldButtonTexture!, widthBuffer + Constants.BUTTON_WIDTH * 4 + buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
 
-            _cursor = new(FiveCardDrawTextures.CursorTexture!, _checkButton.GetAdjustedPos());
+                _cursor = new(FiveCardDrawTextures.CursorTexture!, _checkButton.GetAdjustedPos());
+            } 
+
+            _pokerPotValueIndicator = new();
+            _userStackIndicator = new();
+            _userBetIndicator = new();
+            _aiOneStackIndicator = new();
+            _aiOneBetIndicator = new();
+            _aiTwoStackIndicator = new();
+            _aiTwoBetIndicator = new();
+            _aiThreeStackIndicator = new();
+            _aiThreeBetIndicator = new();
+            _aiFourStackIndicator = new();
+            _aiFourBetIndicator = new();
+            _aiOneIdentifier = new();
+            _aiTwoIdentifier = new();
+            _aiThreeIdentifier = new();
+            _aiFourIdentifier = new();
+
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
+            _potUI.LoadContent(content); // Load pot textures
         }
 
         /// <summary>
-        /// The main update loop for blackjack.
+        /// The main update loop for Five Card Draw.
         /// </summary>
         public void Update()
         {
+            if (_handleDraw) //if true the player is in the phase of selecting which cards to discard
+            {
+                HandleDiscardAction();
+                return;
+            }
+            if(_discardAnimations) //if true the discarded cards have been selected and the animation phase is active
+            {
+                DiscardAnimations();
+                return;
+            }
+            if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
+                return;
+
+            //// Let the player look at the outcome and then continue.
+            //if (_currentPhase == Phase.CONCLUSION)
+            //{
+            //    UpdateWhileUserPlaying();
+            //    return;
+            //}
+
+            //if player is either folded or all in, skip the player's turn
+            if (!_players.IsActivePlayer(playerIndex))
+            {
+
+                RoundLogic();
+                return;
+            }
+
             // If it's currently player's turn
-            if (_userPlaying)
+            if (playerIndex == 0)
                 UpdateWhileUserPlaying();
             else
                 UpdateWhileAIPlaying();
+
+            int totalPotValue = _potManager.Pots.Sum(pot => pot.Total); // Calculate total pot value
+            _potUI.UpdatePot(totalPotValue);
+        }
+
+        private void NextPlayer()
+        {
+            playerIndex = (playerIndex + 1) % _playerHands.Count;
+        }
+
+        /// <summary>
+        /// Delay
+        /// </summary>
+        private void BlockingDelay(int milliseconds)
+        {
+            // Get the current time
+            var stopwatch = Stopwatch.StartNew();
+
+            // Loop until the specified time has passed
+            while (stopwatch.ElapsedMilliseconds < milliseconds)
+            {
+                // Do nothing (block)
+            }
+
+            stopwatch.Stop();
         }
 
         /// <summary>
@@ -325,10 +597,11 @@ namespace CardsCashCasino.Manager
         /// Will not block the flow of execution.
         /// </summary>
         /// <returns>The action chosen, or null if no action has been chosen</returns>
-        private PokerAction? GetPlayerAction()
+        private FCDPokerAction? GetPlayerAction()
         {
+            KeyboardState state = Keyboard.GetState();
             // Handle right key press to move the cursor.
-            if (Keyboard.GetState().IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || _cursorMoveTimeout.Enabled))
+            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos++;
 
@@ -336,7 +609,7 @@ namespace CardsCashCasino.Manager
                 if (_currentCursorPos >= Constants.POKER_BUTTON_COUNT)
                     _currentCursorPos = 0;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 // Reset the cursor move timer.
                 _cursorMoveTimeout = new Timer(100);
@@ -344,7 +617,7 @@ namespace CardsCashCasino.Manager
                 _cursorMoveTimeout.Start();
             }
             // Handle left key press to move the cursor.
-            else if (Keyboard.GetState().IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            else if (state.IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
             {
                 _currentCursorPos--;
 
@@ -352,13 +625,13 @@ namespace CardsCashCasino.Manager
                 if (_currentCursorPos < 0)
                     _currentCursorPos = Constants.POKER_BUTTON_COUNT - 1;
 
-                _cursor!.UpdateLocation(GetNewCursorPos());
+                _cursor.UpdateLocation(GetNewCursorPos());
 
                 _cursorMoveTimeout = new Timer(100);
                 _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
                 _cursorMoveTimeout.Start();
             }
-            else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+            else if (state.IsKeyDown(Keys.Enter))
             {
                 if (_userActionTimeout is not null && _userActionTimeout.Enabled)
                     return null;
@@ -370,22 +643,21 @@ namespace CardsCashCasino.Manager
                 switch (_currentCursorPos)
                 {
                     case Constants.CHECK_BUTTON_POS:
-                        return PokerAction.CHECK;
+                        return FCDPokerAction.CHECK;
 
                     case Constants.CALL_BUTTON_POS:
-                        return PokerAction.CALL;
+                        return FCDPokerAction.CALL;
 
                     case Constants.RAISE_BUTTON_POS:
-                        return PokerAction.RAISE;
+                        return FCDPokerAction.RAISE;
 
                     case Constants.ALL_IN_BUTTON_POS:
-                        return PokerAction.ALL_IN;
+                        return FCDPokerAction.ALL_IN;
 
                     case Constants.FOLD_BUTTON_POS:
-                        return PokerAction.FOLD;
+                        return FCDPokerAction.FOLD;
                 }
             }
-
             return null;
         }
 
@@ -398,9 +670,9 @@ namespace CardsCashCasino.Manager
         private int GetPlayerRaise()
         {
             // TODO: Read user's inputs w.r.t. the UI, and if a decision was made, return that value.
-
-            // If no decision was made yet, return -1.
-            return -1;
+            int amount = BettingManager.UserBet;
+            BettingManager.UserBet = 0;
+            return amount;
         }
 
         /// <summary>
@@ -411,23 +683,30 @@ namespace CardsCashCasino.Manager
         {
             switch (_currentPhase)
             {
-                case Phase.INIT:
-                    _currentPhase = Phase.DRAW;
+                case FCDPhase.DRAW:
+                    _currentPhase = FCDPhase.POSTDRAW;
                     //HandleDraw();
                     return;
 
-                case Phase.DRAW:
-                    //_currentPhase = Phase.TURN;
-                    HandlePostDraw();
+                case FCDPhase.POSTDRAW:
+                    for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
+                    {
+                        _playerHands[i].FCDUnhideCards();
+                    }
+                    _currentPhase = FCDPhase.CONCLUSION;
                     return;
 
-                case Phase.POSTDRAW:
-                    _currentPhase = Phase.CONCLUSION;
+                case FCDPhase.CONCLUSION:
                     RoundConclusion();
-                    return;
-
-                case Phase.CONCLUSION:
-                    _currentPhase = Phase.INIT;
+                    if (_players.Players[0].PlayerStatus == PlayerStatus.BROKE)
+                    {
+                        EndGame();
+                    }
+                    else
+                    {
+                        _currentPhase = FCDPhase.DRAW;
+                        StartGame();
+                    }
                     return;
             }
         }
@@ -437,7 +716,7 @@ namespace CardsCashCasino.Manager
         /// Assumes that the current player has completed their turn, and the next player's turn is about to begin.
         /// Contains the logic to decide who's turn it is next.
         /// </summary>
-        private void HandlePostDraw()
+        private void RoundLogic()
         {
             if (_players.AdvanceToRoundConclusion())
             {
@@ -447,28 +726,30 @@ namespace CardsCashCasino.Manager
 
             if (!_roundInit)
             {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetStartingBettorIndex();
+                if (_currentPhase == FCDPhase.DRAW)
+                {
+                    //set the starting bettor to the player to the left of the big blind
+                    playerIndex = _players.GetPreflopStartingBettor();
+                    _currentBet = _bigBlindBet;
+                }
+                else
+                {
+                    // Set the player index to the player to the left of the big blind
+                    playerIndex = _players.GetStartingBettorIndex();
+                    _currentBet = 0;
+                }
                 _roundInit = true;
             }
             //round init not needed, advance the player index to next player
             else
             {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
+                NextPlayer();
             }
 
             // iterate through the players starting with the player to the left of the big blind. and handle their actions.
             //loop will terminate and betting round will end once conditions are met
             if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
             {
-                //if player is either folded or all in, skip the player's turn
-                if (_players.IsActivePlayer(playerIndex))
-                {
-                    return;
-                }
                 // If the player is the user, set the user playing flag to true.
                 if (playerIndex == 0)
                 {
@@ -485,9 +766,11 @@ namespace CardsCashCasino.Manager
                 {
                     _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                     _potManager.AddToPot(_currentBet, _players.PackageBets());
+                    _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
                     _players.ResetBets();
                     _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
+                    _currentPhase = FCDPhase.CONCLUSION;
+                    NextPhase();
                     return;
                 }
             }
@@ -497,9 +780,18 @@ namespace CardsCashCasino.Manager
                 //finalize bets for the round and add them to the pots
                 _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
                 _potManager.AddToPot(_currentBet, _players.PackageBets());
+                _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
 
                 //reset the bets for the next round to 0
                 _players.ResetBets();
+                _currentBet = 0;
+
+                //update all player bet values to 0
+                _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+                _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+                _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+                _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+                _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
                 _roundInit = false;
                 NextPhase();
                 return;
@@ -511,12 +803,28 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
+            //// If we are waiting for the player to press enter to manually continue
+            //if (_currentPhase == Phase.CONCLUSION)
+            //{
+            //    KeyboardState state = Keyboard.GetState();
+            //    if (state.IsKeyDown(Keys.Enter)) // If the user presses enter
+            //    {
+            //        NextPhase(); // Continue
+            //    }
+            //    return;
+            //}
+            //if player is either folded or all in, skip the player's turn
+            if (!_players.IsActivePlayer(playerIndex))
+            {
+                return;
+            }
             // Return if the AI is still taking an action.
             if (_AIActionTimeout is not null && _AIActionTimeout.Enabled)
                 return;
 
             if (_userRaising)
             {
+
                 // At this point, the UI used to figure out what user wants to raise by should be rendered.
                 int raiseAmount = GetPlayerRaise();
 
@@ -529,12 +837,13 @@ namespace CardsCashCasino.Manager
                 // TODO: Verify that the below code is correct.
                 _currentBet += raiseAmount;
                 Raise(0);
+                //_players.Raise(raiseAmount, 0);
 
             }
             else
             {
                 // Get the action the player selected, if any
-                PokerAction? playerAction = GetPlayerAction();
+                FCDPokerAction? playerAction = GetPlayerAction();
 
                 // if the player did not decide on an action yet
                 if (playerAction == null)
@@ -544,22 +853,31 @@ namespace CardsCashCasino.Manager
 
                 switch (playerAction)
                 {
-                    case PokerAction.FOLD:
+                    case FCDPokerAction.FOLD:
                         Fold(0);
                         break;
-                    case PokerAction.CHECK:
-                        Check(0);
+                    case FCDPokerAction.CHECK:
+                        if (_currentBet != 0)
+                        {
+                            UpdateWhileUserPlaying();
+                            return;
+                        }
+                        else
+                        {
+                            Check(0);
+                        }
                         break;
-                    case PokerAction.CALL:
+                    case FCDPokerAction.CALL:
                         Call(0);
                         break;
-                    case PokerAction.RAISE:
+                    case FCDPokerAction.RAISE:
+                        StartRaise.Invoke();
                         // We have to run the code to get the amount the player raises by.
                         // Since this requires more render calls, we set the flag to start rendering that code
                         // and then we break out of the function early.
                         _userRaising = true;
                         return;
-                    case PokerAction.ALL_IN:
+                    case FCDPokerAction.ALL_IN:
                         AllIn(0);
                         break;
                 }
@@ -569,10 +887,11 @@ namespace CardsCashCasino.Manager
             // We will now carry out logic needed to finish users turn. 
             // At the start of the next call to Update(), it should be the next player's turn.
 
+            //update user bet value
+            _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
 
-
-            //RoundLogic();
-
+            RoundLogic();
         }
 
         /// <summary>
@@ -583,11 +902,42 @@ namespace CardsCashCasino.Manager
             // Should have some AI related nonsense here.
             // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
 
-            // ...
+            _AIActionTimeout = new(500);
+            _AIActionTimeout.Elapsed += Constants.OnTimeoutEvent!;
+            _AIActionTimeout.Start();
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
+            if (_currentBet == 0)
+            {
+                Check(playerIndex);
+            }
+            else
+            {
+                Call(playerIndex);
+            }
 
-            //RoundLogic();
+            //update all ai stack and bet visuals
+            if (playerIndex == 1)
+            {
+                _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+                _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            }
+            else if (playerIndex == 2)
+            {
+                _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+                _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            }
+            else if (playerIndex == 3)
+            {
+                _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+                _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            }
+            else if (playerIndex == 4)
+            {
+                _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
+                _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
+            }
+            RoundLogic();
         }
 
         /// <summary>
@@ -606,12 +956,46 @@ namespace CardsCashCasino.Manager
             // Draw the cursor
             _cursor.Draw(spriteBatch);
 
-            // Draw the player hands
-            foreach (CardHand hand in _playerHands)
+            if (!_handleDraw)
             {
-                hand.Draw(spriteBatch);
+                // Draw the player hands
+                foreach (CardHand hand in _playerHands)
+                {
+                    hand.Draw(spriteBatch);
+                }
             }
+            else if (_handleDraw) //if not in discard selection phase, buttons will not be drawn
+            {
+                //draw the cards that the player can choose to discard
+                _firstCardButton!?.Draw(spriteBatch);
+                _secondCardButton!?.Draw(spriteBatch);
+                _thirdCardButton!?.Draw(spriteBatch);
+                _fourthCardButton!?.Draw(spriteBatch);
+                _fifthCardButton!?.Draw(spriteBatch);
+                _confirmButton!?.Draw(spriteBatch);
+            }
+
+            //Draw player stack, bet, and identifiers 
+            _pokerPotValueIndicator!.Draw(spriteBatch);
+            _userStackIndicator!.Draw(spriteBatch);
+            _userBetIndicator!.Draw(spriteBatch);
+            _aiOneBetIndicator!.Draw(spriteBatch);
+            _aiOneStackIndicator!.Draw(spriteBatch);
+            _aiTwoBetIndicator!.Draw(spriteBatch);
+            _aiTwoStackIndicator!.Draw(spriteBatch);
+            _aiThreeBetIndicator!.Draw(spriteBatch);
+            _aiThreeStackIndicator!.Draw(spriteBatch);
+            _aiFourBetIndicator!.Draw(spriteBatch);
+            _aiFourStackIndicator!.Draw(spriteBatch);
+            _aiOneIdentifier!.Draw(spriteBatch);
+            _aiTwoIdentifier!.Draw(spriteBatch);
+            _aiThreeIdentifier!.Draw(spriteBatch);
+            _aiFourIdentifier!.Draw(spriteBatch);
+
+            // Draw the PotUI
+            _potUI.Draw(spriteBatch);
         }
+
         /// <summary>
         /// Gets the new Cursor position.
         /// </summary>
@@ -623,18 +1007,25 @@ namespace CardsCashCasino.Manager
                 Constants.CALL_BUTTON_POS => _callButton!.GetAdjustedPos(),
                 Constants.RAISE_BUTTON_POS => _raiseButton!.GetAdjustedPos(),
                 Constants.FOLD_BUTTON_POS => _foldButton!.GetAdjustedPos(),
+                Constants.ALL_IN_BUTTON_POS => _allInButton!.GetAdjustedPos(),
                 _ => _callButton!.GetAdjustedPos()
             };
         }
 
         /// <summary>
-        /// Enter the Five Card Draw gameflow
+        /// Enter the FiveCardDraw gameflow
         /// </summary>
-        private void Initialize()
+        public void Initialize()
         {
+            int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int aiStackYPos = 220;
+            int aiBetYPos = 246;
+            int aiIdentifierYPos = 194;
 
             //creates user and number of ai opponents
-            _players.InitiatePlayers(5);
+            _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
 
             _gameOver = false;
             _userPlaying = false;
@@ -648,23 +1039,74 @@ namespace CardsCashCasino.Manager
             _smallBlindBet = 1;
             _bigBlindBet = 2;
 
+
+            //setting position for all front end player and pot info
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 325);
+            _userStackIndicator!.SetPosition(userStackXPos, 605);
+            _userBetIndicator!.SetPosition(userBetXPos, 579);
+            _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
+            _aiOneStackIndicator!.SetPosition(220, aiStackYPos);
+            _aiOneBetIndicator!.SetPosition(220, aiBetYPos);
+            _aiTwoIdentifier!.SetPosition(520, aiIdentifierYPos);
+            _aiTwoStackIndicator!.SetPosition(520, aiStackYPos);
+            _aiTwoBetIndicator!.SetPosition(520, aiBetYPos);
+            _aiThreeIdentifier!.SetPosition(820, aiIdentifierYPos);
+            _aiThreeStackIndicator!.SetPosition(820, aiStackYPos);
+            _aiThreeBetIndicator!.SetPosition(820, aiBetYPos);
+            _aiFourIdentifier!.SetPosition(1120, aiIdentifierYPos);
+            _aiFourStackIndicator!.SetPosition(1120, aiStackYPos);
+            _aiFourBetIndicator!.SetPosition(1120, aiBetYPos);
+
+            //setting ai identifiers
+            _aiOneIdentifier!.Update(1);
+            _aiTwoIdentifier!.Update(2);
+            _aiThreeIdentifier!.Update(3);
+            _aiFourIdentifier!.Update(4);
+
             _playerHands = new List<CardHand>(); // Initialize the list of player hands.
             RequestDecksOfCards!(Constants.POKER_DECK_COUNT); // Generate the deck of cards.
             _capacity = Constants.POKER_DECK_COUNT * 52; // Set the capacity of the deck.
+
+            StartGame();
         }
 
         /// <summary>
-        /// Enter the TexasHoldEm gameflow
+        /// Enter the FiveCardDraw gameflow
         /// </summary>
-        public void StartGame()
+        private void StartGame()
         {
             //collect antes and create pot
             _players.GenerateAntes(_ante);
             _potManager.InitializePot(_ante, _players.PackageBets());
+            _players.ResetBets();
+
+            for (int player = 0; player < _players.Players.Count; player++)
+                if (_players.Players[player].PlayerStatus != PlayerStatus.BROKE)
+                    _players.Players[player].PlayerStatus = PlayerStatus.IN;
+
+            _pokerPotValueIndicator!.Update(_potManager.GetPotAmounts()[0]);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
+            _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
+
+            IsPlaying = true;
             _roundInit = false;
+            _currentPhase = FCDPhase.DRAW;
 
             //collects and places blind bets from small and big blind players
             _players.CollectBlinds(_smallBlindBet, _bigBlindBet); //collects and places blind bets from small and big blind players
+            _userBetIndicator!.Update(_players.Players[0].PlayerBet);
+            _userStackIndicator!.Update(_players.Players[0].PlayerStack);
+            _aiOneBetIndicator!.Update(_players.Players[1].PlayerBet);
+            _aiOneStackIndicator!.Update(_players.Players[1].PlayerStack);
+            _aiTwoBetIndicator!.Update(_players.Players[2].PlayerBet);
+            _aiTwoStackIndicator!.Update(_players.Players[2].PlayerStack);
+            _aiThreeBetIndicator!.Update(_players.Players[3].PlayerBet);
+            _aiThreeStackIndicator!.Update(_players.Players[3].PlayerStack);
+            _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
+            _aiFourStackIndicator!.Update(_players.Players[4].PlayerStack);
 
             // If the size of the card deck is less than 50% of its capacity, recycle the discard pile.
             if (RequestDeckSize!.Invoke() < (_capacity / 2))
@@ -675,28 +1117,267 @@ namespace CardsCashCasino.Manager
                 GeneratePlayerHands();
 
             // Calculate the position of the user hand.
-            int userHandXPos = Constants.WINDOW_WIDTH / 2;
+            int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 40;
 
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
-            int aiHandXPos = 100;
+            int aiHandXPos = 320;
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
             _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 200);
 
-            for (int i = 1; i < Constants.AI_PLAYER_COUNT; i++)
+            for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
-                _playerHands[i].SetCenter(aiHandXPos, 100);
-                aiHandXPos += 200;
+                _playerHands[i].SetCenter(aiHandXPos, 80);
+                aiHandXPos += 300;
             }
 
             // Deal 2 cards to each player one at a time, starting with the small blind.
             int dealStartIndex = _currentSmallBlind;
 
-            for (int i = 0; i < _playerHands.Count * 2; i++)
+            for (int i = 0; i < _playerHands.Count * 5; i++)
             {
                 _playerHands[dealStartIndex].AddCard(RequestCard!());
                 dealStartIndex = (dealStartIndex + 1) % _playerHands.Count;
+            }
+            _playerHands[0].FCDUnhideCards();
+
+        }
+
+        /// <summary>
+        /// Initializes the options menu for which cards the player would like to discard
+        /// </summary>
+        private void HandleDraw()
+        {
+            int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
+            int buffer = 130;
+
+            _firstCardData = _playerHands[0].FCDSelectCard(0);
+            _secondCardData = _playerHands[0].FCDSelectCard(1);
+            _thirdCardData = _playerHands[0].FCDSelectCard(2);
+            _fourthCardData = _playerHands[0].FCDSelectCard(3);
+            _fifthCardData = _playerHands[0].FCDSelectCard(4);
+
+            if (discardIndexes.Any(index => index == 0))
+                _firstCardButton = new(_firstCardData.ReturnTexture()!, widthBuffer, _selectedYPos, 99, 141);
+            else
+                _firstCardButton = new(_firstCardData.ReturnTexture()!, widthBuffer, _unselectedYPos, 99, 141);
+            if (discardIndexes.Any(index => index == 1))
+                _secondCardButton = new(_secondCardData.ReturnTexture()!, widthBuffer + buffer * 1, _selectedYPos, 99, 141);
+            else
+                _secondCardButton = new(_secondCardData.ReturnTexture()!, widthBuffer + buffer * 1, _unselectedYPos, 99, 141);
+            if (discardIndexes.Any(index => index == 2))
+                _thirdCardButton = new(_thirdCardData.ReturnTexture()!, widthBuffer + buffer * 2, _selectedYPos, 99, 141);
+            else
+                _thirdCardButton = new(_thirdCardData.ReturnTexture()!, widthBuffer + buffer * 2, _unselectedYPos, 99, 141);
+            if (discardIndexes.Any(index => index == 3))
+                _fourthCardButton = new(_fourthCardData.ReturnTexture()!, widthBuffer + buffer * 3, _selectedYPos, 99, 141);
+            else
+                _fourthCardButton = new(_fourthCardData.ReturnTexture()!, widthBuffer + buffer * 3, _unselectedYPos, 99, 141);
+            if (discardIndexes.Any(index => index == 4))
+                _fifthCardButton = new(_fifthCardData.ReturnTexture()!, widthBuffer + buffer * 4, _selectedYPos, 99, 141);
+            else
+                _fifthCardButton = new(_fifthCardData.ReturnTexture()!, widthBuffer + buffer * 4, _unselectedYPos, 99, 141);
+
+            _confirmButton = new(FiveCardDrawTextures.ConfirmButton!, widthBuffer + buffer * 5, _unselectedYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
+            _handleDraw = true;
+        }
+
+        /// <summary>
+        /// Actions that update the position of the cards that the player would like to discard
+        /// </summary>
+        private void UpdateDiscardAction()
+        {
+            // Get the action the player selected, if any
+            CardPos? playerAction = HandleDiscardAction();
+
+            // if the player did not decide on an action yet
+            if (playerAction == null)
+            {
+                return;
+            }
+
+            //which card did the player choose to discard
+            switch (playerAction)
+            {
+                case CardPos.FIRST:
+                    if (!discardIndexes.Any(index => index == 0))
+                    {
+                        discardIndexes.Add(0);
+
+                    }
+                    else
+                    {
+                        discardIndexes.Remove(0);
+                    }
+                    return;
+                case CardPos.SECOND:
+                    if (!discardIndexes.Any(index => index == 1))
+                    {
+                        discardIndexes.Add(1);
+
+                    }
+                    else
+                    {
+                        discardIndexes.Remove(1);
+                    }
+                    return;
+                case CardPos.THIRD:
+                    if (!discardIndexes.Any(index => index == 2))
+                    {
+                        discardIndexes.Add(2);
+
+                    }
+                    else
+                    {
+                        discardIndexes.Remove(2);
+                    }
+                    return;
+                case CardPos.FOURTH:
+                    if (!discardIndexes.Any(index => index == 3))
+                    {
+                        discardIndexes.Add(3);
+
+                    }
+                    else
+                    {
+                        discardIndexes.Remove(3);
+
+                    }
+                    return;
+                case CardPos.FIFTH:
+                    if (!discardIndexes.Any(index => index == 4))
+                    {
+                        discardIndexes.Add(4);
+
+                    }
+                    else
+                    {
+                        discardIndexes.Remove(4);
+                    }
+                    return;
+                case CardPos.CONFIRM: //player has confirmed which cards they would like to discard
+                    _handleDraw = false;
+                    if (discardIndexes.Count > 0)
+                    {
+                        _discardAnimations = true;
+                    }
+                    return;
+                    
+            }
+        }
+
+        /// <summary>
+        /// Handles the cursor position and selecting which cards the player would like to discard
+        /// </summary>
+        private CardPos? HandleDiscardAction()
+        {
+            KeyboardState state = Keyboard.GetState();
+            // Handle right key press to move the cursor.
+            if (state.IsKeyDown(Keys.Right) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            {
+                _currentCursorPos++;
+
+                // Wrap the cursor around if it goes past the last button.
+                if (_currentCursorPos >= Constants.POKER_BUTTON_COUNT)
+                    _currentCursorPos = 0;
+
+                _cursor.UpdateLocation(GetNewCursorPos());
+
+                // Reset the cursor move timer.
+                _cursorMoveTimeout = new Timer(100);
+                _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _cursorMoveTimeout.Start();
+            }
+            // Handle left key press to move the cursor.
+            else if (state.IsKeyDown(Keys.Left) && (_cursorMoveTimeout is null || !_cursorMoveTimeout.Enabled))
+            {
+                _currentCursorPos--;
+
+                // Wrap the cursor around if it goes past the first button.
+                if (_currentCursorPos < 0)
+                    _currentCursorPos = Constants.POKER_BUTTON_COUNT - 1;
+
+                _cursor.UpdateLocation(GetNewCursorPos());
+
+                _cursorMoveTimeout = new Timer(100);
+                _cursorMoveTimeout.Elapsed += OnTimeoutEvent!;
+                _cursorMoveTimeout.Start();
+            }
+            else if (state.IsKeyDown(Keys.Enter))
+            {
+                if (_userActionTimeout is not null && _userActionTimeout.Enabled)
+                    return null;
+
+                _userActionTimeout = new(200);
+                _userActionTimeout.Elapsed += OnTimeoutEvent!;
+                _userActionTimeout.Start();
+
+                switch (_currentCursorPos)
+                {
+                    case 1:
+                        return CardPos.FIRST;
+
+                    case 2:
+                        return CardPos.SECOND;
+
+                    case 3:
+                        return CardPos.THIRD;
+
+                    case 4:
+                        return CardPos.FOURTH;
+
+                    case 5:
+                        return CardPos.FIFTH;
+                }
+            }
+            return null;
+        }
+
+
+        /// <summary>
+        /// The sequence of animations once a player has decided which cards to discard
+        /// </summary>
+        private void DiscardAnimations()
+        {
+            switch (_discardAnimationsPhase)
+            {
+                case 1:
+                    _playerHands[0].FCDHideByIndex(discardIndexes[numCardsDiscarded]);
+                    numCardsDiscarded += 1;
+                    BlockingDelay(300);
+                    if (numCardsDiscarded == discardIndexes.Count)
+                    {
+                        _discardAnimationsPhase += 1;
+                    }
+                    return; 
+
+                case 2:
+                    _playerHands[0].RemoveCard(discardIndexes.First());
+                    discardIndexes.Remove(0);
+                    BlockingDelay(300);
+                    if (discardIndexes.Count == 0)
+                    {
+                        _discardAnimationsPhase += 1;
+                    }
+                    return;
+
+                case 3:
+                    _playerHands[0].AddCard(RequestCard!());
+                    numCardsDiscarded -= 1;
+                    BlockingDelay(300);
+                    if (numCardsDiscarded == 0)
+                    {
+                        _discardAnimationsPhase += 1;
+                    }
+                    return;
+
+                case 4:
+                    _playerHands[0].UnhideCards();
+                    _discardAnimations = false;
+                    _discardAnimationsPhase = 1;
+                    BlockingDelay(300);
+                    return;
             }
         }
 
@@ -751,22 +1432,22 @@ namespace CardsCashCasino.Manager
                     _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards[4].GetTexture();
 
                     // Get ranking and optimal hand 
-                    Tuple<List<Card>, PokerUtil.Ranking> pair = PokerUtil.GetScore(_communityCards, _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList());
+                    PokerUtil.Ranking pair = PokerUtil.GetScore(_playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList());
                     // If this ties the best ranking
-                    if (pair.Item2 == bestRanking)
+                    if (pair == bestRanking)
                     {
                         // Mark this hand as needing to be tie broken
-                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList()));
                     }
                     // If this hand beats the old best ranking
-                    else if (pair.Item2 < bestRanking)
+                    else if (pair < bestRanking)
                     {
                         // Update the value
-                        bestRanking = pair.Item2;
+                        bestRanking = pair;
                         // Don't worry about losing hands
                         bestHands.Clear();
                         // Keep track of this hand
-                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], pair.Item1));
+                        bestHands.Add(new Tuple<int, List<Card>>(_potManager.PlayersEligible(potNumber)[i], _playerHands[_potManager.PlayersEligible(potNumber)[i]].Cards.ToList()));
                     }
                 }
                 // Players that will receive a payout.
@@ -828,82 +1509,18 @@ namespace CardsCashCasino.Manager
             //set the blinds for next round
             _players.SetNextRoundBlinds();
             _potManager.ResetPots();
-            _currentPhase = Phase.INIT;
-        }
 
-
-        /// <summary>
-        /// handles the initial stage of betting before any community cards appear
-        /// </summary>
-        private void HandlePreDraw()
-        {
-            if (_players.AdvanceToRoundConclusion())
+            // Discard cards from, and clear, each hand.
+            foreach (CardHand hand in _playerHands)
             {
-                //_currentPhase = Phase.FLOP;
-                return;
-            }
-            if (!_roundInit)
-            {
-                // Set the current bet to the big blind.
-                _currentBet = _bigBlindBet;
-
-                // Set the player index to the player to the left of the big blind
-                playerIndex = _players.GetPreflopStartingBettor();
-                _roundInit = true;
-            }
-
-            //round init not needed, advance the player index to next player
-            else
-            {
-                playerIndex = (playerIndex + 1) % _playerHands.Count;
-            }
-
-            // iterate through the players starting with the player to the left of the big blind. and handle their actions.
-            //loop will terminate and betting round will end once conditions are met
-            if (!_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //if player is either folded or all in, skip the player's turn
-                if (_players.IsActivePlayer(playerIndex))
+                foreach (Card card in hand.Cards)
                 {
-                    return;
+                    RequestCardDiscard!(card);
                 }
-                // If the player is the user, set the user playing flag to true.
-                if (playerIndex == 0)
-                {
-                    _userPlaying = true;
-                }
-                // If the player is an AI player, set the AI playing flag to true.
-                else
-                {
-                    _userPlaying = false;
-                }
-                // Handle the player's action.
-                HandlePlayerAction(playerIndex);
-
-                //if only one player has not folded, prepare pot to award to player and advance to conclusion
-                if (_players.OnePlayerLeft())
-                {
-                    _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                    _potManager.AddToPot(_currentBet, _players.PackageBets());
-                    _players.ResetBets();
-                    _roundInit = false;
-                    _currentPhase = Phase.CONCLUSION;
-                    return;
-                }
+                hand.Clear();
             }
-            if (_players.AdvanceRound() && !_players.OnePlayerLeft())
-            {
-                //finalize bets for the round and add them to the pots
-                _potManager.AddFoldedBetsToPot(_players.PackageFoldedBets());
-                _potManager.AddToPot(_currentBet, _players.PackageBets());
 
-                //reset the bets for the next round to 0
-                _players.ResetBets();
-                _roundInit = false;
-                //_currentPhase = Phase.FLOP;
-                //DealFlop();
-                return;
-            }
+            _currentPhase = FCDPhase.DRAW;
         }
 
         /// <summary>
@@ -933,7 +1550,6 @@ namespace CardsCashCasino.Manager
                     Call(playerIndex);
                     break;
                 case PokerAction.RAISE:
-                    // _currentBet = Front end method of setting raise amount for user : AI calculated raise amount
                     Raise(playerIndex);
                     break;
                 case PokerAction.ALL_IN:
@@ -956,6 +1572,24 @@ namespace CardsCashCasino.Manager
                 Constants.FOLD_BUTTON_POS => PokerAction.FOLD,
                 Constants.ALL_IN_BUTTON_POS => PokerAction.ALL_IN,
                 _ => PokerAction.CHECK
+            };
+        }
+
+        /// <summary>
+        /// Retrieves user selected action
+        /// <returns>USER selected PokerAction</returns>
+        /// </summary>
+        private CardPos GetUserDiscardAction()
+        {
+            return _currentCursorPos switch
+            {
+                1 => CardPos.FIRST,
+                2 => CardPos.SECOND,
+                3 => CardPos.THIRD,
+                4 => CardPos.FOURTH,
+                5 => CardPos.FIFTH,
+                6 => CardPos.CONFIRM,
+                _ => CardPos.FIRST
             };
         }
 
@@ -1065,11 +1699,6 @@ public static class FiveCardDrawTextures
     public static Texture2D? RaiseButtonTexture { get; private set; }
 
     /// <summary>
-    /// The disabled texture for the Raise button. For the occasion that opponent places a bet that would put the user all in.
-    /// </summary> 
-    public static Texture2D? RaiseButtonDisabledTexture { get; private set; }
-
-    /// <summary>
     /// The texture for the Fold button.
     /// </summary> 
     public static Texture2D? FoldButtonTexture { get; private set; }
@@ -1080,27 +1709,30 @@ public static class FiveCardDrawTextures
     public static Texture2D? AllInButtonTexture { get; private set; }
 
     /// <summary>
+    /// The enabled texture for the AllIn button.
+    /// </summary> 
+    public static Texture2D? ConfirmButton { get; private set; }
+
+    /// <summary>
     /// The cursor's texture.
     /// </summary>
     public static Texture2D? CursorTexture { get; private set; }
 
     /// <summary>
-    /// Loads the assets for Texas HoldEm.
+    /// Loads the assets for Five Card Draw.
     /// </summary>
     public static void LoadContent(ContentManager content)
     {
-        // TODO: Create textures for the buttons.
-        // CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
-        // CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
-        // CheckButtonEnablesTexture = content.Load<Texture2D>("CheckButtonEnabled");
-        // CheckButtonEnablesTexture = content.Load<Texture2D>("CheckButtonDisabled");
-        // RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonEnabled");
-        // RaiseButtonEnabledTexture = content.Load<Texture2D>("RaiseButtonDisabled");
-        // FoldButtonTexture = content.Load<Texture2D>("FoldButton");
-        // AllInButtonTexture = content.Load<Texture2D>("AllInButton");
+        CallButtonEnabledTexture = content.Load<Texture2D>("CallButtonEnabled");
+        CallButtonDisabledTexture = content.Load<Texture2D>("CallButtonDisabled");
+        CheckButtonEnabledTexture = content.Load<Texture2D>("CheckButtonEnabled");
+        CheckButtonDisabledTexture = content.Load<Texture2D>("CheckButtonDisabled");
+        RaiseButtonTexture = content.Load<Texture2D>("RaiseButtonEnabled");
+        FoldButtonTexture = content.Load<Texture2D>("FoldButton");
+        AllInButtonTexture = content.Load<Texture2D>("AllInButton");
+        ConfirmButton = content.Load<Texture2D>("ConfirmBet");
 
         CursorTexture = content.Load<Texture2D>("BlackjackCursor");
-
     }
 }
 
@@ -1120,7 +1752,7 @@ public class FiveCardDrawCursor
     /// <summary>
     /// The size of the cursor.
     /// </summary>
-    private Point _size = new(144, 80);
+    private Point _size = new(Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
     #endregion Properties
 
     #region  Methods
@@ -1151,3 +1783,110 @@ public class FiveCardDrawCursor
     #endregion Methods
 }
 
+public class PokerActionButton
+{
+    #region Properties
+
+    /// <summary>
+    /// The disabled button texture.
+    /// </summary>
+    private Texture2D? _disabledTexture;
+
+    /// <summary>
+    /// The unselected button texture.
+    /// </summary>
+    private Texture2D _enabledTexture;
+
+    /// <summary>
+    /// The rectangle for the button.
+    /// </summary>
+    private Rectangle _buttonRectangle;
+
+    /// <summary>
+    /// Whether or not the button is enabled.
+    /// </summary>
+    public bool IsEnabled { get; private set; } = true;
+
+    /// <summary>
+    /// Whether or not the button is selected.
+    /// </summary>
+    public bool IsSelected { get; private set; } = false;
+    #endregion Properties
+
+    #region Methods
+    public PokerActionButton(Texture2D enabledTexture, Texture2D disabledTexture, int xPos, int yPos, int width, int height)
+    {
+        _enabledTexture = enabledTexture;
+        _disabledTexture = disabledTexture;
+        _buttonRectangle = new Rectangle(xPos, yPos, width, height);
+    }
+
+    /// <summary>
+    /// The Draw method for PokerActionButton.
+    /// </summary>
+    /// <param name="spriteBatch"></param>
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        spriteBatch.Draw(IsEnabled ? _enabledTexture : _disabledTexture, _buttonRectangle, Color.White);
+    }
+
+    /// <summary>
+    /// Gets the location where the cursor will be.
+    /// </summary>
+    public Point GetAdjustedPos()
+    {
+        return new Point(_buttonRectangle.X, _buttonRectangle.Y);
+    }
+    #endregion Methods
+}
+
+public class CardButton
+{
+    #region Properties
+
+    /// <summary>
+    /// The unselected button texture.
+    /// </summary>
+    private Texture2D _texture;
+
+    /// <summary>
+    /// The rectangle for the button.
+    /// </summary>
+    private Rectangle _buttonRectangle;
+
+    /// <summary>
+    /// Whether or not the button is enabled.
+    /// </summary>
+    public bool IsEnabled { get; private set; } = true;
+
+    /// <summary>
+    /// Whether or not the button is selected.
+    /// </summary>
+    public bool IsSelected { get; private set; } = false;
+    #endregion Properties
+
+    #region Methods
+    public CardButton(Texture2D texture, int xPos, int yPos, int width, int height)
+    {
+        _texture = texture;
+        _buttonRectangle = new Rectangle(xPos, yPos, width, height);
+    }
+
+    /// <summary>
+    /// The Draw method for PokerActionButton.
+    /// </summary>
+    /// <param name="spriteBatch"></param>
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        spriteBatch.Draw(_texture, _buttonRectangle, Color.White);
+    }
+
+    /// <summary>
+    /// Gets the location where the cursor will be.
+    /// </summary>
+    public Point GetAdjustedPos()
+    {
+        return new Point(_buttonRectangle.X, _buttonRectangle.Y);
+    }
+    #endregion Methods
+}

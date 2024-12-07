@@ -66,6 +66,30 @@ namespace CardsCashCasino.Data
             _cards[1].GetTexture();
         }
 
+        public void FCDUnhideCards()
+        {
+            _cards[0].GetTexture();
+            _cards[1].GetTexture();
+            _cards[2].GetTexture();
+            _cards[3].GetTexture();
+            _cards[4].GetTexture();
+        }
+
+        public void FCDHideByIndex(int _cardIndex)
+        {
+        _cards[_cardIndex].HideTexture();
+        }
+
+        public void FCDUnhideByIndex(int _cardIndex)
+        {
+            _cards[_cardIndex].GetTexture();
+        }
+
+        public Card FCDSelectCard(int index)
+        {
+            return _cards[index];
+        }
+
         /// <summary>
         /// Removes a card at a given index.
         /// </summary>

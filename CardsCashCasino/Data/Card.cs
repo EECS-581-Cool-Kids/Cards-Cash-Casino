@@ -128,6 +128,11 @@ namespace CardsCashCasino.Data
             _cardTexture = CardTextures.GetCardTexture(_value, _suit);
         }
 
+        public Texture2D ReturnTexture()
+        {
+            return CardTextures.GetCardTexture(_value, _suit);
+        }
+
         /// <summary>
         /// Returns the initial blackjack value.
         /// </summary>

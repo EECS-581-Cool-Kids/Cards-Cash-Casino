@@ -76,6 +76,11 @@ namespace CardsCashCasino
         private TexasHoldEmManager _texasHoldEmManager = new();
 
         /// <summary>
+        /// The Texas Hold 'Em manager for the game.
+        /// </summary>
+        private FiveCardDrawManager _fiveCardDrawManager = new();
+
+        /// <summary>
         /// The currently selected game.
         /// </summary>
         private SelectedGame _selectedGame = SelectedGame.NONE;
@@ -117,6 +122,15 @@ namespace CardsCashCasino
             _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
             _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
 
+            _fiveCardDrawManager.RequestCardManagerClear = _cardManager.ClearDecks;
+            _fiveCardDrawManager.RequestDecksOfCards = _cardManager.GenerateDecks;
+            _fiveCardDrawManager.RequestCard = _cardManager.DrawCard;
+            _fiveCardDrawManager.RequestShuffle = _cardManager.Shuffle;
+            _fiveCardDrawManager.RequestRecycle = _cardManager.Recycle;
+            _fiveCardDrawManager.RequestDeckSize = _cardManager.GetDeckSize;
+            _fiveCardDrawManager.RequestCardDiscard = _cardManager.Discard;
+            _fiveCardDrawManager.StartRaise = _bettingManager.OpenBettingMenu;
+
             BettingManager.RequestMainMenuReturn = SetSelectedGame;
 
             base.Initialize();
@@ -139,6 +153,8 @@ namespace CardsCashCasino
             // Load game managers
             _blackjackManager.LoadContent(Content);
             _texasHoldEmManager.LoadContent(Content);
+            _fiveCardDrawManager.LoadContent(Content);
+
             _bettingManager.LoadContent();
 
             // Initialize MainMenu
@@ -203,7 +219,16 @@ namespace CardsCashCasino
                         break;
 
                     case SelectedGame.FIVECARD:
-                        // TODO: Add Five Card Draw logic here
+                        if (!_fiveCardDrawManager.IsPlaying)
+                        {
+                            _fiveCardDrawManager.Initialize();
+                        }
+                        else if (_bettingManager.IsBetting)
+                        {
+                            _bettingManager.Update();
+                            break;
+                        }
+                        _fiveCardDrawManager.Update();
                         break;
                 }
             }
@@ -229,7 +254,10 @@ namespace CardsCashCasino
             {
                 _texasHoldEmManager.Draw(_spriteBatch);
             }
-            // Add logic for Five Card Draw if needed
+            else if (_selectedGame == SelectedGame.FIVECARD && _fiveCardDrawManager.IsPlaying)
+            {
+                _fiveCardDrawManager.Draw(_spriteBatch);
+            }
 
             _bettingManager.Draw(_spriteBatch);
 
@@ -256,15 +284,6 @@ namespace CardsCashCasino
             Timer timer = (Timer)source;
             timer.Stop();
             timer.Dispose();
-        }
-
-        /// <summary>
-        /// Quit the game.
-        /// </summary>
-        public void QuitGame()
-        {
-            StatisticsUtil.SaveStatisticsFile(); // Save Data
-            Exit(); // Quit the game
         }
     }
 }

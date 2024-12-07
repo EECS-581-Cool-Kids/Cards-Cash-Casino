@@ -440,7 +440,7 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        /// The main update loop for blackjack.
+        /// The main update loop for Texas Hold Em.
         /// </summary>
         public void Update()
         {
