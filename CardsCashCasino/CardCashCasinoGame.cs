@@ -147,15 +147,6 @@ namespace CardsCashCasino
         }
 
         /// <summary>
-        /// Quit the game.
-        /// </summary>
-        public void QuitGame()
-        {
-            StatisticsUtil.SaveStatisticsFile(); // Save Data
-            Exit(); // Quit the game
-        }
-
-        /// <summary>
         /// MonoGame Update method. Called every tick.
         /// </summary>
         protected override void Update(GameTime gameTime)
@@ -165,7 +156,7 @@ namespace CardsCashCasino
                 QuitGame();
 
             // Main Menu Logic
-            if (_selectedGame == SelectedGame.NONE)
+            if (_selectedGame == SelectedGame.NONE && (GameStartTimeout is null || !GameStartTimeout.Enabled))
             {
                 _mainMenu?.Update(); // Update MainMenu
             }

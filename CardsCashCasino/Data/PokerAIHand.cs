@@ -20,6 +20,6 @@ namespace CardsCashCasino.Data;
 /// <summary>
 /// The <c>PokerHand</c> class represents the AI opponents' poker hands.
 /// </summary>
-public class PokerAIHand : CardHand
+public class PokerAIHand : PokerHand
 {
 }

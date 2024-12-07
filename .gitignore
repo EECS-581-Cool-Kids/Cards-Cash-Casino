@@ -65,3 +65,4 @@ monodroid*.msi
 artifacts/
 
 .vs/
+.idea/
