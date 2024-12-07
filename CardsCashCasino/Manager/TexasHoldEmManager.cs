@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
  *  Date: 11/3/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/6/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -288,6 +288,11 @@ namespace CardsCashCasino.Manager
         private PlayerValuesIndicator? _aiFourIdentifier;
 
         /// <summary>
+        /// The indicator that shows whose turn it is.
+        /// </summary>
+        private IndicatorCharacter? _turnIndicator;
+
+        /// <summary>
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
@@ -434,6 +439,7 @@ namespace CardsCashCasino.Manager
             _aiTwoIdentifier = new();
             _aiThreeIdentifier = new();
             _aiFourIdentifier = new();
+            _turnIndicator = new(content.Load<Texture2D>("TEMP_CHIP"));
 
             _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 220)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content); // Load pot textures
@@ -457,7 +463,6 @@ namespace CardsCashCasino.Manager
             //if player is either folded or all in, skip the player's turn
             if (!_players.IsActivePlayer(playerIndex))
             {
-
                 RoundLogic();
                 return;
             }
@@ -470,6 +475,50 @@ namespace CardsCashCasino.Manager
 
             int totalPotValue = _potManager.Pots.Sum(pot => pot.Total); // Calculate total pot value
             _potUI.UpdatePot(totalPotValue);
+            
+            // Update the position of the turn indicator depending on who's turn it is
+            UpdateTurnIndicatorPosition();
+        }
+
+        /// <summary>
+        /// Called in the update loop. Updates the position of the turn indicator depending on who's turn it is.
+        /// </summary>
+        private void UpdateTurnIndicatorPosition()
+        {
+            int xPos = 0, yPos = 0;
+            
+            // if it's the user's turn, the indicator should appear next to the user's stack amount
+            switch (playerIndex)
+            {
+             case 0:
+                xPos = (Constants.WINDOW_WIDTH / 2) - 90; // This is shifted 15 pixels from the user's stack amount display
+                yPos = 605; // This is the y position of the user's stack amount display
+                
+                _turnIndicator!.SetPosition(xPos, yPos);
+                break;
+                
+             case 1:
+                 xPos = 190; // The x position of AI player 1's stack amount display shifted left 30 pixels
+                 yPos = 220; // The y position of each AI player's stack amount display
+                 break;
+             
+             case 2:
+                 xPos = 490; // The x position of AI player 2's stack amount display shifted left 30 pixels
+                 yPos = 220; // The y position of each AI player's stack amount display
+                 break;
+             
+            case 3:
+                xPos = 790; // The x position of AI player 3's stack amount display shifted left 30 pixels
+                yPos = 220; // The y position of each AI player's stack amount display
+                break;
+            
+            case 4:
+                xPos = 1090; // The x position of AI player 4's stack amount display shifted left 30 pixels
+                yPos = 220; // The y position of each AI player's stack amount display
+                break;
+            }
+            
+            _turnIndicator!.SetPosition(xPos, yPos);
         }
 
         private void NextPlayer()
@@ -767,22 +816,24 @@ namespace CardsCashCasino.Manager
                 {
                     case PokerAction.FOLD:
                         Fold(0);
+                        Debug.WriteLine("You folded.");
                         break;
                     case PokerAction.CHECK:
                         if (_currentBet != 0)
                         {
+                            Debug.WriteLine("You cannot check when there is an active bet.");
                             UpdateWhileUserPlaying();
                             return;
                         }
-                        else
-                        {
-                            Check(0);
-                        }
+                        Debug.WriteLine("You checked.");
+                        Check(0);
                         break;
                     case PokerAction.CALL:
+                        Debug.WriteLine("You called.");
                         Call(0);
                         break;
                     case PokerAction.RAISE:
+                        Debug.WriteLine("You raised.");
                         StartRaise.Invoke();
                         // We have to run the code to get the amount the player raises by.
                         // Since this requires more render calls, we set the flag to start rendering that code
@@ -790,6 +841,7 @@ namespace CardsCashCasino.Manager
                         _userRaising = true;
                         return;
                     case PokerAction.ALL_IN:
+                        Debug.WriteLine("You went all in! Good luck!");
                         AllIn(0);
                         break;
                 }
@@ -821,10 +873,13 @@ namespace CardsCashCasino.Manager
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
             if (_currentBet == 0)
             {
+                // write "AI <playerIndex> checks." to the console
+                Debug.WriteLine("AI " + playerIndex + " checks.");
                 Check(playerIndex);
             }
             else
             {
+                Debug.WriteLine("AI " + playerIndex + " calls.");
                 Call(playerIndex);
             }
 
@@ -896,6 +951,7 @@ namespace CardsCashCasino.Manager
             _aiTwoIdentifier!.Draw(spriteBatch);
             _aiThreeIdentifier!.Draw(spriteBatch);
             _aiFourIdentifier!.Draw(spriteBatch);
+            _turnIndicator!.Draw(spriteBatch);
 
             // Draw the PotUI
             _potUI.Draw(spriteBatch);
@@ -925,7 +981,7 @@ namespace CardsCashCasino.Manager
             int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
             int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
             int aiStackYPos = 220;
-            int aiBetYPos = 246;
+            int aiBetYPos = 246; // This is the Y position for the AI's bet indicator. Also used for the AI's turn indicator
             int aiIdentifierYPos = 194;
 
             //creates user and number of ai opponents
@@ -1225,7 +1281,7 @@ namespace CardsCashCasino.Manager
 
             if (_blindIncreaseCountdown == 0)
             {
-                _bigBlindBet = _bigBlindBet + (_bigBlindBet / 2);
+                _bigBlindBet += (_bigBlindBet / 2);
                 _smallBlindBet = _bigBlindBet / 2;
                 _blindIncreaseCountdown = 5;
                 _ante += 2;
