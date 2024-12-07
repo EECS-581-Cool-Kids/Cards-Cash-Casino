@@ -47,7 +47,10 @@ namespace CardsCashCasino.Util
                 _ => DisplayIndicatorTextures.ZeroTexture!
             };
         }
-        
+
+        ///<summary>
+        /// used to set the texture for the turn indicator
+        ///</summary>
         public static Texture2D GetTurnTexture()
         {
             return DisplayIndicatorTextures.TurnTexture!;
