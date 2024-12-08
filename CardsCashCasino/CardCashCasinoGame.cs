@@ -169,7 +169,7 @@ namespace CardsCashCasino
         {
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                QuitGame();
+                SetSelectedGame(SelectedGame.NONE);
 
             // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE && (GameStartTimeout is null || !GameStartTimeout.Enabled))
