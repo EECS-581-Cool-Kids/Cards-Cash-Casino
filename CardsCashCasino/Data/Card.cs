@@ -129,6 +129,14 @@ namespace CardsCashCasino.Data
         }
 
         /// <summary>
+        /// Exports the card texture to a variable in another class
+        /// </summary>
+        public Texture2D ReturnTexture()
+        {
+            return CardTextures.GetCardTexture(_value, _suit);
+        }
+
+        /// <summary>
         /// Returns the initial blackjack value.
         /// </summary>
         public int GetBlackjackValue()

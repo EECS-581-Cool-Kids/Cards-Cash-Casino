@@ -447,7 +447,7 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
-        /// The main update loop for blackjack.
+        /// The main update loop for Texas Hold Em.
         /// </summary>
         public void Update()
         {
@@ -864,9 +864,6 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileAIPlaying()
         {
-            // Should have some AI related nonsense here.
-            // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
-            
             _AIActionTimeout = new(500);
             _AIActionTimeout.Elapsed += Constants.OnTimeoutEvent!;
             _AIActionTimeout.Start();

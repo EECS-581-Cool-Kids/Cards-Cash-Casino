@@ -59,10 +59,33 @@ namespace CardsCashCasino.Data
             RecalculateCardPositions();
         }
 
+        /// <summary>
+        /// Reveals cards in Holdem hand.
+        /// </summary>
         public void UnhideCards()
         {
             _cards[0].GetTexture();
             _cards[1].GetTexture();
+        }
+
+        /// <summary>
+        /// Reveals cards in five card draw hand
+        /// </summary>
+        public void FCDUnhideCards()
+        {
+            _cards[0]?.GetTexture();
+            _cards[1]?.GetTexture();
+            _cards[2]?.GetTexture();
+            _cards[3]?.GetTexture();
+            _cards[4]?.GetTexture();
+        }
+
+        /// <summary>
+        /// Returns the card data at a specified index
+        /// </summary>
+        public Card FCDSelectCard(int index)
+        {
+            return _cards[index];
         }
 
         /// <summary>
