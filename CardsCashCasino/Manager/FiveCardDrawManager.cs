@@ -209,7 +209,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         PlayerManager _players = new PlayerManager();
         
-                /// <summary>
+        /// <summary>
         /// Variable holding pot value front end info
         /// </summary>
         private PokerPotValueIndicator? _pokerPotValueIndicator;
@@ -338,6 +338,11 @@ namespace CardsCashCasino.Manager
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
+
+        /// <summary>
+        /// The background texture for the game.
+        /// </summary>
+        private Texture2D? _backgroundTexture;
         
         #region buttons
         /// <summary>
@@ -490,9 +495,13 @@ namespace CardsCashCasino.Manager
             // Load the textures for the game.
             FiveCardDrawTextures.LoadContent(content);
 
+            _backgroundTexture = content.Load<Texture2D>("5CardTable");
+            // _backgroundTexture = content.Load<Texture2D>("MenuBackground");
+
+
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
-            int buffer = 15;
+            int buffer = 50;
 
             if (!_handleDraw)
             {
@@ -547,7 +556,7 @@ namespace CardsCashCasino.Manager
             _aiThreeIdentifier = new();
             _aiFourIdentifier = new();
 
-            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 135, 300)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content); // Load pot textures
         }
 
@@ -1117,6 +1126,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (_backgroundTexture != null)
+            {
+                spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT), Color.White);
+            }
             // Draw the buttons
             _callButton!.Draw(spriteBatch);
             _checkButton!.Draw(spriteBatch);
@@ -1209,9 +1222,9 @@ namespace CardsCashCasino.Manager
             int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
             // int userStackXPos = (Constants.WINDOW_WIDTH / 2) + 200 ;
             int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
-            int aiStackYPos = 220;
-            int aiBetYPos = 246;
-            int aiIdentifierYPos = 194;
+            int aiStackYPos = 231;  // AI stack text
+            int aiBetYPos = 268;  // AI bet text
+            int aiIdentifierYPos = 193;  // AI number
 
             //creates user and number of ai opponents
             _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
@@ -1229,14 +1242,17 @@ namespace CardsCashCasino.Manager
             _bigBlindBet = 2;
 
 
-            //setting position for all front end player and pot info
-            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 400);  // Pot value text  0010
-            _userStackIndicator!.SetPosition(userStackXPos, 605); // User stack text  0497
-            _userBetIndicator!.SetPosition(userBetXPos, 575);  // User bet text  0001
+            //setting positions for pot
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 462);  // Pot value text
 
-            _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
-            _aiOneStackIndicator!.SetPosition(220, aiStackYPos);
-            _aiOneBetIndicator!.SetPosition(220, aiBetYPos);
+            //setting positions for user stack and bet
+            _userStackIndicator!.SetPosition(userStackXPos, 605); // User stack text
+            _userBetIndicator!.SetPosition(userBetXPos, 569);  // User bet text
+
+            //setting positions for ai stack, bet, and identifiers
+            _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);  // AI number
+            _aiOneStackIndicator!.SetPosition(220, aiStackYPos);  // AI stack text
+            _aiOneBetIndicator!.SetPosition(220, aiBetYPos);  // AI bet text
             _aiTwoIdentifier!.SetPosition(520, aiIdentifierYPos);
             _aiTwoStackIndicator!.SetPosition(520, aiStackYPos);
             _aiTwoBetIndicator!.SetPosition(520, aiBetYPos);
@@ -1306,14 +1322,16 @@ namespace CardsCashCasino.Manager
                 GeneratePlayerHands();
 
             // Calculate the position of the user hand.
-            int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 160;
+            // int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 160;
+            int userHandXPos = (Constants.WINDOW_WIDTH / 2) - 10;  // player cards
+
 
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
-            int aiHandXPos = 270;
+            int aiHandXPos = 270;  // ai cards starting position
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
-            _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 200);
+            _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 190);
 
             for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
@@ -2044,6 +2062,7 @@ public class CardButton
     /// <param name="spriteBatch"></param>
     public void Draw(SpriteBatch spriteBatch)
     {
+
         spriteBatch.Draw(_texture, _buttonRectangle, Color.White);
     }
 
