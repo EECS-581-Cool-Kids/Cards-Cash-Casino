@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus, Ethan Berkley
+ *  Developers: Jacob Wilkus, Ethan Berkley. Mo Morgan, Richard Moser, Derek Norton
  *  Date: 10/26/2024
- *  Last Modified: 11/08/2024
+ *  Last Modified: 12/08/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -33,7 +33,7 @@ namespace CardsCashCasino.Data
     /// </summary>
     public class Card
     {
-        private Suit _suit;
+        private Suit _suit; // private instance variable for the card's suit
         /// <summary>
         /// The card's suit.
         /// </summary>

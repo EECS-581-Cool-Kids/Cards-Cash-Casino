@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
+ *  Developers: Jacob Wilkus, Ethan Berkley
  *  Date: 10/26/2024
- *  Last Modified: 11/3/2024
+ *  Last Modified: 11/10/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None

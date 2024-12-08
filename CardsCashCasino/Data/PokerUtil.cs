@@ -4,9 +4,9 @@
  *  Inputs: The set of community cards and a player's hole cards.
  *  Outputs: The ranking, optimal 5-card hand, and the value used to break ties.
  *  Additional code sources: None
- *  Developers: Ethan Berkley
+ *  Developers: Ethan Berkley, Mo Morgan
  *  Date: 11/08/2024
- *  Last Modified: 11/21/2024
+ *  Last Modified: 12/2/2024
  *  Preconditions: Hole card lists are of length 2, Community card lists are of length >= 3, the input to the tiebreaker function was returned by the GetScore function
  *  Postconditions: None
  *  Error/Exception conditions: Only if Preconditions were violated.
