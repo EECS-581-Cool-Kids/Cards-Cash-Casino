@@ -794,7 +794,6 @@ namespace CardsCashCasino.Manager
                 _aiFourBetIndicator!.Update(_players.Players[4].PlayerBet);
                 _roundInit = false;
                 NextPhase();
-                return;
             }
         }
 
@@ -803,16 +802,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void UpdateWhileUserPlaying()
         {
-            //// If we are waiting for the player to press enter to manually continue
-            //if (_currentPhase == Phase.CONCLUSION)
-            //{
-            //    KeyboardState state = Keyboard.GetState();
-            //    if (state.IsKeyDown(Keys.Enter)) // If the user presses enter
-            //    {
-            //        NextPhase(); // Continue
-            //    }
-            //    return;
-            //}
+
             //if player is either folded or all in, skip the player's turn
             if (!_players.IsActivePlayer(playerIndex))
             {
@@ -893,27 +883,227 @@ namespace CardsCashCasino.Manager
 
             RoundLogic();
         }
+        
+        private Tuple<PokerAction, int> PassiveAI()
+        {
+            // The AI will always check if they can.
+            if (_currentBet == 0)
+            {
+                return new(PokerAction.CHECK, 0);
+            }
+
+
+            // If the AI can't check, they will make a decision based on their hand, and if any has gone all in.
+
+            CardHand hand = _playerHands![playerIndex];
+            int stack = _players.Players[playerIndex].PlayerStack;
+            double
+                bias = 0; // bias decides AI action - higher bias, more likely to fold. lower bias, more likely to raise/allin
+
+            if (_players.Players.Any(player => player.PlayerStatus == PlayerStatus.ALLIN))
+                bias += 0.75; // If any player has gone all in, the AI is more likely to fold in intimidation.
+            else if (_currentBet >= stack) bias += 0.7;
+            else if (_currentBet > stack / 5) bias += 0.4;
+            else if (_currentBet > stack / 10) bias += 0.25;
+            else if (_currentBet > stack / 20) bias += 0.15;
+
+            // IF THERE IS NO BETTING PRIOR TO THE CARDS BEING DEALT, DELETE THIS AND EVERY COMMENT IN THIS METHOD AFTER THIS.
+            // IF THERE IS BETTING PRIOR TO THE CARDS BEING DEALT, UNCOMMENT THE IF-ELSE CLAUSE BELOW AND DELETE THIS COMMENT.
+            // if (_currentPhase != Phase.INIT)
+            // {
+            PokerUtil.Ranking handRanking = PokerUtil.GetScore(hand.Cards.ToList());
+            bias -= (handRanking) switch
+            {
+                PokerUtil.Ranking.HIGH_CARD => -0.1,
+                PokerUtil.Ranking.PAIR => 0.1,
+                PokerUtil.Ranking.TWO_PAIR => 0.12,
+                PokerUtil.Ranking.THREE_OF_A_KIND => 0.15,
+                PokerUtil.Ranking.STRAIGHT => 0.25,
+                PokerUtil.Ranking.FLUSH => 0.3,
+                PokerUtil.Ranking.FULL_HOUSE => 0.35,
+                PokerUtil.Ranking.FOUR_OF_A_KIND => 0.4,
+                PokerUtil.Ranking.STRAIGHT_FLUSH => 0.45,
+                PokerUtil.Ranking.ROYAL_FLUSH => 0.75,
+                _ => 0
+            };
+            // }
+            // else
+            // {
+                // if (hand.Cards[0].Value == hand.Cards[1].Value)
+                // {
+                    // bias -= 0.1;
+                // } else
+                // {
+                    // int sum = hand.Cards.Sum(card => card.GetPokerValue());
+                    // if (sum < 5) bias += 0.3; // add bias, low cards
+                    // else if (sum < 10) bias += 0.2; // add bias, low cards
+                    // else if (sum < 15) bias += 0.1;
+                    // else if (sum < 20) bias -= 0.05;
+                    // else bias -= 0.07;
+                // }
+            // }
+
+            Random rand = new();
+            double roll = rand.NextDouble() + bias;
+            const double pAllin = 0.0025;
+            const double pRaise = 0.1;
+            const double p_call = 0.95;
+            
+            // if roll <p_action_n>, do action_n. else, check <p_action_n+1>
+            if (roll < pAllin)
+                return new(PokerAction.ALL_IN, 0);
+            else if (roll < pRaise)
+            {
+                int modifier = Math.Min((int)(_potManager.GetPotAmounts()[0] / (bias + 1)), stack);
+                int raiseAmount = Math.Min((int)(modifier / (bias + 1)), stack - _currentBet);
+                return new(PokerAction.RAISE, raiseAmount);
+            }
+            else if (roll < p_call)
+                return new(PokerAction.CALL, 0);
+            else
+                return new(PokerAction.FOLD, 0);
+        }
+
+        /// <summary>
+        /// Picks either passive or aggressive AI randomly
+        /// </summary>
+        /// <returns> Tuple(PokerAction, raising? raiseamount : 0)</returns>
+        private Tuple<PokerAction, int> PassiveAggressiveAI()
+        {
+            Random rand = new();
+            if (rand.NextDouble() >= 0.5)
+                return PassiveAI();
+            
+            return AggressiveAI();
+        }
+
+        private Tuple<PokerAction, int> AggressiveAI()
+        {
+            CardHand hand = _playerHands![playerIndex];
+            int stack = _players.Players[playerIndex].PlayerStack;
+            // If we can't...
+            // Higher bias = more likely to fold. lower bias = more likely to allin/ raise.
+            // Super arbitrary...
+            double bias = 0;
+
+            // If somebody is going all in
+            if (_players.Players.Any(player => player.PlayerStatus == PlayerStatus.ALLIN))
+                bias += 0.7; // Scary...
+            else if (_currentBet >= stack)
+                bias += 0.6;
+            else if (_currentBet > stack / 5)
+                bias += 0.3;
+            else if (_currentBet > stack / 10)
+                bias += 0.15;
+            else if (_currentBet > stack / 20)
+                bias += 0.1;
+
+            // IF THERE IS NO BETTING PRIOR TO THE CARDS BEING DEALT, DELETE THIS AND EVERY COMMENT IN THIS METHOD AFTER THIS.
+            // IF THERE IS BETTING PRIOR TO THE CARDS BEING DEALT, UNCOMMENT THE IF-ELSE CLAUSE BELOW AND DELETE THIS COMMENT.
+            // if (_currentPhase != Phase.INIT)
+            // {
+            PokerUtil.Ranking handRanking = PokerUtil.GetScore(hand.Cards.ToList());
+            bias -= (handRanking) switch
+            {
+                PokerUtil.Ranking.HIGH_CARD => -0.05,
+                PokerUtil.Ranking.PAIR => 0.15,
+                PokerUtil.Ranking.TWO_PAIR => 0.2,
+                PokerUtil.Ranking.THREE_OF_A_KIND => 0.23,
+                PokerUtil.Ranking.STRAIGHT => 0.28,
+                PokerUtil.Ranking.FLUSH => 0.32,
+                PokerUtil.Ranking.FULL_HOUSE => 0.35,
+
+                // Logic should probably change if four of a kind is in community cards and AI has like a 2 and a 3
+                PokerUtil.Ranking.FOUR_OF_A_KIND => 0.4,
+                PokerUtil.Ranking.STRAIGHT_FLUSH => 0.45,
+                PokerUtil.Ranking.ROYAL_FLUSH => 0.75,
+                _ => 0, // This is just here to make the compiler happy. It should never be reached.
+            };
+        // }
+        // else
+            // {
+            //     if (hand.Cards[0].Value == hand.Cards[1].Value)
+            //     {
+            //         bias -= 0.2;
+            //     }
+            //     else
+            //     {
+            //         int sum = hand.Cards.Sum(card => card.GetPokerValue());
+            //         if (sum < 5) bias += 0.2;
+            //         else if (sum < 10) bias += 0.1;
+            //         else if (sum < 15) bias += 0.05;
+            //         else if (sum < 20) bias -= 0.08;
+            //         else if (sum < 25) bias -= 0.1;
+            //     }
+            
+            
+            
+            Random rand = new();
+            double roll = rand.NextDouble() + bias;
+            const double pAllin = 0.0025;
+            const double pRaise = 0.3;
+            const double p_call= 0.97;
+
+            if (_currentBet == 0)
+            {
+                if (bias > 0 && roll < 0.6)
+                {
+                    return new(PokerAction.CHECK, 0);
+                }
+            }
+
+            // if roll < p_<action_n>, do action_n. else, check p_<action_n+1
+            if (roll < pAllin) return new(PokerAction.ALL_IN, 0);
+            else if (roll < pRaise)
+            {
+                // Arbitrary.
+                // If you come up with a better formula, feel free to change.
+                int modifier = Math.Min(((int)(_potManager.GetPotAmounts()[0] / (bias + 1))), stack);
+                int myRaise = Math.Min((int)(modifier / (bias + 1)), (stack - _currentBet));
+                return new(PokerAction.RAISE, myRaise);
+            }
+            else if (roll < p_call)
+                if (_currentBet == 0) return new(PokerAction.CHECK, 0);
+                else return new(PokerAction.CALL, 0);
+            else return new(PokerAction.FOLD, 0);
+        }
 
         /// <summary>
         /// Updates the AI player index
         /// </summary>
         private void UpdateWhileAIPlaying()
         {
-            // Should have some AI related nonsense here.
-            // TODO: AI turns shoulnd't take one frame, so let's add a timer. 
 
             _AIActionTimeout = new(500);
             _AIActionTimeout.Elapsed += Constants.OnTimeoutEvent!;
             _AIActionTimeout.Start();
 
             // Assuming the timer says we are ready to go on at this point, let's finish the AI player's turn.
-            if (_currentBet == 0)
+            Tuple<PokerAction, int> action = (playerIndex) switch
             {
-                Check(playerIndex);
-            }
-            else
+                3 => PassiveAI(),
+                4 => AggressiveAI(),
+                _ => PassiveAggressiveAI()
+            };
+
+            switch (action.Item1)
             {
-                Call(playerIndex);
+                case PokerAction.CALL:
+                    Call(playerIndex);
+                    break;
+                case PokerAction.CHECK:
+                    Check(playerIndex);
+                    break;
+                case PokerAction.RAISE:
+                    _currentBet += action.Item2;
+                    Raise(playerIndex);
+                    break;
+                case PokerAction.ALL_IN:
+                    AllIn(playerIndex);
+                    break;
+                case PokerAction.FOLD:
+                    Fold(playerIndex);
+                    break;
             }
 
             //update all ai stack and bet visuals
