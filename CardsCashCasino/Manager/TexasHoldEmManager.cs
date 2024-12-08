@@ -425,7 +425,7 @@ namespace CardsCashCasino.Manager
 
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
-            int buffer = 15;
+            int buffer = 50;
 
             _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, TexasHoldEmTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
             _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
