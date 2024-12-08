@@ -128,6 +128,9 @@ namespace CardsCashCasino.Data
             _cardTexture = CardTextures.GetCardTexture(_value, _suit);
         }
 
+        /// <summary>
+        /// Exports the card texture to a variable in another class
+        /// </summary>
         public Texture2D ReturnTexture()
         {
             return CardTextures.GetCardTexture(_value, _suit);
