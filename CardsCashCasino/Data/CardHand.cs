@@ -68,16 +68,16 @@ namespace CardsCashCasino.Data
 
         public void FCDUnhideCards()
         {
-            _cards[0].GetTexture();
-            _cards[1].GetTexture();
-            _cards[2].GetTexture();
-            _cards[3].GetTexture();
-            _cards[4].GetTexture();
+            _cards[0]?.GetTexture();
+            _cards[1]?.GetTexture();
+            _cards[2]?.GetTexture();
+            _cards[3]?.GetTexture();
+            _cards[4]?.GetTexture();
         }
 
         public void FCDHideByIndex(int _cardIndex)
         {
-        _cards[_cardIndex].HideTexture();
+            _cards[_cardIndex].HideTexture();
         }
 
         public void FCDUnhideByIndex(int _cardIndex)
