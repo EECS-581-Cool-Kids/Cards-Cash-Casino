@@ -276,5 +276,14 @@ namespace CardsCashCasino
             timer.Stop();
             timer.Dispose();
         }
+
+        /// <summary>
+        /// Quit the game.
+        /// </summary>
+        public void QuitGame()
+        {
+            StatisticsUtil.SaveStatisticsFile(); // Save Data
+            Exit(); // Quit the game
+        }
     }
 }
