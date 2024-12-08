@@ -1,4 +1,21 @@
-﻿using CardsCashCasino.Manager;
+﻿/*
+ *  Module Name: StatisticsUtil.cs
+ *  Purpose: Utility methods for handling statistics data.
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Jacob Wilkus, Ethan Berkley
+ *  Date: 12/1/2024
+ *  Last Modified: 12/2/2024
+ *  Preconditions: None
+ *  Postconditions: None
+ *  Error/Exception conditions: None
+ *  Side effects: None
+ *  Invariants: None
+ *  Known Faults: None encountered
+ */
+
+using CardsCashCasino.Manager;
 using System;
 using System.Collections.Generic;
 using System.IO;

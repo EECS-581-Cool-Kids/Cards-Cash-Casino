@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Jacob Wilkus
  *  Date: 11/7/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/3/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -37,8 +37,14 @@ namespace CardsCashCasino.Data
         /// </summary>
         private Rectangle? _characterRectangle;
 
+        /// <summary>
+        /// Constructor without parameters.
+        /// </summary>
         public IndicatorCharacter() { }
 
+        /// <summary>
+        /// Constructor with a texture parameter.
+        /// </summary>
         public IndicatorCharacter(Texture2D characterTexture)
         {
             _characterTexture = characterTexture;

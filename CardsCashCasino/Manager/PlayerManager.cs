@@ -4,9 +4,15 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Derek Norton
+ *  Developers: Derek Norton, Ethan Berkley
  *  Date: 11/12/2024
- *  Last Modified: 12/6/2024
+ *  Last Modified: 12/7/2024
+ *  Preconditions: None
+ *  Postconditions: None
+ *  Error/Exception conditions: None
+ *  Side effects: None
+ *  Invariants: None
+ *  Known Faults: None encountered
  */
 
 using CardsCashCasino.Data;
@@ -51,6 +57,9 @@ namespace CardsCashCasino.Manager
         NONE
     }
 
+    /// <summary>
+    /// The player class that holds the player's stack, type, status, position, and bet
+    /// </summary>
     public class Player
     {
         /// <summary>
@@ -131,6 +140,9 @@ namespace CardsCashCasino.Manager
         }
     }
 
+    /// <summary>
+    /// The class that manages the players in the game
+    /// </summary>
     public class PlayerManager
     {
         /// <summary>
@@ -498,6 +510,10 @@ namespace CardsCashCasino.Manager
             }
         }
     }
+
+    /// <summary>
+    /// The class that manages the player values indicator
+    /// </summary>
     public class PlayerValuesIndicator
     {
         /// <summary>
