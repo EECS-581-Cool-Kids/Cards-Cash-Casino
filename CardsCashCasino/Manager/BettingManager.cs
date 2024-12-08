@@ -418,7 +418,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Rectangle for the background of the menu.
         /// </summary>
-        private Rectangle _menuRectangle = new(50, 100, 900, 400);
+        private Rectangle _menuRectangle = new(300, 250, 900, 400);
 
         /// <summary>
         /// Placeholder texture to draw the rectangle.
@@ -461,22 +461,21 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public BettingMenu()
         {
-            // Create the buttons and set their positions and textures
-            _addOneDollarButton = new(BettingTextures.BetOneDollarTexture!, 63, 211);
-            _addFiveDollarButton = new(BettingTextures.BetFiveDollarsTexture!, 63, 286);
-            _addTenDollarButton = new(BettingTextures.BetTenDollarsTexture!, 63, 361);
-            _addTwentyFiveDollarButton = new(BettingTextures.BetTwentyFiveDollarsTexture!, 288, 211);
-            _addFiftyDollarButton = new(BettingTextures.BetFiftyDollarsTexture!, 288, 286);
-            _addOneHundredDollarButton = new(BettingTextures.BetOneHundredDollarsTexture!, 288, 361);
-            _subOneDollarButton = new(BettingTextures.SubOneDollarTexture!, 513, 211);
-            _subFiveDollarButton = new(BettingTextures.SubFiveDollarsTexture!, 513, 286);
-            _subTenDollarButton = new(BettingTextures.SubTenDollarsTexture!, 513, 361);
-            _subTwentyFiveDollarButton = new(BettingTextures.SubTwentyFiveDollarsTexture!, 738, 211);
-            _subFiftyDollarButton = new(BettingTextures.SubFiftyDollarsTexture!, 738, 286);
-            _subOneHundredDollarButton = new(BettingTextures.SubOneHundredDollarsTexture!, 738, 361);
+            _addOneDollarButton = new(BettingTextures.BetOneDollarTexture!, 63+250, 211+150);
+            _addFiveDollarButton = new(BettingTextures.BetFiveDollarsTexture!, 63 + 250, 286 + 150);
+            _addTenDollarButton = new(BettingTextures.BetTenDollarsTexture!, 63 + 250, 361 + 150);
+            _addTwentyFiveDollarButton = new(BettingTextures.BetTwentyFiveDollarsTexture!, 288 + 250, 211 + 150);
+            _addFiftyDollarButton = new(BettingTextures.BetFiftyDollarsTexture!, 288 + 250, 286 + 150);
+            _addOneHundredDollarButton = new(BettingTextures.BetOneHundredDollarsTexture!, 288 + 250, 361 + 150);
+            _subOneDollarButton = new(BettingTextures.SubOneDollarTexture!, 513 + 250, 211 + 150);
+            _subFiveDollarButton = new(BettingTextures.SubFiveDollarsTexture!, 513 + 250, 286 + 150);
+            _subTenDollarButton = new(BettingTextures.SubTenDollarsTexture!, 513 + 250, 361 + 150);
+            _subTwentyFiveDollarButton = new(BettingTextures.SubTwentyFiveDollarsTexture!, 738 + 250, 211 + 150);
+            _subFiftyDollarButton = new(BettingTextures.SubFiftyDollarsTexture!, 738 + 250, 286 + 150);
+            _subOneHundredDollarButton = new(BettingTextures.SubOneHundredDollarsTexture!, 738 + 250, 361 + 150);
 
-            _confirmBetButton = new(BettingTextures.ConfirmBetTexture!, 288, 436);
-            _cancelBetButton = new(BettingTextures.CancelBetTexture!, 513, 436);
+            _confirmBetButton = new(BettingTextures.ConfirmBetTexture!, 288 + 250, 436 + 150);
+            _cancelBetButton = new(BettingTextures.CancelBetTexture!, 513 + 250, 436 + 150);
 
             // Create the cursor
             _cursor = new(_addOneDollarButton.GetAdjustedPos());
@@ -484,7 +483,7 @@ namespace CardsCashCasino.Manager
             // Create the user bet value display
             _userBetValue = new();
             _userBetValue.Update(5);
-            _userBetValue.SetCorner(100, 140);
+            _userBetValue.SetCorner(100 + 250, 140 + 150);
         }
 
         /// <summary>

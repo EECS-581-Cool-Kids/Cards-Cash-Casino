@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
  *  Date: 11/3/2024
- *  Last Modified: 12/6/2024
+ *  Last Modified: 12/8/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -32,6 +32,7 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace CardsCashCasino.Manager
 {
+
     /// <summary>
     /// The possible actions that a player can take in Texas Hold Em.
     /// </summary>
@@ -58,6 +59,11 @@ namespace CardsCashCasino.Manager
     public class TexasHoldEmManager
     {
         #region Properties
+
+        /// <summary>
+        /// The background texture for the game.
+        /// </summary>
+        private Texture2D? _backgroundTexture;
 
         private bool initialized = false;
 
@@ -414,9 +420,12 @@ namespace CardsCashCasino.Manager
             // Load the textures for the game.
             TexasHoldEmTextures.LoadContent(content);
 
+            _backgroundTexture = content.Load<Texture2D>("HoldEmTable");
+
+
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
-            int buffer = 15;
+            int buffer = 50;
 
             _checkButton = new(TexasHoldEmTextures.CheckButtonEnabledTexture!, TexasHoldEmTextures.CheckButtonDisabledTexture!, widthBuffer - buffer * 2, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
             _callButton = new(TexasHoldEmTextures.CallButtonEnabledTexture!, TexasHoldEmTextures.CallButtonDisabledTexture!, widthBuffer + Constants.BUTTON_WIDTH - buffer, buttonYPos, Constants.BUTTON_WIDTH, Constants.BUTTON_HEIGHT);
@@ -443,8 +452,11 @@ namespace CardsCashCasino.Manager
             _aiFourIdentifier = new();
             _turnIndicator = new();
             _turnIndicator._characterTexture = DisplayIndicatorUtil.GetTurnTexture();
+            _turnIndicator.Scale(2);
 
-            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 220)); // Explicitly specify the namespace for Vector2
+            // _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 220)); // Explicitly specify the namespace for Vector2
+            _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 + 270, 526)); // Explicitly specify the namespace for Vector2
+
             _potUI.LoadContent(content); // Load pot textures
         }
 
@@ -489,39 +501,43 @@ namespace CardsCashCasino.Manager
         private void UpdateTurnIndicatorPosition()
         {
             int xPos = 0, yPos = 0;
+            int aiYPos = 100; // The y position of each AI player's stack amount display
+            int aiXOffset = -5; // The x offset for each AI player's stack amount display
             
             // if it's the user's turn, the indicator should appear next to the user's stack amount
             switch (playerIndex)
             {
              case 0:
                 xPos = (Constants.WINDOW_WIDTH / 2) - 90; // This is shifted 15 pixels from the user's stack amount display
-                yPos = 605; // This is the y position of the user's stack amount display
+                yPos = 700; // This is the y position of the user's stack amount display
                 
                 _turnIndicator!.SetPosition(xPos, yPos);
+                _turnIndicator.Scale(2);
                 break;
                 
              case 1:
-                 xPos = 190; // The x position of AI player 1's stack amount display shifted left 30 pixels
-                 yPos = 220; // The y position of each AI player's stack amount display
+                 xPos = 190 + aiXOffset; // The x position of AI player 1's stack amount display shifted left 30 pixels
+                 yPos = aiYPos; // The y position of each AI player's stack amount display
                  break;
              
              case 2:
-                 xPos = 490; // The x position of AI player 2's stack amount display shifted left 30 pixels
-                 yPos = 220; // The y position of each AI player's stack amount display
+                 xPos = 490 + aiXOffset; // The x position of AI player 2's stack amount display shifted left 30 pixels
+                 yPos = aiYPos; // The y position of each AI player's stack amount display
                  break;
              
             case 3:
-                xPos = 790; // The x position of AI player 3's stack amount display shifted left 30 pixels
-                yPos = 220; // The y position of each AI player's stack amount display
+                xPos = 790 + aiXOffset; // The x position of AI player 3's stack amount display shifted left 30 pixels
+                yPos = aiYPos; // The y position of each AI player's stack amount display
                 break;
             
             case 4:
-                xPos = 1090; // The x position of AI player 4's stack amount display shifted left 30 pixels
-                yPos = 220; // The y position of each AI player's stack amount display
+                xPos = 1090 + aiXOffset; // The x position of AI player 4's stack amount display shifted left 30 pixels
+                yPos = aiYPos; // The y position of each AI player's stack amount display
                 break;
             }
             
             _turnIndicator!.SetPosition(xPos, yPos);
+            _turnIndicator.Scale(2);
         }
 
         private void NextPlayer()
@@ -1137,6 +1153,12 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
+            // Draw the background
+            if (_backgroundTexture != null)
+            {
+                spriteBatch.Draw(_backgroundTexture, new Rectangle(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT), Color.White);
+            }
+
             // Draw the buttons
             _callButton!.Draw(spriteBatch);
             _checkButton!.Draw(spriteBatch);
@@ -1175,6 +1197,7 @@ namespace CardsCashCasino.Manager
             _aiTwoIdentifier!.Draw(spriteBatch);
             _aiThreeIdentifier!.Draw(spriteBatch);
             _aiFourIdentifier!.Draw(spriteBatch);
+            _turnIndicator.Scale(2);
             _turnIndicator!.Draw(spriteBatch);
 
             // Draw the PotUI
@@ -1201,12 +1224,14 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Initialize()
         {
-            int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) + 400;
             int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
-            int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
-            int aiStackYPos = 220;
-            int aiBetYPos = 246; // This is the Y position for the AI's bet indicator. Also used for the AI's turn indicator
-            int aiIdentifierYPos = 194;
+            // int userStackXPos = (Constants.WINDOW_WIDTH / 2) + 200 ;
+            int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 372;
+            int aiStackYPos = 231;  // AI stack text
+            int aiBetYPos = 268;  // AI bet text
+            int aiIdentifierYPos = 193;  // AI number
+            int aiIdentifierXOffset = 60;
 
             //creates user and number of ai opponents
             _players.InitiatePlayers(Constants.AI_PLAYER_COUNT);
@@ -1223,23 +1248,25 @@ namespace CardsCashCasino.Manager
             _smallBlindBet = 1;
             _bigBlindBet = 2;
 
+            //setting positions for pot
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 692);  // Pot value text
 
-            //setting position for all front end player and pot info
-            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 380);
-            _userStackIndicator!.SetPosition(userStackXPos, 605);
-            _userBetIndicator!.SetPosition(userBetXPos, 579);
-            _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
-            _aiOneStackIndicator!.SetPosition(220, aiStackYPos);
-            _aiOneBetIndicator!.SetPosition(220, aiBetYPos);
-            _aiTwoIdentifier!.SetPosition(520, aiIdentifierYPos);
-            _aiTwoStackIndicator!.SetPosition(520, aiStackYPos);
-            _aiTwoBetIndicator!.SetPosition(520, aiBetYPos);
-            _aiThreeIdentifier!.SetPosition(820, aiIdentifierYPos);
-            _aiThreeStackIndicator!.SetPosition(820, aiStackYPos);
-            _aiThreeBetIndicator!.SetPosition(820, aiBetYPos);
-            _aiFourIdentifier!.SetPosition(1120, aiIdentifierYPos);
-            _aiFourStackIndicator!.SetPosition(1120, aiStackYPos);
-            _aiFourBetIndicator!.SetPosition(1120, aiBetYPos);
+            //setting positions for user stack and bet
+            _userStackIndicator!.SetPosition(userStackXPos, 605); // User stack text
+            _userBetIndicator!.SetPosition(userBetXPos, 650);  // User bet text
+
+            _aiOneIdentifier!.SetPosition(220 + aiIdentifierXOffset, aiIdentifierYPos);
+            _aiOneStackIndicator!.SetPosition(220 + aiIdentifierXOffset, aiStackYPos);
+            _aiOneBetIndicator!.SetPosition(220 + aiIdentifierXOffset, aiBetYPos);
+            _aiTwoIdentifier!.SetPosition(520 + aiIdentifierXOffset, aiIdentifierYPos);
+            _aiTwoStackIndicator!.SetPosition(520 + aiIdentifierXOffset, aiStackYPos);
+            _aiTwoBetIndicator!.SetPosition(520 + aiIdentifierXOffset, aiBetYPos);
+            _aiThreeIdentifier!.SetPosition(820 + aiIdentifierXOffset, aiIdentifierYPos);
+            _aiThreeStackIndicator!.SetPosition(820 + aiIdentifierXOffset, aiStackYPos);
+            _aiThreeBetIndicator!.SetPosition(820 + aiIdentifierXOffset, aiBetYPos);
+            _aiFourIdentifier!.SetPosition(1120 + aiIdentifierXOffset, aiIdentifierYPos);
+            _aiFourStackIndicator!.SetPosition(1120 + aiIdentifierXOffset, aiStackYPos);
+            _aiFourBetIndicator!.SetPosition(1120 + aiIdentifierXOffset, aiBetYPos);
 
             //setting ai identifiers
             _aiOneIdentifier!.Update(1);
@@ -1311,11 +1338,11 @@ namespace CardsCashCasino.Manager
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
-            _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 200);
+            _playerHands![0].SetCenter(userHandXPos, Constants.WINDOW_HEIGHT - 185);
 
             for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
-                _playerHands[i].SetCenter(aiHandXPos, 80);
+                _playerHands[i].SetCenter(aiHandXPos, 105);
                 aiHandXPos += 300;
             }
 
