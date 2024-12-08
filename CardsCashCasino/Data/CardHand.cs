@@ -64,6 +64,8 @@ namespace CardsCashCasino.Data
         /// </summary>
         public void UnhideCards()
         {
+            if (_cards.Count == 0)
+                return;
             _cards[0].GetTexture();
             _cards[1].GetTexture();
         }

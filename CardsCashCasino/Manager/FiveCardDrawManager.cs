@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
  *  Date: 11/23/2024
- *  Last Modified: 11/24/2024
+ *  Last Modified: 12/6/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -190,7 +190,7 @@ namespace CardsCashCasino.Manager
         private int playerIndex;
 
         /// <summary>
-        /// If the update function is dealing with the raise functionality
+        /// Tracks if the user is raising. Used within UpdateWhileUserPlaying() to allow user to make a decision.
         /// </summary>
         private bool _userRaising = false;
 
@@ -208,6 +208,81 @@ namespace CardsCashCasino.Manager
         /// Initializing PlayerManager class
         /// </summary>
         PlayerManager _players = new PlayerManager();
+        
+                /// <summary>
+        /// Variable holding pot value front end info
+        /// </summary>
+        private PokerPotValueIndicator? _pokerPotValueIndicator;
+
+        /// <summary>
+        /// Variable connecting user stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userStackIndicator;
+
+        /// <summary>
+        /// Variable connecting user bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _userBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 2's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 3's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's stack value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourStackIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 4's bet value to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourBetIndicator;
+
+        /// <summary>
+        /// Variable connecting ai player 1 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiOneIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 2 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiTwoIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 3 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiThreeIdentifier;
+
+        /// <summary>
+        /// Variable connecting ai player 4 identifier to front end
+        /// </summary>
+        private PlayerValuesIndicator? _aiFourIdentifier;
 
         /// <summary>
         /// Variable to hold the Pots Manager class
@@ -338,6 +413,7 @@ namespace CardsCashCasino.Manager
         /// The cursor.
         /// </summary>
         private HoldEmCursor _cursor;
+        
         #region buttons
         /// <summary>
         /// The check button.
@@ -463,13 +539,15 @@ namespace CardsCashCasino.Manager
             POSTDRAW,
             CONCLUSION
         }
+        
         /// <summary>
-        /// What phase are we currently in?
+        /// Tracks which phase the game is in.
         /// Set by update.
         /// </summary>
         private FCDPhase _currentPhase;
+
         /// <summary>
-        /// What user is currently active?
+        /// Represents the index of the current player. Used to track the player whose turn it is.
         /// Set by update.
         /// </summary>
         private int _currentPlayer;
@@ -1649,7 +1727,7 @@ namespace CardsCashCasino.Manager
                         }
                     }
                 }
-
+                
                 // payout the pot to the winning player(s)
                 _players.Payout(winners, _potManager.DistributePot(winners.Count, potNumber));
             }
@@ -1688,7 +1766,6 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// handles the poker action enacted by the user or by the AI opponent
         /// <param name="playerIndex">The index of the player's hand in _playerHands</param>
-
         /// </summary>
         private void HandlePlayerAction(int playerIndex)
         {
