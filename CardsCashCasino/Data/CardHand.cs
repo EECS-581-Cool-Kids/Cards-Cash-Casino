@@ -53,19 +53,41 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// Adds a card to the hand.
         /// </summary>
-        public virtual void AddCard(Card newCard)
+        public virtual void AddCard(Card card)
         {
-            newCard.HideTexture();
-            _cards.Add(newCard);
+            _cards.Add(card);
             RecalculateCardPositions();
         }
 
+        /// <summary>
+        /// Reveals cards in Holdem hand.
+        /// </summary>
         public void UnhideCards()
         {
             if (_cards.Count == 0)
                 return;
             _cards[0].GetTexture();
             _cards[1].GetTexture();
+        }
+
+        /// <summary>
+        /// Reveals cards in five card draw hand
+        /// </summary>
+        public void FCDUnhideCards()
+        {
+            _cards[0]?.GetTexture();
+            _cards[1]?.GetTexture();
+            _cards[2]?.GetTexture();
+            _cards[3]?.GetTexture();
+            _cards[4]?.GetTexture();
+        }
+
+        /// <summary>
+        /// Returns the card data at a specified index
+        /// </summary>
+        public Card FCDSelectCard(int index)
+        {
+            return _cards[index];
         }
 
         /// <summary>
@@ -89,7 +111,7 @@ namespace CardsCashCasino.Data
                 return;
 
             int cardCount = _cards.Count;
-            int width = (cardCount * 99) + ((cardCount - 1) * 25);
+            int width = 99 + ((cardCount - 1) * 30);
             int xPos = ((Point)_center).X - (width / 2);
             int yPos = ((Point)_center).Y - 70;
 

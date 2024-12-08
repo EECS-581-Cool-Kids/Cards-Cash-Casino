@@ -1,4 +1,15 @@
-﻿using CardsCashCasino.Data;
+﻿/*
+ *  Module Name: PotManager.cs
+ *  Purpose: Controls logic and rules for the pots used to distribute funds at the end of the game
+ *  Inputs: None
+ *  Outputs: None
+ *  Additional code sources: None
+ *  Developers: Derek Norton
+ *  Date: 11/12/2024
+ *  Last Modified: 12/6/2024
+ */
+
+using CardsCashCasino.Data;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;

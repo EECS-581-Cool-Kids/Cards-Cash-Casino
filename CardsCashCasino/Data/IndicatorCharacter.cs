@@ -30,7 +30,7 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// Texture for the character.
         /// </summary>
-        protected Texture2D? _characterTexture;
+        public Texture2D? _characterTexture;
 
         /// <summary>
         /// Rectnagle for the character.

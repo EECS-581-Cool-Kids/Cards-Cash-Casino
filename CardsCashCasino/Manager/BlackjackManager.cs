@@ -179,7 +179,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// The LoadContent method for blackjack.
         /// </summary>
-        public void LoadContent(ContentManager content)
+        public void LoadContent(ContentManager? content = null)
         {
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.BLACKJACK_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 100;
@@ -198,6 +198,9 @@ namespace CardsCashCasino.Manager
             _resultLabel = new((Constants.WINDOW_WIDTH / 2) - Constants.RESULT_LABEL_OFFSET, (Constants.WINDOW_HEIGHT / 2) - Constants.RESULT_LABEL_OFFSET);
             CurrentHandStatus = BlackjackResult.NONE;
 
+            if (content is null)
+                return;
+            
             // Initialize PotUI and load its content
             _potUI = new PotUI(new Microsoft.Xna.Framework.Vector2(Constants.WINDOW_WIDTH / 2 - 172, 150)); // Explicitly specify the namespace for Vector2
             _potUI.LoadContent(content);
