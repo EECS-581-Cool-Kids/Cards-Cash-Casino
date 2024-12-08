@@ -290,81 +290,6 @@ namespace CardsCashCasino.Manager
         private PotManager _potManager = new PotManager();
 
         /// <summary>
-        /// Variable holding pot value front end info
-        /// </summary>
-        private PokerPotValueIndicator? _pokerPotValueIndicator;
-
-        /// <summary>
-        /// Variable connecting user stack value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _userStackIndicator;
-
-        /// <summary>
-        /// Variable connecting user bet value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _userBetIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 1's stack value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiOneStackIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 1's bet value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiOneBetIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 2's stack value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiTwoStackIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 2's bet value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiTwoBetIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 3's stack value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiThreeStackIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 3's bet value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiThreeBetIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 4's stack value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiFourStackIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 4's bet value to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiFourBetIndicator;
-
-        /// <summary>
-        /// Variable connecting ai player 1 identifier to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiOneIdentifier;
-
-        /// <summary>
-        /// Variable connecting ai player 2 identifier to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiTwoIdentifier;
-
-        /// <summary>
-        /// Variable connecting ai player 3 identifier to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiThreeIdentifier;
-
-        /// <summary>
-        /// Variable connecting ai player 4 identifier to front end
-        /// </summary>
-        private PlayerValuesIndicator? _aiFourIdentifier;
-
-        /// <summary>
         /// Card data for the first card in the player's hand.
         /// </summary>
         private Card _firstCardData;
@@ -1282,6 +1207,7 @@ namespace CardsCashCasino.Manager
         {
             int potValueIndicatorXPos = (Constants.WINDOW_WIDTH / 2) - 60;
             int userStackXPos = (Constants.WINDOW_WIDTH / 2) - 60;
+            // int userStackXPos = (Constants.WINDOW_WIDTH / 2) + 200 ;
             int userBetXPos = (Constants.WINDOW_WIDTH / 2) - 60;
             int aiStackYPos = 220;
             int aiBetYPos = 246;
@@ -1304,9 +1230,10 @@ namespace CardsCashCasino.Manager
 
 
             //setting position for all front end player and pot info
-            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 325);
-            _userStackIndicator!.SetPosition(userStackXPos, 605);
-            _userBetIndicator!.SetPosition(userBetXPos, 579);
+            _pokerPotValueIndicator!.SetPosition(potValueIndicatorXPos, 400);  // Pot value text  0010
+            _userStackIndicator!.SetPosition(userStackXPos, 605); // User stack text  0497
+            _userBetIndicator!.SetPosition(userBetXPos, 575);  // User bet text  0001
+
             _aiOneIdentifier!.SetPosition(220, aiIdentifierYPos);
             _aiOneStackIndicator!.SetPosition(220, aiStackYPos);
             _aiOneBetIndicator!.SetPosition(220, aiBetYPos);
@@ -1382,7 +1309,7 @@ namespace CardsCashCasino.Manager
             int userHandXPos = (Constants.WINDOW_WIDTH / 2) + 160;
 
             // Calculate the horizontal position of the intital AI hand. It is positioned at 100 pixels from the left of the screen.
-            int aiHandXPos = 420;
+            int aiHandXPos = 270;
 
             // Set the position of the card hands. The user hand is centered at the bottom of the screen.
             // The AI hands are positioned along the top of the screen with a buffer of 100 pixels.
@@ -1390,7 +1317,7 @@ namespace CardsCashCasino.Manager
 
             for (int i = 1; i < Constants.AI_PLAYER_COUNT + 1; i++)
             {
-                _playerHands[i].SetCenter(aiHandXPos, 80);
+                _playerHands[i].SetCenter(aiHandXPos, 100);
                 aiHandXPos += 300;
             }
 
