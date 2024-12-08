@@ -47,6 +47,14 @@ namespace CardsCashCasino.Util
                 _ => DisplayIndicatorTextures.ZeroTexture!
             };
         }
+
+        ///<summary>
+        /// used to set the texture for the turn indicator
+        ///</summary>
+        public static Texture2D GetTurnTexture()
+        {
+            return DisplayIndicatorTextures.TurnTexture!;
+        }
     }
 
     public static class DisplayIndicatorTextures
@@ -105,6 +113,11 @@ namespace CardsCashCasino.Util
         /// Texture for the dollar sign.
         /// </summary>
         public static Texture2D? DollarSignTexture { get; private set; }
+        
+        /// <summary>
+        /// Texture for the poker chip turn indicator
+        /// </summary>
+        public static Texture2D? TurnTexture { get; private set; }
 
         /// <summary>
         /// Loads the content for the util.
@@ -122,6 +135,7 @@ namespace CardsCashCasino.Util
             EightTexture = content.Load<Texture2D>("eight");
             NineTexture = content.Load<Texture2D>("nine");
             DollarSignTexture = content.Load<Texture2D>("dollarSign");
+            TurnTexture = content.Load<Texture2D>("TEMP_CHIP");
         }
     }
 }
