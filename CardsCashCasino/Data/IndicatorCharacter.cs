@@ -73,7 +73,7 @@ namespace CardsCashCasino.Data
             int xPos = _characterRectangle!.Value.X;
             int yPos = _characterRectangle!.Value.Y;
 
-            _characterRectangle = new(xPos, yPos, Convert.ToInt32(21 * scale), Convert.ToInt32(24 * scale));
+            _characterRectangle = new(xPos, yPos, Convert.ToInt32(30 * scale), Convert.ToInt32(30 * scale));
         }
     }
 }

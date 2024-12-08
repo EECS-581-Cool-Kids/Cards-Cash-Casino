@@ -305,6 +305,11 @@ namespace CardsCashCasino.Manager
         private IndicatorDigit _fourthDigit = new();
 
         /// <summary>
+        /// The dollar sign.
+        /// </summary>
+        private IndicatorCharacter _dollarSign = new();
+
+        /// <summary>
         /// The previous value.
         /// </summary>
         private int _previousValue = 0;
@@ -320,6 +325,7 @@ namespace CardsCashCasino.Manager
             _secondDigit.SetPosition(xPos + 21, yPos);
             _thirdDigit.SetPosition(xPos + 42, yPos);
             _fourthDigit.SetPosition(xPos + 63, yPos);
+            _dollarSign.SetPosition(xPos + 84, yPos);
         }
 
         /// <summary>
@@ -378,6 +384,7 @@ namespace CardsCashCasino.Manager
             if (_thirdDigit != null)
                 _thirdDigit.Draw(spriteBatch);
             _fourthDigit.Draw(spriteBatch);
+            _dollarSign.Draw(spriteBatch);
             // _firstDigit.Draw(spriteBatch);
             // _secondDigit.Draw(spriteBatch);
             // _thirdDigit.Draw(spriteBatch);
