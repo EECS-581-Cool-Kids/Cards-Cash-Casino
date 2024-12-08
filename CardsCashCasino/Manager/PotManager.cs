@@ -371,10 +371,17 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-            _firstDigit.Draw(spriteBatch);
-            _secondDigit.Draw(spriteBatch);
-            _thirdDigit.Draw(spriteBatch);
+            if (_firstDigit != null)
+                _firstDigit.Draw(spriteBatch);
+            if (_secondDigit != null)
+                _secondDigit.Draw(spriteBatch);
+            if (_thirdDigit != null)
+                _thirdDigit.Draw(spriteBatch);
             _fourthDigit.Draw(spriteBatch);
+            // _firstDigit.Draw(spriteBatch);
+            // _secondDigit.Draw(spriteBatch);
+            // _thirdDigit.Draw(spriteBatch);
+            // _fourthDigit.Draw(spriteBatch);
         }
     }
 }

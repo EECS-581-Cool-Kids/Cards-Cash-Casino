@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan, Ethan Berkley, Derek Norton
+ *  Developers: Mo Morgan, Ethan Berkley, Derek Norton, Richard Moser
  *  Date: 11/23/2024
- *  Last Modified: 12/6/2024
+ *  Last Modified: 12/8/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -496,7 +496,6 @@ namespace CardsCashCasino.Manager
             FiveCardDrawTextures.LoadContent(content);
 
             _backgroundTexture = content.Load<Texture2D>("5CardTable");
-            // _backgroundTexture = content.Load<Texture2D>("MenuBackground");
 
 
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.BUTTON_WIDTH * Constants.POKER_BUTTON_COUNT) / 2;

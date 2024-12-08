@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Derek Norton, Mo Morgan
+ *  Developers: Derek Norton, Mo Morgan, Richard Moser
  *  Date: 10/21/2024
- *  Last Modified: 12/6/2024
+ *  Last Modified: 12/8/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -83,7 +83,8 @@ namespace CardsCashCasino
         /// <summary>
         /// The currently selected game.
         /// </summary>
-        private SelectedGame _selectedGame = SelectedGame.NONE;
+        // private SelectedGame _selectedGame = SelectedGame.NONE;
+        private SelectedGame _selectedGame = SelectedGame.HOLDEM;
 
         /// <summary>
         /// The game start timeout.
