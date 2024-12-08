@@ -83,8 +83,7 @@ namespace CardsCashCasino
         /// <summary>
         /// The currently selected game.
         /// </summary>
-        // private SelectedGame _selectedGame = SelectedGame.NONE;
-        private SelectedGame _selectedGame = SelectedGame.HOLDEM;
+        private SelectedGame _selectedGame = SelectedGame.NONE;
 
         /// <summary>
         /// The game start timeout.
