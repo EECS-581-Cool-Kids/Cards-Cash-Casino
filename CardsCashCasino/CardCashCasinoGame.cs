@@ -174,7 +174,9 @@ namespace CardsCashCasino
             // Main Menu Logic
             if (_selectedGame == SelectedGame.NONE && (GameStartTimeout is null || !GameStartTimeout.Enabled))
             {
-                _mainMenu?.Update(); // Update MainMenu
+                // _mainMenu?.Update(); // Update MainMenu
+                _mainMenu?.Update(gameTime); // Pass gameTime here
+
             }
             else
             {
@@ -231,7 +233,12 @@ namespace CardsCashCasino
         {
             GraphicsDevice.Clear(Color.Green);
 
-            _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
+            // _spriteBatch!.Begin(samplerState: SamplerState.PointClamp);
+            _spriteBatch!.Begin(
+                samplerState: SamplerState.PointClamp,
+                blendState: BlendState.AlphaBlend
+            );
+
 
             if (_selectedGame == SelectedGame.NONE)
             {
