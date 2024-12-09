@@ -53,6 +53,11 @@ namespace CardsCashCasino.Manager
         private Texture2D? _backgroundTexture;
 
         /// <summary>
+        /// The menu animation sprite sheet.
+        /// </summary>
+        private Texture2D _menuSplashSheet;
+
+        /// <summary>
         /// The blackjack button for the main menu.
         /// </summary>
         private MainMenuActionButton _blackjackButton;
@@ -80,6 +85,20 @@ namespace CardsCashCasino.Manager
 
         private CardCashCasinoGame _game; // Field to store reference to CardCashCasinoGame
 
+        // A timer that stores milliseconds.
+        float timer;
+
+    // An int that is the threshold for the timer.
+        int threshold;
+
+    // A Rectangle array that stores sourceRectangles for animations.
+        Rectangle [] sourceRectangles;
+
+    // These bytes tell the spriteBatch.Draw() what sourceRectangle to display.
+        byte previousAnimationIndex;
+        byte currentAnimationIndex;
+
+
         public MainMenu(CardCashCasinoGame game)
         {
             _game = game;
@@ -92,6 +111,33 @@ namespace CardsCashCasino.Manager
         ///</summary>
         public void LoadContent(ContentManager content)
         {
+
+            // Set a default timer value.
+            timer = 0;
+
+        // Set an initial threshold of 250ms, you can change this to alter the speed of the animation (lower number = faster animation).
+            threshold = 10;
+
+        // Three sourceRectangles contain the coordinates of Alex's three down-facing sprites on the charaset.
+            sourceRectangles = new Rectangle[128];
+            // sourceRectangles[0] = new Rectangle(0, 128, 48, 64);
+            // sourceRectangles[1] = new Rectangle(48, 128, 48, 64);
+            // sourceRectangles[2] = new Rectangle(96, 128, 48, 64);
+
+            // 128 rectangles 300 wide and 200 tall from a spritesheet 3300 x 2200
+            for (int i = 0; i < 112; i++)
+            {
+                sourceRectangles[i] = new Rectangle(300 * (i % 10), 200 * (i / 10), 300, 200);
+            }
+
+
+        // This tells the animation to start on the left-side sprite.
+            // previousAnimationIndex = 2;
+            // currentAnimationIndex = 1;
+
+            previousAnimationIndex = 0;
+            currentAnimationIndex = 1;
+
             int widthBuffer = (Constants.WINDOW_WIDTH - Constants.MAIN_MENU_BUTTON_WIDTH * Constants.MAIN_MENU_BUTTON_COUNT) / 2;
             int buttonYPos = Constants.WINDOW_HEIGHT - 350;
             int buffer = 30;
@@ -130,10 +176,60 @@ namespace CardsCashCasino.Manager
                 );
             _cursor = new MainMenuCursor(MainMenuTextures.CursorTexture!, MainMenuTextures.CursorAltTexture!,
                 new Point(widthBuffer - buffer - 12, buttonYPos - 12));
+
+            _menuSplashSheet = content.Load<Texture2D>("MenuSplashSheet");
         }
 
-        public void Update()
+        // public void Update(gameTime gameTime)
+        public void Update(GameTime gameTime)
         {
+            // Check if the timer has exceeded the threshold.
+            // if (timer > threshold)
+            if (timer > threshold && currentAnimationIndex < 112)
+            {
+                // If the current animation index is the last index in the array, then set the current animation index to 0.
+                if (currentAnimationIndex == sourceRectangles.Length - 1)
+                {
+                    currentAnimationIndex = 0;
+                    // Reset the timer.
+                    timer = 0;
+                }
+                else if (currentAnimationIndex == 58)
+                {
+                    // continue the timer until threshold * 10 and do not advance the animation index
+                    if (timer < threshold * 50)
+                    {
+                        timer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                        threshold = 50;
+                    }
+                    else
+                    {
+                        currentAnimationIndex++;
+                        // Reset the timer.
+                        timer = 0;
+                    }
+                }
+                // If the current animation index is not the last index in the array, then increment the current animation index by 1.
+                else
+                {
+                    currentAnimationIndex++;
+                    // Reset the timer.
+                    timer = 0;
+                }
+
+            }
+            // If the timer has not reached the threshold, then add the milliseconds that have past since the last Update() to the timer.
+            else if (currentAnimationIndex < 112)
+            {
+                timer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            }
+
+            if (_menuSplashSheet != null && currentAnimationIndex > 112)
+            {
+                // nullify the menuSplashSheet
+                _menuSplashSheet = null;
+            }
+
             KeyboardState state = Keyboard.GetState();
 
             // Simulate button selection
@@ -201,6 +297,18 @@ namespace CardsCashCasino.Manager
             _texasHoldEmButton.Draw(spriteBatch);
             _quitButton.Draw(spriteBatch);
             _cursor.Draw(spriteBatch, _currentCursorPos);
+
+            // if (_menuSplashSheet != null)
+            if (currentAnimationIndex < 112)
+            {
+                spriteBatch.Draw(
+                    _menuSplashSheet,
+                    // new Vector2(0, 0),
+                    new Rectangle(0, 0, Constants.WINDOW_WIDTH, Constants.WINDOW_HEIGHT),
+                    sourceRectangles[currentAnimationIndex],
+                    Color.White
+                );
+            }
         }
         
         private Point GetNewCursorPos()
