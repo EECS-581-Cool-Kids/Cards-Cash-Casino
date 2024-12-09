@@ -6,7 +6,7 @@
  *  Additional code sources: None
  *  Developers: Jacob Wilkus
  *  Date: 11/7/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/3/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -30,15 +30,21 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// Texture for the character.
         /// </summary>
-        protected Texture2D? _characterTexture;
+        public Texture2D? _characterTexture;
 
         /// <summary>
         /// Rectnagle for the character.
         /// </summary>
         private Rectangle? _characterRectangle;
 
+        /// <summary>
+        /// Constructor without parameters.
+        /// </summary>
         public IndicatorCharacter() { }
 
+        /// <summary>
+        /// Constructor with a texture parameter.
+        /// </summary>
         public IndicatorCharacter(Texture2D characterTexture)
         {
             _characterTexture = characterTexture;
@@ -73,7 +79,7 @@ namespace CardsCashCasino.Data
             int xPos = _characterRectangle!.Value.X;
             int yPos = _characterRectangle!.Value.Y;
 
-            _characterRectangle = new(xPos, yPos, Convert.ToInt32(21 * scale), Convert.ToInt32(24 * scale));
+            _characterRectangle = new(xPos, yPos, Convert.ToInt32(30 * scale), Convert.ToInt32(30 * scale));
         }
     }
 }

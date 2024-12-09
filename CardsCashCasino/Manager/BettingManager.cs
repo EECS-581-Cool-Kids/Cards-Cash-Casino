@@ -4,9 +4,15 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
+ *  Developers: Jacob Wilkus, Richard Moser
  *  Date: 11/8/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/8/2024
+ *  Preconditions: None
+ *  Postconditions: None
+ *  Error/Exception conditions: None
+ *  Side effects: None
+ *  Invariants: None
+ *  Known Faults: None encountered
  */
 
 using CardsCashCasino.Data;
@@ -24,13 +30,16 @@ using System.Timers;
 
 namespace CardsCashCasino.Manager
 {
+    /// <summary>
+    /// The betting manager. Manages the user's cash value and betting.
+    /// </summary>
     public class BettingManager
     {
         /// <summary>
         /// The amount of cash the user has on hand.
         /// Initializes to $500.
         /// </summary>
-        public int UserCashValue { get; private set; } = 4900;
+        public static int UserCashValue { get; private set; } = 500;
 
         /// <summary>
         /// How much the user bet last time.
@@ -71,6 +80,11 @@ namespace CardsCashCasino.Manager
         }
 
         /// <summary>
+        /// Requests a return to the main menu.
+        /// </summary>
+        public static Action<SelectedGame>? RequestMainMenuReturn { get; set; }
+
+        /// <summary>
         /// Loads the betting manager's content.
         /// </summary>
         public void LoadContent()
@@ -80,6 +94,9 @@ namespace CardsCashCasino.Manager
             _userCashValueIndicator.Update(UserCashValue);
 
             _bettingMenu = new();
+
+            if (StatisticsUtil.GetPreviousCashValue() > 0)
+                UserCashValue = StatisticsUtil.GetPreviousCashValue();
         }
 
         /// <summary>
@@ -241,8 +258,14 @@ namespace CardsCashCasino.Manager
         }
     }
 
+    /// <summary>
+    /// The betting menu. Manages the user's betting.
+    /// </summary>
     public class BettingMenu
     {
+        /// <summary>
+        /// The cursor through the betting menu.
+        /// </summary>
         internal class BettingCursor
         {
             /// <summary>
@@ -255,6 +278,9 @@ namespace CardsCashCasino.Manager
             /// </summary>
             private Point _size = new(216, 72);
 
+            /// <summary>
+            /// The constructor
+            /// </summary>
             public BettingCursor(Point location)
             {
                 _cursorRectangle = new Rectangle(location, _size);
@@ -278,6 +304,9 @@ namespace CardsCashCasino.Manager
             }
         }
 
+        /// <summary>
+        /// A button for betting.
+        /// </summary>
         internal class BettingButton
         {
             /// <summary>
@@ -290,6 +319,9 @@ namespace CardsCashCasino.Manager
             /// </summary>
             private Texture2D _buttonTexture;
 
+            /// <summary>
+            /// The constructor for the button.
+            /// </summary>
             public BettingButton(Texture2D texture, int xPos, int yPos)
             {
                 _buttonTexture = texture;
@@ -386,7 +418,7 @@ namespace CardsCashCasino.Manager
         /// <summary>
         /// Rectangle for the background of the menu.
         /// </summary>
-        private Rectangle _menuRectangle = new(50, 100, 900, 400);
+        private Rectangle _menuRectangle = new(300, 250, 900, 400);
 
         /// <summary>
         /// Placeholder texture to draw the rectangle.
@@ -424,29 +456,34 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public bool Open { get; private set; } = false;
 
+        /// <summary>
+        /// The constructor for the betting menu.
+        /// </summary>
         public BettingMenu()
         {
-            _addOneDollarButton = new(BettingTextures.BetOneDollarTexture!, 63, 211);
-            _addFiveDollarButton = new(BettingTextures.BetFiveDollarsTexture!, 63, 286);
-            _addTenDollarButton = new(BettingTextures.BetTenDollarsTexture!, 63, 361);
-            _addTwentyFiveDollarButton = new(BettingTextures.BetTwentyFiveDollarsTexture!, 288, 211);
-            _addFiftyDollarButton = new(BettingTextures.BetFiftyDollarsTexture!, 288, 286);
-            _addOneHundredDollarButton = new(BettingTextures.BetOneHundredDollarsTexture!, 288, 361);
-            _subOneDollarButton = new(BettingTextures.SubOneDollarTexture!, 513, 211);
-            _subFiveDollarButton = new(BettingTextures.SubFiveDollarsTexture!, 513, 286);
-            _subTenDollarButton = new(BettingTextures.SubTenDollarsTexture!, 513, 361);
-            _subTwentyFiveDollarButton = new(BettingTextures.SubTwentyFiveDollarsTexture!, 738, 211);
-            _subFiftyDollarButton = new(BettingTextures.SubFiftyDollarsTexture!, 738, 286);
-            _subOneHundredDollarButton = new(BettingTextures.SubOneHundredDollarsTexture!, 738, 361);
+            _addOneDollarButton = new(BettingTextures.BetOneDollarTexture!, 63+250, 211+150);
+            _addFiveDollarButton = new(BettingTextures.BetFiveDollarsTexture!, 63 + 250, 286 + 150);
+            _addTenDollarButton = new(BettingTextures.BetTenDollarsTexture!, 63 + 250, 361 + 150);
+            _addTwentyFiveDollarButton = new(BettingTextures.BetTwentyFiveDollarsTexture!, 288 + 250, 211 + 150);
+            _addFiftyDollarButton = new(BettingTextures.BetFiftyDollarsTexture!, 288 + 250, 286 + 150);
+            _addOneHundredDollarButton = new(BettingTextures.BetOneHundredDollarsTexture!, 288 + 250, 361 + 150);
+            _subOneDollarButton = new(BettingTextures.SubOneDollarTexture!, 513 + 250, 211 + 150);
+            _subFiveDollarButton = new(BettingTextures.SubFiveDollarsTexture!, 513 + 250, 286 + 150);
+            _subTenDollarButton = new(BettingTextures.SubTenDollarsTexture!, 513 + 250, 361 + 150);
+            _subTwentyFiveDollarButton = new(BettingTextures.SubTwentyFiveDollarsTexture!, 738 + 250, 211 + 150);
+            _subFiftyDollarButton = new(BettingTextures.SubFiftyDollarsTexture!, 738 + 250, 286 + 150);
+            _subOneHundredDollarButton = new(BettingTextures.SubOneHundredDollarsTexture!, 738 + 250, 361 + 150);
 
-            _confirmBetButton = new(BettingTextures.ConfirmBetTexture!, 288, 436);
-            _cancelBetButton = new(BettingTextures.CancelBetTexture!, 513, 436);
+            _confirmBetButton = new(BettingTextures.ConfirmBetTexture!, 288 + 250, 436 + 150);
+            _cancelBetButton = new(BettingTextures.CancelBetTexture!, 513 + 250, 436 + 150);
 
+            // Create the cursor
             _cursor = new(_addOneDollarButton.GetAdjustedPos());
 
+            // Create the user bet value display
             _userBetValue = new();
             _userBetValue.Update(5);
-            _userBetValue.SetCorner(100, 140);
+            _userBetValue.SetCorner(100 + 250, 140 + 150);
         }
 
         /// <summary>
@@ -462,18 +499,20 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Update()
         {
-            if (_cursorMoveTimeout is not null && _cursorMoveTimeout.Enabled)
+            // Return if the cursor is moving or the game is starting
+            if ((_cursorMoveTimeout is not null && _cursorMoveTimeout.Enabled) || (CardCashCasinoGame.GameStartTimeout is not null && CardCashCasinoGame.GameStartTimeout.Enabled))
                 return;
 
-            if (Keyboard.GetState().IsKeyDown(Keys.Up))
+            // Handle the user input
+            if (Keyboard.GetState().IsKeyDown(Keys.Up)) // if the up arrow key is pressed
                 HandleUpArrowKey();
-            else if (Keyboard.GetState().IsKeyDown(Keys.Down))
+            else if (Keyboard.GetState().IsKeyDown(Keys.Down)) // if the down arrow key is pressed
                 HandleDownArrowKey();
-            else if (Keyboard.GetState().IsKeyDown(Keys.Left))
+            else if (Keyboard.GetState().IsKeyDown(Keys.Left)) // if the left arrow key is pressed
                 HandleLeftArrowKey();
-            else if (Keyboard.GetState().IsKeyDown(Keys.Right))
+            else if (Keyboard.GetState().IsKeyDown(Keys.Right)) // if the right arrow key is pressed
                 HandleRightArrowKey();
-            else if (Keyboard.GetState().IsKeyDown(Keys.Enter))
+            else if (Keyboard.GetState().IsKeyDown(Keys.Enter)) // if the enter key is pressed
             {
                 switch (_cursorPos)
                 {
@@ -523,8 +562,13 @@ namespace CardsCashCasino.Manager
                         break;
                 }
             }
+            else // if no keys are pressed
+            {
+                return;
+            }
 
-            _cursorMoveTimeout = new(50);
+            // Start the cursor move timeout
+            _cursorMoveTimeout = new(200);
             _cursorMoveTimeout.Elapsed += Constants.OnTimeoutEvent!;
             _cursorMoveTimeout.Start();
         }
@@ -534,9 +578,10 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void HandleUpArrowKey()
         {
-            if (_cursorPos - 4 < 0)
+            if (_cursorPos - 4 < 0) // if the cursor is at the top
                 return;
 
+            // move the cursor up
             _cursorPos -= 4;
             _cursor.UpdateLocation(GetNewCursorPosition());
         }
@@ -546,11 +591,12 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void HandleDownArrowKey()
         {
-            int newPos = _cursorPos + 4;
+            int newPos = _cursorPos + 4; // get the new position
 
-            if (newPos > 14 || newPos == 12)
+            if (newPos > 14 || newPos == 12) // if the cursor is at the bottom
                 return;
 
+            // move the cursor down
             _cursorPos += 4;
             _cursor.UpdateLocation(GetNewCursorPosition());
         }
@@ -560,12 +606,13 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void HandleLeftArrowKey()
         {
-            int newPos = _cursorPos - 1;
-            bool canGoLeft = (_cursorPos / 4) == (newPos / 4);
+            int newPos = _cursorPos - 1; // get the new position
+            bool canGoLeft = (_cursorPos / 4) == (newPos / 4); // check if the cursor can go left
 
-            if (_cursorPos - 1 < 0 || newPos == 12 || !canGoLeft)
+            if (_cursorPos - 1 < 0 || newPos == 12 || !canGoLeft) // if the cursor is at the left
                 return;
 
+            // move the cursor left
             _cursorPos--;
             _cursor.UpdateLocation(GetNewCursorPosition());
         }
@@ -575,14 +622,14 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void HandleRightArrowKey()
         {
-            int newPos = _cursorPos + 1;
-            bool canGoRight = (_cursorPos / 4) == (newPos / 4);
+            int newPos = _cursorPos + 1; // get the new position
+            bool canGoRight = (_cursorPos / 4) == (newPos / 4); // check if the cursor can go right
 
-            if (newPos > 14 || newPos == 12 || !canGoRight)
+            if (newPos > 14 || newPos == 12 || !canGoRight) // if the cursor is at the right
                 return;
 
-            _cursorPos++;
-            _cursor.UpdateLocation(GetNewCursorPosition());
+            _cursorPos++; // move the cursor right
+            _cursor.UpdateLocation(GetNewCursorPosition()); // update the cursor position
         }
 
         /// <summary>
@@ -590,6 +637,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private Point GetNewCursorPosition()
         {
+            // return the position of the cursor
             return _cursorPos switch
             {
                 0 => _addOneDollarButton!.GetAdjustedPos(),
@@ -615,11 +663,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void AddMoney(int value)
         {
-            if (_currentBet + value > 1000000)
+            if (_currentBet + value > 1000000) // if the bet is too high
                 return;
 
-            _userBetValue.Add(value);
-            _currentBet += value;
+            _userBetValue.Add(value); // add the value to the user bet value
+            _currentBet += value; // add the value to the current bet
         }
 
         /// <summary>
@@ -627,11 +675,11 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void SubMoney(int value)
         {
-            if (_currentBet - value < 5)
+            if (_currentBet - value < 5) // if the bet is too low
                 return;
 
-            _userBetValue.Sub(value);
-            _currentBet -= value;
+            _userBetValue.Sub(value); // subtract the value from the user bet value
+            _currentBet -= value; // subtract the value from the current bet
         }
 
         /// <summary>
@@ -639,8 +687,8 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void ConfirmBet()
         {
-            BettingManager.UserBet = _currentBet;
-            Open = false;
+            BettingManager.UserBet = _currentBet; // set the user bet to the current bet
+            Open = false; // close the betting menu
         }
 
         /// <summary>
@@ -648,8 +696,9 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private void CancelBet()
         {
-            _currentBet = 0;
-            Open = false;
+            _currentBet = 0; // reset the current bet
+            Open = false; // close the betting menu
+            BettingManager.RequestMainMenuReturn!.Invoke(SelectedGame.NONE); // return to the main menu
         }
 
         /// <summary>
@@ -695,6 +744,9 @@ namespace CardsCashCasino.Manager
         }
     }
 
+    /// <summary>
+    /// The cash value indicator. Displays the user's cash value.
+    /// </summary>
     public class CashValueIndicator
     {
         /// <summary>
@@ -722,6 +774,9 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private Point? _topLeftCorner;
 
+        /// <summary>
+        /// The constructor for the cash value indicator.
+        /// </summary>
         public CashValueIndicator()
         {
             _dollarSign = new(DisplayIndicatorTextures.DollarSignTexture!);
@@ -733,12 +788,12 @@ namespace CardsCashCasino.Manager
         /// <param name="value">The value.</param>
         public void Update(int value)
         {
-            if (value == _currentValue)
+            if (value == _currentValue) // if the value is the same
                 return;
 
-            _currentValue = value;
+            _currentValue = value; // set the current value
 
-            if (value == 0)
+            if (value == 0) // if the value is zero
             {
                 _digits.Clear();
                 IndicatorDigit zeroDigit = new IndicatorDigit();
@@ -775,12 +830,12 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (_topLeftCorner is null || _digits.Count == 0)
+            if (_topLeftCorner is null || _digits.Count == 0) // if the corner is null or there are no digits
                 return;
 
-            _dollarSign.Draw(spriteBatch);
+            _dollarSign.Draw(spriteBatch); // draw the dollar sign
 
-            foreach (IndicatorDigit indicatorDigit in _digits)
+            foreach (IndicatorDigit indicatorDigit in _digits) // draw each digit
                 indicatorDigit.Draw(spriteBatch);
         }
 
@@ -791,9 +846,11 @@ namespace CardsCashCasino.Manager
         /// <param name="yPos">The y coordinate</param>
         public void SetCorner(int xPos, int yPos)
         {
+            // set the corner and calculate the digit positions
             _topLeftCorner = new Point(xPos, yPos);
             _dollarSign.SetPosition(xPos, yPos);
 
+            // set the x position
             xPos += _characterWidth;
             CalculateDigitPositions(xPos, yPos);
         }
@@ -805,7 +862,7 @@ namespace CardsCashCasino.Manager
         /// <param name="yPos">The y coordinate</param>
         private void CalculateDigitPositions(int xPos, int yPos)
         {
-            foreach (IndicatorDigit indicatorDigit in _digits)
+            foreach (IndicatorDigit indicatorDigit in _digits) // calculate the position of each digit
             {
                 indicatorDigit.SetPosition(xPos, yPos);
                 xPos += _characterWidth;
@@ -817,7 +874,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Add(int value)
         {
-            Update(_currentValue + value);
+            Update(_currentValue + value); // update the value
         }
 
         /// <summary>
@@ -825,7 +882,7 @@ namespace CardsCashCasino.Manager
         /// </summary>
         public void Sub(int value)
         {
-            Update(_currentValue - value);
+            Update(_currentValue - value); // update the value
         }
     }
 }

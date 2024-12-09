@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
- *  Date: 11/7/2024
- *  Last Modified: 11/10/2024
+ *  Developers: Jacob Wilkus, Mo Morgan
+ *  Date: 11/8/2024
+ *  Last Modified: 12/7/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -46,6 +46,14 @@ namespace CardsCashCasino.Util
                 9 => DisplayIndicatorTextures.NineTexture!,
                 _ => DisplayIndicatorTextures.ZeroTexture!
             };
+        }
+
+        ///<summary>
+        /// used to set the texture for the turn indicator
+        ///</summary>
+        public static Texture2D GetTurnTexture()
+        {
+            return DisplayIndicatorTextures.TurnTexture!;
         }
     }
 
@@ -105,6 +113,11 @@ namespace CardsCashCasino.Util
         /// Texture for the dollar sign.
         /// </summary>
         public static Texture2D? DollarSignTexture { get; private set; }
+        
+        /// <summary>
+        /// Texture for the poker chip turn indicator
+        /// </summary>
+        public static Texture2D? TurnTexture { get; private set; }
 
         /// <summary>
         /// Loads the content for the util.
@@ -122,6 +135,7 @@ namespace CardsCashCasino.Util
             EightTexture = content.Load<Texture2D>("eight");
             NineTexture = content.Load<Texture2D>("nine");
             DollarSignTexture = content.Load<Texture2D>("dollarSign");
+            TurnTexture = content.Load<Texture2D>("TEMP_CHIP");
         }
     }
 }

@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan, Jacob Wilkus
+ *  Developers: Mo Morgan, Jacob Wilkus, Richard Moser, Derek Norton
  *  Date: 11/3/2024
- *  Last Modified: 11/7/2024
+ *  Last Modified: 12/3/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -30,12 +30,12 @@ namespace CardsCashCasino.Data
         /// <summary>
         /// The window height.
         /// </summary>
-        public const int WINDOW_HEIGHT = 600;
+        public const int WINDOW_HEIGHT = 900;
 
         /// <summary>
         /// The window width.
         /// </summary>
-        public const int WINDOW_WIDTH = 1000;
+        public const int WINDOW_WIDTH = 1500;
 
         /// <summary>
         /// The width of a button.

@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Derek Norton, Mo Morgan
+ *  Developers: Derek Norton, Mo Morgan, Richard Moser
  *  Date: 10/21/2024
- *  Last Modified: 11/10/2024
+ *  Last Modified: 12/8/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -23,9 +23,21 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Timers;
+using System.Xml.Linq;
 
 namespace CardsCashCasino
 {
+    /// <summary>
+    /// An enumeration of the selected game.
+    /// </summary>
+    public enum SelectedGame
+    {
+        NONE,
+        BLACKJACK,
+        HOLDEM,
+        FIVECARD
+    }
+    
     public class CardCashCasinoGame : Microsoft.Xna.Framework.Game
     {
         /// <summary>
@@ -38,10 +50,9 @@ namespace CardsCashCasino
         /// </summary>
         private SpriteBatch? _spriteBatch;
         
-        // /// <summary>
-        // /// The internal Main menu object.
-        // /// </summary>
-        // private MainMenu? _mainMenu; // TODO: Implement the main menu in MainMenu.cs.
+        /// <summary>
+        /// The internal Main menu object.
+        /// </summary>
         private MainMenu? _mainMenu;
 
         /// <summary>
@@ -65,6 +76,11 @@ namespace CardsCashCasino
         private TexasHoldEmManager _texasHoldEmManager = new();
 
         /// <summary>
+        /// The Texas Hold 'Em manager for the game.
+        /// </summary>
+        private FiveCardDrawManager _fiveCardDrawManager = new();
+
+        /// <summary>
         /// The currently selected game.
         /// </summary>
         private SelectedGame _selectedGame = SelectedGame.NONE;
@@ -79,6 +95,7 @@ namespace CardsCashCasino
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            StatisticsUtil.LoadStatisticsFile();
         }
 
         /// <summary>
@@ -95,7 +112,6 @@ namespace CardsCashCasino
             _blackjackManager.RequestCard = _cardManager.DrawCard;
             _blackjackManager.RequestBet = _bettingManager.Bet;
             _blackjackManager.RequestPayout = _bettingManager.Payout;
-            _blackjackManager.RequestMainMenuReturn = EndBlackjack;
             
             _texasHoldEmManager.RequestCardManagerClear = _cardManager.ClearDecks;
             _texasHoldEmManager.RequestDecksOfCards = _cardManager.GenerateDecks;
@@ -105,6 +121,17 @@ namespace CardsCashCasino
             _texasHoldEmManager.RequestDeckSize = _cardManager.GetDeckSize;
             _texasHoldEmManager.RequestCardDiscard = _cardManager.Discard;
             _texasHoldEmManager.StartRaise = _bettingManager.OpenBettingMenu;
+
+            _fiveCardDrawManager.RequestCardManagerClear = _cardManager.ClearDecks;
+            _fiveCardDrawManager.RequestDecksOfCards = _cardManager.GenerateDecks;
+            _fiveCardDrawManager.RequestCard = _cardManager.DrawCard;
+            _fiveCardDrawManager.RequestShuffle = _cardManager.Shuffle;
+            _fiveCardDrawManager.RequestRecycle = _cardManager.Recycle;
+            _fiveCardDrawManager.RequestDeckSize = _cardManager.GetDeckSize;
+            _fiveCardDrawManager.RequestCardDiscard = _cardManager.Discard;
+            _fiveCardDrawManager.StartRaise = _bettingManager.OpenBettingMenu;
+
+            BettingManager.RequestMainMenuReturn = SetSelectedGame;
 
             base.Initialize();
         }
@@ -124,16 +151,15 @@ namespace CardsCashCasino
             BlackjackTextures.LoadContent(Content);
 
             // Load game managers
-            _blackjackManager.LoadContent();
+            _blackjackManager.LoadContent(Content);
             _texasHoldEmManager.LoadContent(Content);
+            _fiveCardDrawManager.LoadContent(Content);
+
             _bettingManager.LoadContent();
 
             // Initialize MainMenu
             _mainMenu = new MainMenu(this); // Pass the current game instance
             _mainMenu.LoadContent(Content); // Load MainMenu content
-
-            // _selectedGame = SelectedGame.NONE; // temp, remove when main menu is implemented OR change to other games.
-
         }
 
         /// <summary>
@@ -141,13 +167,12 @@ namespace CardsCashCasino
         /// </summary>
         protected override void Update(GameTime gameTime)
         {
-
             // Exit the game on Escape
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+                SetSelectedGame(SelectedGame.NONE);
 
             // Main Menu Logic
-            if (_selectedGame == SelectedGame.NONE)
+            if (_selectedGame == SelectedGame.NONE && (GameStartTimeout is null || !GameStartTimeout.Enabled))
             {
                 _mainMenu?.Update(); // Update MainMenu
             }
@@ -159,8 +184,10 @@ namespace CardsCashCasino
                     case SelectedGame.BLACKJACK:
                         if (!_bettingManager.HasBet)
                         {
+                            if (!_bettingManager.IsBetting)
+                                _bettingManager.OpenBettingMenu();
                             _bettingManager.Update();
-                            return;
+                            break;
                         }
                         else if (!_blackjackManager.IsPlaying)
                         {
@@ -171,14 +198,28 @@ namespace CardsCashCasino
 
                     case SelectedGame.HOLDEM:
                         if (!_texasHoldEmManager.IsPlaying)
+                        {   
+                            _texasHoldEmManager.Initialize();
+                        }
+                        else if (_bettingManager.IsBetting)
                         {
-                            _texasHoldEmManager.StartGame();
+                            _bettingManager.Update();
+                            break;
                         }
                         _texasHoldEmManager.Update();
                         break;
 
                     case SelectedGame.FIVECARD:
-                        // TODO: Add Five Card Draw logic here
+                        if (!_fiveCardDrawManager.IsPlaying)
+                        {
+                            _fiveCardDrawManager.Initialize();
+                        }
+                        else if (_bettingManager.IsBetting)
+                        {
+                            _bettingManager.Update();
+                            break;
+                        }
+                        _fiveCardDrawManager.Update();
                         break;
                 }
             }
@@ -204,7 +245,12 @@ namespace CardsCashCasino
             {
                 _texasHoldEmManager.Draw(_spriteBatch);
             }
-            // Add logic for Five Card Draw if needed
+            else if (_selectedGame == SelectedGame.FIVECARD && _fiveCardDrawManager.IsPlaying)
+            {
+                _fiveCardDrawManager.Draw(_spriteBatch);
+            }
+
+            _bettingManager.Draw(_spriteBatch);
 
             _spriteBatch.End();
 
@@ -214,42 +260,30 @@ namespace CardsCashCasino
         public void SetSelectedGame(SelectedGame selectedGame)
         {
             _selectedGame = selectedGame;
-        //     // Optionally, you can include logic to initialize the selected game here.
-        //     // For example:
-        //     switch (_selectedGame)
-        //     {
-        //         case SelectedGame.BLACKJACK:
-        //             _blackjackManager.StartGame();
-        //             break;
-        //         case SelectedGame.HOLDEM:
-        //             _texasHoldEmManager.StartGame();
-        //             break;
-        //         case SelectedGame.FIVECARD:
-        //             // TODO: Add initialization for Five Card Draw.
-        //             break;
-        //         case SelectedGame.NONE:
-        //             // Reset or return to the main menu state, if needed.
-        //             break;
-        //     }
+
+            GameStartTimeout = new(1000);
+            GameStartTimeout.Elapsed += OnTimeoutEvent!;
+            GameStartTimeout.Start();
         }
 
         /// <summary>
-        /// Ends the current game by resetting the user bet to zero.
+        /// Event called when a timer times out.
         /// </summary>
-        private void EndBlackjack()
+        private static void OnTimeoutEvent(object source, ElapsedEventArgs e)
         {
-            BettingManager.UserBet = 0;
-            //_selectedGame = SelectedGame.NONE // uncomment to reset to a state of none, once main menu is built out.
+            // Stop and dispose of the timer
+            Timer timer = (Timer)source;
+            timer.Stop();
+            timer.Dispose();
+        }
+
+        /// <summary>
+        /// Quit the game.
+        /// </summary>
+        public void QuitGame()
+        {
+            StatisticsUtil.SaveStatisticsFile(); // Save Data
+            Exit(); // Quit the game
         }
     }
-
-    public enum SelectedGame
-    {
-        NONE,
-        BLACKJACK,
-        HOLDEM,
-        FIVECARD,
-        MAINMENU //delete this once main menu is implemented
-    }
-
 }

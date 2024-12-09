@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Mo Morgan
+ *  Developers: Mo Morgan, Jacob Wilkus
  *  Date: 11/3/2024
- *  Last Modified: 11/7/2024
+ *  Last Modified: 12/5/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -20,6 +20,6 @@ namespace CardsCashCasino.Data;
 /// <summary>
 /// The <c>PokerHand</c> class represents the AI opponents' poker hands.
 /// </summary>
-public class PokerAIHand : CardHand
+public class PokerAIHand : PokerHand
 {
 }

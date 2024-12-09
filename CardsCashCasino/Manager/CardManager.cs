@@ -6,7 +6,13 @@
  *  Additional code sources: None
  *  Developers: Jacob Wilkus, Mo Morgan, Ethan Berkley
  *  Date: 10/26/2024
- *  Last Modified: 10/26/2024
+ *  Last Modified: 12/8/2024
+ *  Preconditions: None
+ *  Postconditions: None
+ *  Error/Exception conditions: None
+ *  Side effects: None
+ *  Invariants: None
+ *  Known Faults: None encountered
  */
 
 // Import necessary libraries
@@ -46,6 +52,9 @@ namespace CardsCashCasino.Manager
         /// </summary>
         private List<Card> _discard = new List<Card>();
 
+        /// <summary>
+        /// The constructor for the CardManager.
+        /// </summary>
         public CardManager() 
         {
             List<Suit> suits = Enum.GetValues<Suit>().ToList();
@@ -124,22 +133,6 @@ namespace CardsCashCasino.Manager
             Card card = Cards[0];
             Cards.RemoveAt(0);
             return card;
-        }
-        
-        /// <summary>
-        /// Update method for the CardManager
-        /// </summary>
-        public void Update()
-        {
-
-        }
-
-        /// <summary>
-        /// Draw method for the CardManager
-        /// </summary>
-        public void Draw(SpriteBatch spriteBatch)
-        {
-
         }
 
         /// <summary>

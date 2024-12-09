@@ -4,9 +4,9 @@
  *  Inputs: None
  *  Outputs: None
  *  Additional code sources: None
- *  Developers: Jacob Wilkus
+ *  Developers: Jacob Wilkus, Ethan Berkley
  *  Date: 10/26/2024
- *  Last Modified: 11/7/2024
+ *  Last Modified: 12/4/2024
  *  Preconditions: None
  *  Postconditions: None
  *  Error/Exception conditions: None
@@ -25,6 +25,11 @@ namespace CardsCashCasino.Data
 {
     public class BlackjackUserHand : BlackjackHand
     {
+        /// <summary>
+        /// Whether or not the hand has been evaluated versus the dealer's hand.
+        /// </summary>
+        public bool HandEvaluated { get; set; } = false;
+
         public BlackjackUserHand() { }
 
         /// <summary>
@@ -52,7 +57,7 @@ namespace CardsCashCasino.Data
         public Card RemoveLastCard()
         {
             Card toReturn = _cards.Last();
-            _cards.Remove(_cards.Last());
+            _cards.RemoveAt(_cards.Count - 1);
             return toReturn;
         }
     }
